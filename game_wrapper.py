@@ -55,6 +55,9 @@ class GameWrapper:
     """
     def getPhase(self):
         return self.phase
+        
+    def getSize(self):
+        return self.currentState.size
 
     """
     Get the position of the unit currently under consideration
