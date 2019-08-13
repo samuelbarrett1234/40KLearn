@@ -131,5 +131,8 @@ class ShootCommand:
             states.append(newboard)
         return states, probs
         
+    def getTargetPosition(self):
+        return (self.x2,self.y2)
+        
         
         

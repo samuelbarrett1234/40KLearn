@@ -41,6 +41,9 @@ class CheckMoraleCommand:
                 states.append(newboard)
                 probs.append(1/6)
             return states,probs
+        
+    def getTargetPosition(self):
+        return None
                 
                 
 
@@ -79,6 +82,9 @@ class EndPhaseCommand:
                     u["modelsLostThisPhase"] = 0
                     state.setUnitOnSquare(i,j,u,team)
         return states, probs
+        
+    def getTargetPosition(self):
+        return None
         
         
         

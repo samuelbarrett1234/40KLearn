@@ -145,4 +145,7 @@ class ChargeCommand:
                 probs2.append(p*pPass)
         
         return states2, probs2
+        
+    def getTargetPosition(self):
+        return (self.x2,self.y2)
     

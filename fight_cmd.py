@@ -18,8 +18,8 @@ def getFightCommands(x, y, board):
         return []
     #Start off by just getting all of the positions which are
     # adjacent (note 
-    possible = [(i,j) for j in range(y-1,y+2) if y >= 0 and y < board.size\
-        for i in range(x-1,x+2) if x >= 0 and x < board.size]
+    possible = [(i,j) for j in range(y-1,y+2) if j >= 0 and j < board.size\
+        for i in range(x-1,x+2) if i >= 0 and i < board.size]
     #Return all of the positions in range which are occupied
     # by an enemy unit.
     return [FightCommand(x,y,i,j) for i,j in possible\
@@ -96,3 +96,6 @@ class FightCommand:
             newboard.setMessage(msg)
             states.append(newboard)
         return states, probs
+        
+    def getTargetPosition(self):
+        return (self.x2,self.y2)

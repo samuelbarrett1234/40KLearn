@@ -55,5 +55,8 @@ class MoveCommand:
         newboard.setMessage("Moved unit " + unit["name"] + " at " + str((self.x1,self.y1)) + " to " + str((self.x2,self.y2)))
         return [newboard], [1.0]
         
+    def getTargetPosition(self):
+        return (self.x2,self.y2)
+        
         
         

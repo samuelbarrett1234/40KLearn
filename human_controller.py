@@ -5,6 +5,10 @@ class HumanController:
     def __init__(self, model):
         self.model = model
     
-    def onClick(self, x, y):
-        assert((x,y) in self.model.getOptionPositions)
-        self.model.choosePosition(x,y)
+    def onClickPosition(self, x, y, bLeft):
+        if(x,y) in self.model.getOptionPositions() and not bLeft:
+            self.model.choosePosition(x,y)
+            
+    def onReturn(self):
+        self.model.skip()
+    

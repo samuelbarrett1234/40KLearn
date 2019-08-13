@@ -130,5 +130,5 @@ def loadUnitsCSV(filename):
                     if col != "name":
                         entry = int(entry) #Convert datatype if not unit name
                     u[col]=entry
-            units.append(u)
+                units.append(u)
     return units
