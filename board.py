@@ -15,6 +15,9 @@ class Board:
         self.size = size
         self.scale = scale
         
+    def __eq__(self, other):
+        raise NotImplementedError()
+        
     def createCopy(self):
         return deepcopy(self)
         

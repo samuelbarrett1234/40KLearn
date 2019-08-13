@@ -37,6 +37,9 @@ class GameWrapper:
             self.currentState.setUnitOnSquare(x, y, unit, team)
         self.activeUnits = list(self.currentState.getAllUnits(self.team))
         random.shuffle(self.activeUnits)
+        
+    def __eq__(self, other):
+        raise NotImplementedError()
     
     """
     Create and return a full copy of the current object
