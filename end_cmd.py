@@ -38,6 +38,7 @@ class CheckMoraleCommand:
                     newboard.clearSquare(self.x,self.y)
                 else:
                     newboard.setUnitOnSquare(self.x,self.y,u,team)
+                u["total_w"] = u["count"] * u["w"]
                 states.append(newboard)
                 probs.append(1/6)
             return states,probs
@@ -79,6 +80,7 @@ class EndPhaseCommand:
                         u["attemptedChargeThisTurn"] = False
                         u["successfulChargeThisTurn"] = False
                         u["foughtThisTurn"] = False
+                        u["movedOutOfCombatThisTurn"] = False
                     u["modelsLostThisPhase"] = 0
                     state.setUnitOnSquare(i,j,u,team)
         return states, probs

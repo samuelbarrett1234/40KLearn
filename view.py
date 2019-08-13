@@ -1,5 +1,4 @@
 import pygame
-from textwrap import drawText
 
 
 """
@@ -39,7 +38,7 @@ class GameView:
         self.enemyColour = (252,37,13)
         #Other values:
         pygame.display.set_caption("40KLearn")
-        self.font = pygame.font.Font(None, 8)
+        self.font = pygame.font.Font(None, 20)
         
     def run(self):
         selectedUnit = None
@@ -54,7 +53,7 @@ class GameView:
                         #Convert mouse position to index coordinates:
                         ix,iy = (mx-self.boardLeft)//self.pixelsPerCell,(my-self.boardTop)//self.pixelsPerCell
                         #Compute buttons
-                        left,right,middle = pygame.mouse.get_pressed()
+                        left,middle,right = pygame.mouse.get_pressed()
                         assert(not (left and right))
                         if right:
                             self.controller.onClickPosition(ix,iy,False)

@@ -128,7 +128,7 @@ class GameWrapper:
             
             self.phase += 1 #Advance phase
             if self.phase == FIGHT_PHASE + 1:
-                self.team = 1.0 - self.team #Change team
+                self.team = 1 - self.team #Change team
                 self.phase = MOVEMENT_PHASE #Reset phase
                 
             self.currentState = self._selectRandomly(results, probs)

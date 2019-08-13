@@ -39,7 +39,8 @@ class Model:
         if not self.game.currentState.isOccupied(x,y):
             return "An empty cell."
         else:
-            unitDesc = str(self.game.currentState.getUnitOnSquare(x,y))
+            unit = self.game.currentState.getUnitOnSquare(x,y)
+            unitDesc = unit["name"] + " at " + str(unit["count"]) + " models, " + str(unit["total_w"]) + " total wounds left."
             team = str(self.game.currentState.getTeamOnSquare(x,y))
             return unitDesc + " (team " + team + ")"
     

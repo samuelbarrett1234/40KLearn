@@ -86,7 +86,7 @@ def getPenetratingHitProbability(hitSkill, wpnStrength, wpnAp, targetToughness, 
         pWound = 4 / 6
     elif strengthRatio <= 0.5:
         pWound = 1 / 6
-    elif strengthRatio < 1:
+    elif strengthRatio < 1.0:
         pWound = 2 / 6
     #Else it will be 3/6
 
@@ -94,7 +94,7 @@ def getPenetratingHitProbability(hitSkill, wpnStrength, wpnAp, targetToughness, 
     pInvulnerableSave = (7.0 - targetInv) / 6.0
     pOverallSave = max(pArmourSave, pInvulnerableSave) #We only get to make one saving throw
 
-    return pHit * pWound * pOverallSave
+    return pHit * pWound * (1.0-pOverallSave)
 
 
 """
