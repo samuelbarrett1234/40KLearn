@@ -38,7 +38,7 @@ class BasicAIController:
         self.model = model
         self.tau = 0.2
         self.exploratoryParam = 1.4
-        self.N = 250
+        self.N = 500
         self.tree = None
         self.onTurnChanged() #Sets up the MCTS tree
         
