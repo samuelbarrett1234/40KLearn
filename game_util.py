@@ -103,11 +103,15 @@ This helper function will apply a given command to a given
 state distribution, to generate a new state distrbution.
 """
 def combineDistributions(command, states, probabilities):
+    assert(len(states)==len(probabilities))
     results, resultProbs = [], []
     for s,p in zip(states, probabilities):
         ss, ps = command.apply(s)
         results += ss
-        resultProbs += [p2 * p for p2 in ps] #Combine the probabilities
+        #Combine the probabilities
+        for p2 in ps:
+            resultProbs.append(p2*p)
+    assert(len(results)==len(resultProbs))
     return results, resultProbs
   
 """
@@ -139,11 +143,16 @@ def loadUnitsCSV(filename):
 A helper function for selecting a result randomly
 based on an array of corresponding probabilities.
 """
-def selectRandomly(self, results, probs):
-    cumulative = [sum(probs[:i]) for i in range(1, len(probs) + 1)]
+def selectRandomly(results, probs):
+    assert(len(results)==len(probs))
     r = random.random()
-    i = bisect_left(cumulative, r)
-    return results[i]
+    total = 0.0
+    for i,p in enumerate(probs):
+        total += p
+        if total > r:
+            return results[i]
+    print(probs)
+    assert(False and "Should never reach here")
     
     
     

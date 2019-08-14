@@ -1,4 +1,4 @@
-from game_state import newGameState
+from game_state import newGameState,UnitOrderStateCommand
 from game_util import selectRandomly
 
 """
@@ -22,13 +22,13 @@ class Model:
     def choosePosition(self, x, y):
         assert((x,y) in self.getOptionPositions())
         #Now find the option which was at this position:
-        option = [action for action in self.currentActions if action is not None and (x,y)==action.getTargetPosition()][0]
+        option = [action for action in self.currentActions if (x,y)==action.getTargetPosition()][0]
         states, probs = self.game.chooseOption(option)
         self.game = selectRandomly(states, probs)
         self.currentActions = self.game.getCurrentOptions()
         
     def skip(self):
-        states, probs = self.game.chooseOption(None)
+        states, probs = self.game.chooseOption(UnitOrderStateCommand(None))
         self.game = selectRandomly(states, probs)
         self.currentActions = self.game.getCurrentOptions()
         

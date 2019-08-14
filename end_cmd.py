@@ -12,6 +12,9 @@ class CheckMoraleCommand:
         return (self.x == other.x and self.y == other.y)
     
     def apply(self, board):
+        #Temp, for performance reasons
+        return [board], [1.0]
+        
         assert(board.isOccupied(self.x,self.y))
         unit = board.getUnitOnSquare(self.x,self.y)
         team = board.getTeamOnSquare(self.x,self.y)

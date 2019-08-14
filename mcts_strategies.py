@@ -1,4 +1,5 @@
 import random
+import math
 from game_util import selectRandomly
 
 
@@ -60,15 +61,19 @@ class PolicyStrategy:
 
 
 class UniformRandomEstimatorStrategy(EstimatorStrategy):
+    def __init__(self,team):
+        self.team=team
+        
     def computeValueEstimate(self, rootState):
         #Compute value of game by uniform random simulation
         state = rootState.createCopy()
         while not state.finished():
             actions = state.getCurrentOptions()
             action = actions[random.randint(0, len(actions)-1)]
-            results,probs = action.apply(state)
+            results,probs = state.chooseOption(action)
             state = selectRandomly(results,probs)
-        return state.getGameValue()
+        gameVal = state.getGameValue(self.team)
+        return gameVal
         
     def computePriorDistribution(self, state, actions):
         #Just return uniform distribution:
@@ -80,7 +85,7 @@ class UCB1PolicyStrategy(PolicyStrategy):
     """
     c : exploratory parameter
     """
-    def __init__(c):
+    def __init__(self, c):
         assert(c > 0.0)
         self.c = c
         
@@ -88,6 +93,8 @@ class UCB1PolicyStrategy(PolicyStrategy):
         priors, actionTeam, ourTeam, curPhase):
         #N is the number of simulations ran from the parent state
         N = sum(actionVisitCounts)
+        assert(N>0)
+        
         #The team value is multiplied with all of the
         # action values before taking the max, so a value
         # of -1 effectively makes us choose the min.

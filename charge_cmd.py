@@ -141,8 +141,11 @@ class ChargeCommand:
                 msg2 = s.getMessage()
                 msg2 += " The charge was successful!"
                 s.setMessage(msg2)
-                states2.append(s)
-                probs2.append(p*pPass)
+            else:
+                s.setMessage("The unit was killed by overwatch!")
+            #Always append these to ensure that the probabilities all work out.
+            states2.append(s)
+            probs2.append(p*pPass)
         
         return states2, probs2
         

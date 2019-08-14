@@ -29,7 +29,7 @@ def newGameState(unitRoster, placements):
         unit["movedOutOfCombatThisTurn"] = False
         unit["modelsLostThisPhase"] = 0
         gs.currentState.setUnitOnSquare(x, y, unit, team)
-    gs.activeUnits = list(gs.currentState.getAllUnits(self.team))
+    gs.activeUnits = list(gs.currentState.getAllUnits(gs.team))
     return gs
     
     
@@ -46,14 +46,19 @@ class UnitOrderStateCommand:
         self.cmd = boardCmd
         
     def apply(self, state):
-        boards,probs = self.cmd.apply(state.getBoard())
+        boards, probs = [state.getBoard().createCopy()], [1.0]
+        if self.cmd is not None: #None => empty action
+            boards,probs = combineDistributions(self.cmd, boards, probs)
         states = [state.createCopyFromBoard(b) for b in boards]
         for s in states:
             s.activeUnits.pop()
         return states, probs
         
     def getTargetPosition(self):
-        return self.cmd.getTargetPosition()
+        if self.cmd is None:
+            return None
+        else:
+            return self.cmd.getTargetPosition()
         
         
 """
@@ -90,7 +95,7 @@ will do nothing.
 class ForwardStateCommand:
     def apply(self, state):
         #While no more units left then advance phase
-        if len(state.activeUnits) == 0:
+        if len(state.activeUnits) == 0 and not state.finished():
             #End turn (do morale, etc)
             cmd = EndPhaseStateCommand()
             results, probs = cmd.apply(state)
@@ -105,7 +110,9 @@ class ForwardStateCommand:
                     result.activeUnits.pop()
                     
             #Now we need to recurse to forward again if necessary:
-            return combineDistributions(ForwardStateCommand(), results, probs)
+            results,probs= combineDistributions(ForwardStateCommand(), results, probs)
+            
+            return results,probs
         else:
             return [state],[1.0]
         
@@ -140,6 +147,7 @@ class GameState:
         gs.team = self.team
         gs.phase = self.phase
         gs.activeUnits = deepcopy(self.activeUnits)
+        return gs
         
     """
     Create a copy of this game state, but updating the
@@ -209,6 +217,8 @@ class GameState:
     doing nothing with the current unit.
     """
     def getCurrentOptions(self):
+        assert(not self.finished())
+        assert(len(self.activeUnits) > 0)
         #TODO: the fight phase is currently done wrong!
         #Players should alternate to make their fight
         # decisions, not like how it is done now.
@@ -224,11 +234,11 @@ class GameState:
             options = getChargeCommands(ux, uy, self.currentState)
         else: #Fight phase
             options = getFightCommands(ux, uy, self.currentState)
+
+        options.append(None) #The no-op
             
         #Convert board options to state options
         options = [UnitOrderStateCommand(cmd) for cmd in options]
-
-        options.append(None) #The no-op
         return options
 
     """
@@ -237,15 +247,16 @@ class GameState:
     by returning [states], [probabilities].
     """
     def chooseOption(self, option):
-        assert(len(self.activeUnits) > 0)
+        assert(len(self.activeUnits) > 0 and not self.finished())
 
         results, probs = [self.createCopy()], [1.0]
 
-        if option != None:
-            #Apply results to state
-            results, probs = combineDistributions(option, results, probs)
+        #Apply results to state
+        results, probs = combineDistributions(option, results, probs)
 
         for state in results:
+            if state.finished():
+                continue #Ignore finished states
             #Ensure that we ignore any other units with no options (excluding no-op):
             while len(state.activeUnits) > 0 and len(state.getCurrentOptions()) <= 1:
                 state.activeUnits.pop()
@@ -253,7 +264,9 @@ class GameState:
         #The ForwardStateCommand does exactly what we want, in that
         # it will advance all results to a position where they are
         # ready to be played.
-        return combineDistributions(ForwardStateCommand(), results, probs)
+        results,probs = combineDistributions(ForwardStateCommand(), results, probs)
+        
+        return results,probs
 
     """
     Determine what the possible results of a given option
