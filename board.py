@@ -11,7 +11,7 @@ class Board:
     msg = ""
     
     def __init__(self, size, scale):
-        self.board = [[None for j in range(size)] for i in range(size)]
+        self.board = {}
         self.size = size
         self.scale = scale
         
@@ -25,23 +25,23 @@ class Board:
         
     def isOccupied(self, x, y):
         assert(x >= 0 and y >= 0 and x < self.size and y < self.size)
-        return (self.board[x][y] is not None)
+        return ((x,y) in self.board)
         
     def getTeamOnSquare(self, x, y):
         assert(self.isOccupied(x,y))
-        return self.board[x][y][1]
+        return self.board[(x,y)][1]
         
     def getUnitOnSquare(self, x, y):
         assert(self.isOccupied(x,y))
-        return deepcopy(self.board[x][y][0]) #Copy to prevent edits
+        return deepcopy(self.board[(x,y)][0]) #Copy to prevent edits
     
     def setUnitOnSquare(self, x, y, unit, team):
         assert(x >= 0 and y >= 0 and x < self.size and y < self.size)
-        self.board[x][y] = [unit, team]
+        self.board[(x,y)] = [deepcopy(unit), team]
         
     def clearSquare(self, x, y):
         assert(x >= 0 and y >= 0 and x < self.size and y < self.size)
-        self.board[x][y] = None
+        del self.board[(x,y)]
         
     def setMessage(self, msg):
         self.msg = msg
@@ -76,20 +76,16 @@ class Board:
     def hasAdjacentEnemy(self, x, y, team):
         for i in range(max(x-1,0),min(x+2,self.size)):
             for j in range(max(y-1,0),min(y+2,self.size)):
-                cell = self.board[i][j]
-                if cell is not None and cell[1] != team:
-                    return True
+                if (i,j) in self.board:
+                    cell = self.board[(i,j)]
+                    if cell[1] != team:
+                        return True
         return False
         
     def getAllUnits(self, team):
-        units=[]
-        for i in range(self.size):
-            col = self.board[i]
-            for j in range(self.size):
-                cell = col[j]
-                if cell is not None and cell[1] == team:
-                    units.append((i,j))
-        return units
+        return [pos\
+            for pos,unitAndTeam in self.board.items()\
+            if unitAndTeam[1] == team]
 
         
         

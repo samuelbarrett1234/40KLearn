@@ -24,6 +24,21 @@ class ActionNode:
         self.currentEstimate = 0
         self.sampleCount = 0
         
+    def __str__(self):
+        d = 2 * self.getParent().getDepth() - 1
+        ux,uy = self.getParent().getState().getCurrentUnit()
+        unit = self.getParent().getState().getBoard().getUnitOnSquare(ux,uy)
+        name = unit["name"] + " phase=" + str(self.getParent().getState().getPhase())
+        actionStr = "no-op " + name
+        if self.action.getTargetPosition() is not None:
+            actionStr = str(self.action.getTargetPosition()) + name
+        return\
+        (" " * d) + "[action] mean=" + str(self.currentEstimate)\
+        + " from " + str(self.sampleCount) + " samples"\
+        + ", prior=" + str(self.prior) + " action=" + actionStr + "\n"\
+        + "\n".join([str(s) for s in self.stateNodeChildren\
+                    if not s.isLeaf()])
+        
     """
     Update the estimate of this action's value. This should
     be called whenever any of its child nodes have had their
@@ -79,6 +94,15 @@ class StateNode:
         self.weightSum = 0.0 #The sum of the weights of the samples in meanValue
         self.meanValue = 0.0 #The weighted mean value from this state so far
         
+    def __str__(self):
+        d = 2 * (self.getDepth() - 1)
+        return\
+        (" " * d) + "[state] mean=" + str(self.meanValue)\
+        + " from " + str(self.numSamples) + " samples\n"\
+        + "\n".join([str(a) for a in self.actionChildren\
+                    if a.sampleCount > 0])
+        
+    
     """
     If this node is a nonterminal leaf node in the MCTS tree,
     calling this will expand it with all possible child actions.
@@ -106,6 +130,12 @@ class StateNode:
     """
     def isRoot(self):
         return (self.parent is None)
+        
+    def getDepth(self):
+        if self.isRoot():
+            return 1
+        else:
+            return 1 + self.getParent().getParent().getDepth()
         
     """
     Add a value statistic to this node (this value should be
@@ -182,6 +212,10 @@ class MCTS:
         self.finalPolicy = finalPolicy
         self.simStrategy = simStrategy
         self.team = rootState.getCurrentTeam()
+        self.maxDepth = 1
+        
+    def __str__(self):
+        return str(self.root)
         
     """
     Get the current distribution of actions, as
@@ -256,7 +290,7 @@ class MCTS:
             #Compute value estimate of this state
             valueEstimate = None
             if curNode.isTerminal():
-                valueEstimate = curNode.getState().getGameValue()
+                valueEstimate = curNode.getState().getGameValue(self.team)
             elif curNode.isLeaf():
                 #Expand the leaf node BEFORE doing a simulation
                 #This means we need to get actions and prior probabilities
@@ -271,7 +305,12 @@ class MCTS:
                 curNode = selectRandomly(actionNode.getChildNodes(), actionNode.getChildNodeDistribution())
                 #Simulate to compute its value:
                 valueEstimate = self.simStrategy.computeValueEstimate(curNode.getState())
-                #We will then backpropagate this valule below
+                #We will then backpropagate this valule below!
+                #Determine if we have just gone deeper into the tree:
+                depth = curNode.getDepth()
+                if depth > self.maxDepth:
+                    print("MCTS tree deepened to", depth)
+                    self.maxDepth = depth
                 
             assert(valueEstimate is not None)
             probability=1.0

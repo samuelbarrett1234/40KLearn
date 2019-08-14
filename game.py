@@ -8,13 +8,18 @@ from game_util import *
 
 unitRoster = loadUnitsCSV("unit_stats.csv")
 placements = [
-    (0,0,5,5),
-    (0,0,20,5),
-    (8,1,5,20)
+    (9,0,15,17),
+    (4,1,15,22)
 ]
 
 
 model = Model(unitRoster, placements)
+ctrl = BasicAIController(model)
+ctrl.onUpdate()
+
+print("Done!")
+
+"""
 ctrl = TwoPlayerController(model,\
     BasicAIController(model),\
     HumanController(model)\
@@ -22,3 +27,4 @@ ctrl = TwoPlayerController(model,\
 view = GameView(model, ctrl)
 
 view.run()
+"""
