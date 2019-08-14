@@ -1,11 +1,3 @@
-"""
-TODO in this file:
-
-Final value policy of picking the action with highest N, and the policy of picking
-the action with highest Q, and the policy picking according to the distribution Ni^(1/tau)
-
-"""
-
 import random
 from game_util import selectRandomly
 
@@ -68,10 +60,6 @@ class PolicyStrategy:
 
 
 class UniformRandomEstimatorStrategy(EstimatorStrategy):
-    """
-    By simulation (or using a value function approximation),
-    determine the value of the given game state.
-    """
     def computeValueEstimate(self, rootState):
         #Compute value of game by uniform random simulation
         state = rootState.createCopy()
@@ -82,11 +70,6 @@ class UniformRandomEstimatorStrategy(EstimatorStrategy):
             state = selectRandomly(results,probs)
         return state.getGameValue()
         
-    """
-    Return a list of probabilities which represent the probability
-    that an expert will pick each action from the list 'actions'.
-    Note that actions=state.getCurrentOptions().
-    """
     def computePriorDistribution(self, state, actions):
         #Just return uniform distribution:
         N = len(actions)
@@ -113,7 +96,8 @@ class UCB1PolicyStrategy(PolicyStrategy):
             teamValue = -1.0
         
         #Compute UCB1 values for each action
-        ucbValues = [teamValue*q+self.c*p*(math.log(N)/(1+n))**0.5 for q,p,n in zip(actionValues,priors,actionVisitCounts)]
+        ucbValues = [teamValue*q+self.c*p*(math.log(N)/(1+n))**0.5 \
+            for q,p,n in zip(actionValues,priors,actionVisitCounts)]
         
         #Find max and pick that action (deterministically):
         iMax = None

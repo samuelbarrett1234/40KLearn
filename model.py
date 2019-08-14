@@ -1,5 +1,5 @@
-from game_wrapper import GameWrapper
-
+from game_state import newGameState
+from game_util import selectRandomly
 
 """
 Represents the interface by which the views/controllers
@@ -9,7 +9,7 @@ and handles everything in terms of board-cell-coordinates.
 """
 class Model:
     def __init__(self, unitRoster, placements):
-        self.game = GameWrapper(unitRoster, placements)
+        self.game = newGameState(unitRoster, placements)
         self.currentActions = self.game.getCurrentOptions()
         
     def finished(self):
@@ -19,11 +19,13 @@ class Model:
         assert((x,y) in self.getOptionPositions())
         #Now find the option which was at this position:
         option = [action for action in self.currentActions if action is not None and (x,y)==action.getTargetPosition()][0]
-        self.game.chooseOption(option)
+        states, probs = self.game.chooseOption(option)
+        self.game = selectRandomly(states, probs)
         self.currentActions = self.game.getCurrentOptions()
         
     def skip(self):
-        self.game.chooseOption(None)
+        states, probs = self.game.chooseOption(None)
+        self.game = selectRandomly(states, probs)
         self.currentActions = self.game.getCurrentOptions()
         
     def getActivePosition(self):
@@ -36,19 +38,19 @@ class Model:
         return self.game.getSize()
         
     def getPositionDesc(self, x, y):
-        if not self.game.currentState.isOccupied(x,y):
+        if not self.game.getBoard().isOccupied(x,y):
             return "An empty cell."
         else:
-            unit = self.game.currentState.getUnitOnSquare(x,y)
+            unit = self.game.getBoard().getUnitOnSquare(x,y)
             unitDesc = unit["name"] + " at " + str(unit["count"]) + " models, " + str(unit["total_w"]) + " total wounds left."
-            team = str(self.game.currentState.getTeamOnSquare(x,y))
+            team = str(self.game.getBoard().getTeamOnSquare(x,y))
             return unitDesc + " (team " + team + ")"
     
     def getAlliedPositions(self):
-        return self.game.currentState.getAllUnits(self.game.getCurrentTeam())
+        return self.game.getBoard().getAllUnits(self.game.getCurrentTeam())
     
     def getEnemyPositions(self):
-        return self.game.currentState.getAllUnits(1-self.game.getCurrentTeam())
+        return self.game.getBoard().getAllUnits(1-self.game.getCurrentTeam())
     
     def getSummary(self):
         team = self.game.getCurrentTeam()
@@ -57,3 +59,6 @@ class Model:
             "Charge phase", "Fight phase"
         ]
         return "TEAM: " + str(team) + ", PHASE: " + phaseNames[phase]
+        
+        
+        

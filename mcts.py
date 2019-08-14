@@ -1,5 +1,6 @@
 from mcts_strategies import EstimatorStrategy, PolicyStrategy,\
-                            UniformRandomEstimatorStrategy
+                            UniformRandomEstimatorStrategy, UCB1PolicyStrategy,\
+                            VisitCountStochasticPolicyStrategy
 
 """
 An action node is a node in the MCTS tree which
