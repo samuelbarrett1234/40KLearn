@@ -136,7 +136,10 @@ class GameState:
     activeUnits = []
         
     def __eq__(self, other):
-        raise NotImplementedError()
+        return (self.team == other.team and\
+                self.phase == other.phase and\
+                self.currentState == other.currentState and\
+                self.activeUnits == other.activeUnits)
     
     """
     Create and return a full copy of the current object

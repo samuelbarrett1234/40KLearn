@@ -203,17 +203,17 @@ class MCTS:
     Commit to a given action. This RE-ROOTS the MCTS tree
     so as not to waste any of the previous simulations which
     were used to inform the commit decision.
-    i,j : the target position of the action you chose
+    pos=(i,j) : the target position of the action you chose
     state : the state which resulted from applying that action
     This function will be checking that (i,j) was a valid action
     and that 'state' was a state which could actually result from
     that action.
     """
-    def commit(self, i, j, state):
+    def commit(self, pos, state):
         #First, find action:
         actionNode = None
         for node in self.root.getChildNodes():
-            if node.getActionCommand().getTargetPosition() == (i,j):
+            if node.getActionCommand().getTargetPosition() == pos:
                 actionNode = node
                 break
         assert(actionNode != None)

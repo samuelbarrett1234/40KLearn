@@ -68,6 +68,8 @@ class GameView:
                 elif event.type == pygame.QUIT:
                     exit = True
                 
+            if self.model.changedTeam():
+                self.controller.onTurnChanged()
             self.controller.onUpdate()
             #Get data from model to update:
             

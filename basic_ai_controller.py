@@ -10,12 +10,37 @@ ends.
 class BasicAIController:
     def __init__(self, model):
         self.model = model
-        self.tau = 0.4
+        self.tau = 0.3
         self.exploratoryParam = 0.3
         self.N = 5
-        #TODO: make MCTS tree persistent and use the commit() functionality
+        self.tree = None
+        self.onTurnChanged() #Sets up the MCTS tree
         
-    def onUpdate(self):
+    def onUpdate(self):        
+        #Simulate:
+        self.tree.simulate(self.N)
+        
+        #Get results:
+        actions,dist = self.tree.getCurrentDistribution()
+        
+        #Select and apply:
+        action = selectRandomly(actions,dist)
+        if action is None or action.getTargetPosition() is None:
+            self.model.skip()
+            self.tree.commit(self, None, state)
+        else:
+            x,y = action.getTargetPosition()
+            self.model.choosePosition(x,y)
+            self.tree.commit((x,y), self.model.getState())
+    
+    def onClickPosition(self, x, y, bLeft):
+        pass #AI doesn't care about clicks
+            
+    def onReturn(self):
+        pass #AI doesn't care about clicks
+        
+    def onTurnChanged(self):
+        #Reconstruct MCTS tree
         #MCTS components:
         rootState = self.model.getState().createCopy()
         treePolicy = UCB1PolicyStrategy(self.exploratoryParam)
@@ -25,27 +50,5 @@ class BasicAIController:
         assert(len(rootState.activeUnits) > 0)
         
         #Create MCTS tree
-        tree = MCTS(rootState,treePolicy,finalPolicy,simStrategy)
-        
-        #Simulate:
-        tree.simulate(self.N)
-        
-        #Get results:
-        actions,dist = tree.getCurrentDistribution()
-        
-        #Select and apply:
-        action = selectRandomly(actions,dist)
-        if action is None or action.getTargetPosition() is None:
-            self.model.skip()
-            print("AI decided to pass.")
-        else:
-            x,y = action.getTargetPosition()
-            self.model.choosePosition(x,y)
-            print("AI decided position",(x,y))
-    
-    def onClickPosition(self, x, y, bLeft):
-        pass #AI doesn't care about clicks
-            
-    def onReturn(self):
-        pass #AI doesn't care about clicks
+        self.tree = MCTS(rootState,treePolicy,finalPolicy,simStrategy)
     

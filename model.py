@@ -11,7 +11,7 @@ class Model:
     def __init__(self, unitRoster, placements):
         self.game = newGameState(unitRoster, placements)
         self.currentActions = self.game.getCurrentOptions()
-        
+        self.changedTurn = True #True iff the last action caused the turn to change
         
     def getState(self):
         return self.game
@@ -21,11 +21,13 @@ class Model:
         
     def choosePosition(self, x, y):
         assert((x,y) in self.getOptionPositions())
+        initialTeam = self.game.getCurrentTeam()
         #Now find the option which was at this position:
         option = [action for action in self.currentActions if (x,y)==action.getTargetPosition()][0]
         states, probs = self.game.chooseOption(option)
         self.game = selectRandomly(states, probs)
         self.currentActions = self.game.getCurrentOptions()
+        self.changedTurn = (self.game.getCurrentTeam() != initialTeam)
         
     def skip(self):
         states, probs = self.game.chooseOption(UnitOrderStateCommand(None))
@@ -40,6 +42,9 @@ class Model:
         
     def getSize(self):
         return self.game.getSize()
+        
+    def changedTeam(self):
+        return self.changedTurn
         
     def getPositionDesc(self, x, y):
         if not self.game.getBoard().isOccupied(x,y):

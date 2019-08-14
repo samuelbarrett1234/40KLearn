@@ -16,4 +16,7 @@ class HumanController:
             
     def onReturn(self):
         self.model.skip()
+        
+    def onTurnChanged(self):
+        pass
     

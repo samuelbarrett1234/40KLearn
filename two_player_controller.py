@@ -18,4 +18,7 @@ class TwoPlayerController:
             
     def onReturn(self):
         self.controllers[self.model.getCurrentTeam()].onReturn()
+        
+    def onTurnChanged(self):
+        self.controllers[self.model.getCurrentTeam()].onTurnChanged()
     
