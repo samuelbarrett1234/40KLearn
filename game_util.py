@@ -144,3 +144,6 @@ def selectRandomly(self, results, probs):
     r = random.random()
     i = bisect_left(cumulative, r)
     return results[i]
+    
+    
+    

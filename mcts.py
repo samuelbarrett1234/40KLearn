@@ -1,3 +1,6 @@
+from mcts_strategies import EstimatorStrategy, PolicyStrategy,\
+                            UniformRandomEstimatorStrategy
+
 """
 An action node is a node in the MCTS tree which
 contains information about the current action,
@@ -159,59 +162,7 @@ class StateNode:
         return self.transitionProbability
         
         
-"""
-The estimator provides us with two pieces of
-information: the prior expert knowledge for
-move selection (returning a prior probability
-distribution over actions) which is an estimate
-that MCTS aims to improve, and also provides
-value estimates for given states.
-These two methods are grouped into two objects
-mainly because it is common for policy and
-value networks to occupy these jobs, and they
-usually share many neural network layers between
-them.
-"""
-class EstimatorStrategy:
-    """
-    By simulation (or using a value function approximation),
-    determine the value of the given game state.
-    """
-    def computeValueEstimate(self, rootState):
-        pass
-        
-    """
-    Return a list of probabilities which represent the probability
-    that an expert will pick each action from the list 'actions'.
-    Note that actions=state.getCurrentOptions().
-    """
-    def computePriorDistribution(self, state, actions):
-        pass
-        
-        
-"""
-A policy strategy object is responsible for constructing
-a distribution across actions, using statistics about
-those actions, calculated by the MCTS tree.
-"""
-class PolicyStrategy:
-    """
-    A policy strategy determines the distribution over a list
-    of actions. Given are:
-    actionValues: the estimated value of each action (calculated as an
-                  average over the values of their resulting states),
-    actionVisitCounts: the number of times each action has been visited,
-                       each contributing to a single simulation of that action.
-    priorActionProbabilities: the initial distribution of actions, before simulation.
-    actionTeam: the team which will be choosing the action
-    ourTeam: the team performing the MCTS
-    Return: a list of the same length which sums to 1, and gives us a distribution
-            over which actions we should pick next. Note that if actionTeam != ourTeam
-            you should be picking the WORSE action!
-    """
-    def getActionDistribution(self, actionValues, actionVisitCounts,\
-        priorActionProbabilities, actionTeam, ourTeam):
-        pass
+
         
 
 
@@ -240,7 +191,8 @@ class MCTS:
         values = [node.getValueEstimate() for node in actionNodes]
         visitCounts = [node.getSampleCount() for node in actionNodes]
         priors = [node.getPrior() for node in actionNodes]
-        dist = self.finalPolicy.getActionDistribution(values, visitCounts, priors, self.team, self.team)
+        dist = self.finalPolicy.getActionDistribution(values, visitCounts, priors,\
+            self.team, self.team, self.root.getState().getPhase())
         actions = [node.getActionCommand() for node in actionNodes]
         return actions,dist
         
@@ -290,7 +242,8 @@ class MCTS:
                 priors = [node.getPrior() for node in actionNodes]
                 
                 #Compute distribution over actions:
-                actionDist = self.treePolicy.getActionDistribution(values, visitCounts, priors, curNode.getState().getCurrentTeam(), self.team)
+                actionDist = self.treePolicy.getActionDistribution(values, visitCounts, priors,\
+                    curNode.getState().getCurrentTeam(), self.team, curNode.getState().getPhase())
                 #Select an action according to our tree policy:
                 actionNode = selectRandomly(actionNodes, actionDist)
                 #Select a state (via the random state transition dynamics):
