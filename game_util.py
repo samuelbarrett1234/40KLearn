@@ -2,6 +2,7 @@ import math
 import random
 from copy import deepcopy
 import csv
+from bisect import bisect_left
 
 
 MOVEMENT_PHASE = 0
@@ -132,3 +133,14 @@ def loadUnitsCSV(filename):
                     u[col]=entry
                 units.append(u)
     return units
+    
+    
+"""
+A helper function for selecting a result randomly
+based on an array of corresponding probabilities.
+"""
+def selectRandomly(self, results, probs):
+    cumulative = [sum(probs[:i]) for i in range(1, len(probs) + 1)]
+    r = random.random()
+    i = bisect_left(cumulative, r)
+    return results[i]

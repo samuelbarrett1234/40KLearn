@@ -13,7 +13,7 @@ class ActionNode:
         self.prior = priorProbability
         #Immediately set up child state nodes, and their probabilities:
         states, self.probs = actionCmd.apply(parentStateNode.getState())
-        self.stateNodeChildren = [StateNode(state, self) for state in states]
+        self.stateNodeChildren = [StateNode(state, self, prob) for state in states]
         #We will cache our current value estimate of this action, derived
         # from the child states' estimates.
         self.currentEstimate = None
@@ -66,12 +66,14 @@ and/or nodes further down the tree. Can be terminal and/or
 a leaf node and/or a root node.
 """
 class StateNode:
-    def __init__(self, state, actionParent):
+    def __init__(self, state, actionParent, transitionProbability):
         self.state = state
         self.parent = actionParent
+        self.transitionProbability = transitionProbability
         self.actionChildren = [] #list of action NODES
         self.numSamples = 0 #The number of samples that meanValue consists of
-        self.meanValue = 0.0 #The mean value from this state so far
+        self.weightSum = 0.0 #The sum of the weights of the samples in meanValue
+        self.meanValue = 0.0 #The weighted mean value from this state so far
         
     """
     If this node is a nonterminal leaf node in the MCTS tree,
@@ -106,10 +108,14 @@ class StateNode:
     an estimate of the expected returns from this node. This
     may be derived from a simulation directly from this state,
     or from a future state.)
+    Here, the weight is the probability of the child state's (from
+    which the value is being derived) probability of occurring
+    given the actions taken to get there.
     """
-    def addStatistic(self, value):
+    def addStatistic(self, value, weight):
         #Incrementally update the mean
-        self.meanValue = (self.numSamples * self.meanValue + value) / (self.numSamples + 1)
+        self.meanValue = (self.weightSum * self.meanValue + value * weight) / (self.weightSum + weight)
+        self.weightSum += weight
         self.numSamples += 1
         
     """
@@ -144,6 +150,13 @@ class StateNode:
     """
     def getChildNodes(self):
         return self.actionChildren
+        
+    """
+    Get the probability that this state occurs as a result
+    of performing the parent action.
+    """
+    def getTransitionProbability(self):
+        return self.transitionProbability
         
         
 """
@@ -190,10 +203,14 @@ class PolicyStrategy:
     actionVisitCounts: the number of times each action has been visited,
                        each contributing to a single simulation of that action.
     priorActionProbabilities: the initial distribution of actions, before simulation.
+    actionTeam: the team which will be choosing the action
+    ourTeam: the team performing the MCTS
     Return: a list of the same length which sums to 1, and gives us a distribution
-            over which actions we should pick next.
+            over which actions we should pick next. Note that if actionTeam != ourTeam
+            you should be picking the WORSE action!
     """
-    def getActionDistribution(self, actionValues, actionVisitCounts, priorActionProbabilities):
+    def getActionDistribution(self, actionValues, actionVisitCounts,\
+        priorActionProbabilities, actionTeam, ourTeam):
         pass
         
 
@@ -210,7 +227,7 @@ class MCTS:
         self.treePolicy = treePolicy
         self.finalPolicy = finalPolicy
         self.simStrategy = simStrategy
-        
+        self.team = rootState.getCurrentTeam()
         
     """
     Get the current distribution of actions, as
@@ -223,7 +240,7 @@ class MCTS:
         values = [node.getValueEstimate() for node in actionNodes]
         visitCounts = [node.getSampleCount() for node in actionNodes]
         priors = [node.getPrior() for node in actionNodes]
-        dist = self.finalPolicy.getActionDistribution(values, visitCounts, priors)
+        dist = self.finalPolicy.getActionDistribution(values, visitCounts, priors, self.team, self.team)
         actions = [node.getActionCommand() for node in actionNodes]
         return actions,dist
         
@@ -260,18 +277,10 @@ class MCTS:
     distribution estimate.
     """
     def simulate(self, n):
-        #TODO: for i in range(n)
-        # Start at root as node,
-        # If node is not leaf, compute action distribution from
-        #  tree policy and sample. Compute resulting state distrbution
-        #  and sample. Set state as new node.
-        # Else if state node is leaf, compute new set of actions
-        #  from all possible ones by using prior distribution policy,
-        #  and for each action that can be performed, generate a resulting
-        #  state and simulate from there using the sim strategy. 
-        
+        #For each simulation...
         for i in range(n):
             curNode = self.root
+            
             #Simulate until the end of our MCTS tree:
             while not curNode.isLeaf() and not curNode.isTerminal():
                 #Obtain information about potential actions:
@@ -279,30 +288,36 @@ class MCTS:
                 values = [node.getValueEstimate() for node in actionNodes]
                 visitCounts = [node.getSampleCount() for node in actionNodes]
                 priors = [node.getPrior() for node in actionNodes]
+                
                 #Compute distribution over actions:
-                actionDist = self.treePolicy.getActionDistribution(values, visitCounts, priors)
+                actionDist = self.treePolicy.getActionDistribution(values, visitCounts, priors, curNode.getState().getCurrentTeam(), self.team)
                 #Select an action according to our tree policy:
                 actionNode = selectRandomly(actionNodes, actionDist)
                 #Select a state (via the random state transition dynamics):
                 stateNode = selectRandomly(actionNode.getChildNodes(), actionNode.getChildNodeDistribution())
                 #Update the node
                 curNode = stateNode
+                
+            #Compute value estimate of this state
             valueEstimate = None
             if curNode.isTerminal():
-                valueEstimate = curNode.getTrueTerminalValue()
+                valueEstimate = curNode.getState().getGameValue()
             elif curNode.isLeaf():
                 valueEstimate = self.simStrategy.computeValueEstimate(curNode.getState())
             assert(valueEstimate is not None)
-            #Time to backpropagate:
+            probability=1.0
+            
+            #Backpropagate results:
             while curNode != self.root:
                 #Add the value statistic to the node:
-                ##### ***** TODO: valueEstimate should change as we backpropagate, right?! ***** #####
-                curNode.addStatistic(valueEstimate)
+                curNode.addStatistic(valueEstimate,probability)
                 action = curNode.getParent()
+                probability *= curNode.getTransitionProbability()
                 action.updateEstimate()
                 curNode = action.getParent()
+                
             #And finally, add to root:
-            self.root.addStatistic(valueEstimate)
+            self.root.addStatistic(valueEstimate,probability)
             #Done!
             
         

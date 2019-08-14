@@ -6,7 +6,6 @@ from fight_cmd import getFightCommands
 from end_cmd import EndPhaseCommand
 from game_util import *
 import random
-from bisect import bisect_left
 
 
 """
@@ -36,7 +35,7 @@ class GameWrapper:
             unit["modelsLostThisPhase"] = 0
             self.currentState.setUnitOnSquare(x, y, unit, team)
         self.activeUnits = list(self.currentState.getAllUnits(self.team))
-        random.shuffle(self.activeUnits)
+        #random.shuffle(self.activeUnits) #Don't do shuffling - messes with MCTS
         
     def __eq__(self, other):
         raise NotImplementedError()
@@ -59,6 +58,9 @@ class GameWrapper:
     def getPhase(self):
         return self.phase
         
+    """
+    Get board size (in cells)
+    """
     def getSize(self):
         return self.currentState.size
 
@@ -79,6 +81,23 @@ class GameWrapper:
     """
     def finished(self):
         return (len(self.currentState.getAllUnits(0)) == 0 or len(self.currentState.getAllUnits(1)) == 0)
+        
+    """
+    If the game has finished, determine who won.
+    Returns the value of the game for the team 'team'.
+    1 = win, 0 = draw, -1 = loss
+    """
+    def getGameValue(self, team):
+        assert(self.finished())
+        # bLeft[i] is true iff team i has any units left
+        bLeft = [(len(self.currentState.getAllUnits(0)) != 0),
+            (len(self.currentState.getAllUnits(1)) != 0)]
+        if bLeft[team]:
+            return 1.0 #Win
+        elif bLeft[1-team]:
+            return -1.0 #Loss
+        else:
+            return 0.0 #Draw
 
     """
     Get the list of possible actions we can take. This DOES
@@ -116,7 +135,7 @@ class GameWrapper:
         if option != None:
             #Apply results to state
             results, probs = self.getResultsOf(option)
-            self.currentState = self._selectRandomly(results, probs)
+            self.currentState = selectRandomly(results, probs)
 
         #Pop current unit, and ensure that we ignore any other units with no options (excluding no-op):
         self.activeUnits.pop()
@@ -134,10 +153,10 @@ class GameWrapper:
                 self.team = 1 - self.team #Change team
                 self.phase = MOVEMENT_PHASE #Reset phase
                 
-            self.currentState = self._selectRandomly(results, probs)
+            self.currentState = selectRandomly(results, probs)
             #Restore the list of active units:
             self.activeUnits = list(self.currentState.getAllUnits(self.team))
-            random.shuffle(self.activeUnits)
+            #random.shuffle(self.activeUnits) #Don't shuffle - messes with MCTS
             #Ensure that our next unit in the list has options ready (excluding no-op):
             while len(self.activeUnits) > 0 and len(self.getCurrentOptions()) <= 1:
                 self.activeUnits.pop()
@@ -154,12 +173,3 @@ class GameWrapper:
         else:
             return option.apply(self.currentState)
 
-    """
-    A helper function for selecting a result randomly
-    based on an array of corresponding probabilities.
-    """
-    def _selectRandomly(self, results, probs):
-        cumulative = [sum(probs[:i]) for i in range(1, len(probs) + 1)]
-        r = random.random()
-        i = bisect_left(cumulative, r)
-        return results[i]
