@@ -68,6 +68,7 @@ class GameView:
                 elif event.type == pygame.QUIT:
                     exit = True
                 
+            self.controller.update()
             #Get data from model to update:
             
             #Cache update data

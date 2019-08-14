@@ -1,5 +1,7 @@
 from view import GameView
 from human_controller import HumanController
+from two_player_controller import TwoPlayerController
+from basic_ai_controller import BasicAIController
 from model import Model
 from game_util import *
 
@@ -21,7 +23,10 @@ placements = [
 
 
 model = Model(unitRoster, placements)
-ctrl = HumanController(model)
+ctrl = TwoPlayerController(model\
+    HumanController(model),\
+    BasicAIController(model)\
+)
 view = GameView(model, ctrl)
 
 view.run()

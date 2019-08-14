@@ -12,6 +12,10 @@ class Model:
         self.game = newGameState(unitRoster, placements)
         self.currentActions = self.game.getCurrentOptions()
         
+        
+    def getState(self):
+        return self.game
+        
     def finished(self):
         return self.game.finished()
         
@@ -51,10 +55,16 @@ class Model:
     
     def getEnemyPositions(self):
         return self.game.getBoard().getAllUnits(1-self.game.getCurrentTeam())
+        
+    def getCurrentTeam(self):
+        return self.game.getCurrentTeam()
     
+    def getPhase(self):
+        return self.game.getPhase()
+        
     def getSummary(self):
-        team = self.game.getCurrentTeam()
-        phase = self.game.getPhase()
+        team = self.getCurrentTeam()
+        phase = self.getPhase()
         phaseNames = ["Movement phase", "Shooting phase",
             "Charge phase", "Fight phase"
         ]
