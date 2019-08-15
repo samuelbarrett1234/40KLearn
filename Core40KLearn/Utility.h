@@ -54,7 +54,16 @@ class C40KL_API IntArray : public std::vector<int>
 
 
 class C40KL_API String : public std::string
-{ };
+{
+public:
+	String() = default;
+	String(const String& s) :
+		std::string((std::string)s)
+	{ }
+	String(const std::string& s) :
+		std::string(s)
+	{ }
+};
 
 
 } // namespace c40kl
