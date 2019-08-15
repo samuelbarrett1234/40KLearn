@@ -78,6 +78,16 @@ public:
 	/// <param name="y">Zero-indexed y coordinate of cell.</param>
 	void ClearSquare(int x, int y);
 
+	/// <summary>
+	/// Check if any of the squares adjacent to (but not including) (x,y)
+	/// contain a unit whose team differs from 'team'.
+	/// </summary>
+	/// <param name="x">Zero-indexed x coordinate of cell.</param>
+	/// <param name="y">Zero-indexed y coordinate of cell.</param>
+	/// <param name="team">0 or 1; the team you want to check against.</param>
+	/// <returns>True if and only if the above condition holds.</returns>
+	bool HasAdjacentEnemy(int x, int y, int team) const;
+
 private:
 	int m_Size;
 

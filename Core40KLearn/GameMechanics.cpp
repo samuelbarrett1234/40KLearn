@@ -36,6 +36,7 @@ void ApplyCommand(GameCommandPtr pCmd,
 	}
 }
 
+
 } // namespace c40kl
 
 

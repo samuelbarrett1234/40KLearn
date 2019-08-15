@@ -120,6 +120,25 @@ void BoardState::ClearSquare(int x, int y)
 }
 
 
+bool BoardState::HasAdjacentEnemy(int x, int y, int team) const
+{
+	for (int i = x - 1; i <= x + 1; i++)
+	{
+		for (int j = y - 1; j <= y + 1; j++)
+		{
+			if (i >= 0 && i < m_Size && j >= 0 && j < m_Size)
+			{
+				if (IsOccupied(i, j) && GetTeamOnSquare(i, j) != team)
+				{
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+
 } // namespace c40kl
 
 
