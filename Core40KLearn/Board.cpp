@@ -1,35 +1,37 @@
 #include "Board.h"
+#include <algorithm>
+#include <cmath>
 
 
 namespace c40kl
 {
 
 
-BoardState::BoardState(int boardSize) :
-	m_Size(boardSize)
+BoardState::BoardState(int boardSize, float scale) :
+	m_Size(boardSize),
+	m_Scale(scale)
 {
 	C40KL_ASSERT_PRECONDITION(boardSize > 0, "Board size must be strictly positive.");
+	C40KL_ASSERT_PRECONDITION(scale > 0, "Scale must be strictly positive.");
 }
 
 
-bool BoardState::IsOccupied(int x, int y) const
+bool BoardState::IsOccupied(Position pos) const
 {
-	C40KL_ASSERT_PRECONDITION(x >= 0 && y >= 0 && x < m_Size && y < m_Size,
+	C40KL_ASSERT_PRECONDITION(pos.first >= 0 && pos.second >= 0 && pos.first < m_Size && pos.second < m_Size,
 		"Coordinates must be valid.");
 
-	Position pos(x, y);
 	auto iter = std::find(m_Positions.begin(), m_Positions.end(), pos);
 	return (iter != m_Positions.end());
 }
 
 
-void BoardState::SetUnitOnSquare(int x, int y, Unit unit, int team)
+void BoardState::SetUnitOnSquare(Position pos, Unit unit, int team)
 {
-	C40KL_ASSERT_PRECONDITION(x >= 0 && y >= 0 && x < m_Size && y < m_Size,
+	C40KL_ASSERT_PRECONDITION(pos.first >= 0 && pos.second >= 0 && pos.first < m_Size && pos.second < m_Size,
 		"Coordinates must be valid.");
 	C40KL_ASSERT_PRECONDITION(team == 0 || team == 1, "Team must be 0 or 1.");
 
-	Position pos(x, y);
 	auto iter = std::find(m_Positions.begin(), m_Positions.end(), pos);
 	
 	if (iter == m_Positions.end())
@@ -49,12 +51,11 @@ void BoardState::SetUnitOnSquare(int x, int y, Unit unit, int team)
 }
 
 
-const Unit& BoardState::GetUnitOnSquare(int x, int y) const
+const Unit& BoardState::GetUnitOnSquare(Position pos) const
 {
 	//Automatically checks x,y are valid
-	C40KL_ASSERT_PRECONDITION(IsOccupied(x, y), "Must be an occupied square.");
+	C40KL_ASSERT_PRECONDITION(IsOccupied(pos), "Must be an occupied square.");
 
-	Position pos(x, y);
 	auto iter = std::find(m_Positions.begin(), m_Positions.end(), pos);
 	
 	C40KL_ASSERT_INVARIANT(iter != m_Positions.end(), "Must be able to find position.");
@@ -65,12 +66,11 @@ const Unit& BoardState::GetUnitOnSquare(int x, int y) const
 }
 
 
-int BoardState::GetTeamOnSquare(int x, int y) const
+int BoardState::GetTeamOnSquare(Position pos) const
 {
 	//Automatically checks x,y are valid
-	C40KL_ASSERT_PRECONDITION(IsOccupied(x, y), "Must be an occupied square.");
+	C40KL_ASSERT_PRECONDITION(IsOccupied(pos), "Must be an occupied square.");
 
-	Position pos(x, y);
 	auto iter = std::find(m_Positions.begin(), m_Positions.end(), pos);
 
 	C40KL_ASSERT_INVARIANT(iter != m_Positions.end(), "Must be able to find position.");
@@ -101,12 +101,11 @@ PositionArray BoardState::GetAllUnits(int team) const
 }
 
 
-void BoardState::ClearSquare(int x, int y)
+void BoardState::ClearSquare(Position pos)
 {
 	//Automatically checks x,y are valid
-	C40KL_ASSERT_PRECONDITION(IsOccupied(x, y), "Must be an occupied square.");
+	C40KL_ASSERT_PRECONDITION(IsOccupied(pos), "Must be an occupied square.");
 
-	Position pos(x, y);
 	auto iter = std::find(m_Positions.begin(), m_Positions.end(), pos);
 
 	C40KL_ASSERT_INVARIANT(iter != m_Positions.end(), "Must be able to find position.");
@@ -120,15 +119,15 @@ void BoardState::ClearSquare(int x, int y)
 }
 
 
-bool BoardState::HasAdjacentEnemy(int x, int y, int team) const
+bool BoardState::HasAdjacentEnemy(Position pos, int team) const
 {
-	for (int i = x - 1; i <= x + 1; i++)
+	for (int i = pos.first - 1; i <= pos.first + 1; i++)
 	{
-		for (int j = y - 1; j <= y + 1; j++)
+		for (int j = pos.second - 1; j <= pos.second + 1; j++)
 		{
 			if (i >= 0 && i < m_Size && j >= 0 && j < m_Size)
 			{
-				if (IsOccupied(i, j) && GetTeamOnSquare(i, j) != team)
+				if (IsOccupied(Position(i,j)) && GetTeamOnSquare(Position(i,j)) != team)
 				{
 					return true;
 				}
@@ -136,6 +135,49 @@ bool BoardState::HasAdjacentEnemy(int x, int y, int team) const
 		}
 	}
 	return false;
+}
+
+
+PositionArray BoardState::GetSquaresInRange(Position centre, float radius) const
+{
+	const int intRad = (int)(radius / m_Scale);
+	const int intRadSq = intRad * intRad;
+
+	//Compute 'loose' rectangle
+	const int left = std::max(0, centre.first - intRad);
+	const int right = std::min(m_Size - 1, centre.first + intRad);
+	const int top = std::max(0, centre.second - intRad);
+	const int bottom = std::min(m_Size - 1, centre.second + intRad);
+
+	PositionArray result;
+
+	//There will be just over pi*r^2 cells, so reserve as much
+	// to prevent extra allocations
+	result.reserve(4 * intRadSq);
+
+	//Loop through loose rectangle, push_back
+	// elements which are within the circle.
+	for (size_t i = left; i <= right; i++)
+	{
+		for (size_t j = top; j <= bottom; j++)
+		{
+			const int dx = centre.first - i, dy = centre.second - j;
+			if (dx*dx + dy * dy <= intRadSq)
+			{
+				result.push_back(Position(i, j));
+			}
+		}
+	}
+
+	return result;
+}
+
+
+float BoardState::GetDistance(Position a, Position b) const
+{
+	const auto dx = a.first - b.first;
+	const auto dy = a.second - b.second;
+	return m_Scale * std::sqrt(dx*dx+dy*dy);
 }
 
 
