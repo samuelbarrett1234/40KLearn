@@ -335,6 +335,6 @@ class MCTS:
     might go down (because not all simulations would've taken the
     path that actually did occur).
     """
-    def getCurrentSimulationCount(self):
+    def getNumSamples(self):
         return self.root.getSampleCount()
         

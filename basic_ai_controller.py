@@ -38,13 +38,13 @@ class BasicAIController:
         self.model = model
         self.tau = 0.2
         self.exploratoryParam = 1.4
-        self.N = 50
+        self.N = 200
         self.tree = None
         self.onTurnChanged() #Sets up the MCTS tree
         
     def onUpdate(self):        
         #Simulate:
-        self.tree.simulate(self.N)
+        self.tree.simulate(self.N-self.tree.getNumSamples())
 
         #Save MCTS tree:
         file = open("mcts_tree_output.txt", "w")
