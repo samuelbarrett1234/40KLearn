@@ -13,5 +13,6 @@ The 40K game will be simplified in the following way:
 - No Psykers,
 - No stratagems or other global abilities,
 - No aura special rules,
-- No randomness in determining statistics (e.g. a weapon with a random number of shots)
+- No randomness in determining statistics (e.g. a weapon with a random number of shots),
+- The order in which you move/shoot/charge/fight with units in your army is fixed
 
