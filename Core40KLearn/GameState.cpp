@@ -1,8 +1,16 @@
 #include "GameState.h"
+#include "UnitMovementCommand.h"
+#include <functional>
 
 
 namespace c40kl
 {
+
+
+std::function<void(const GameState&, GameCommandArray&)> commandCreators[] =
+{
+	&UnitMovementCommand::GetPossibleCommands
+};
 
 
 GameState::GameState(int team, Phase phase, const BoardState& board) :
@@ -18,7 +26,15 @@ GameCommandArray GameState::GetCommands() const
 {
 	C40KL_ASSERT_PRECONDITION(!IsFinished(), "Can't produce command list for finished game.");
 
-
+	//Just loop through this array, and let the
+	// commands decide whether or not they are
+	// applicable.
+	GameCommandArray cmds;
+	for (const auto& getCmds : commandCreators)
+	{
+		getCmds(*this, cmds);
+	}
+	return cmds;
 }
 
 
