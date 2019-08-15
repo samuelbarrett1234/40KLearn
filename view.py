@@ -43,6 +43,7 @@ class GameView:
     def run(self):
         selectedUnit = None
         exit = False
+        currentTeam = self.model.getCurrentTeam()
         while not exit and not self.model.finished():
             #Handle events
             for event in pygame.event.get():
@@ -68,7 +69,8 @@ class GameView:
                 elif event.type == pygame.QUIT:
                     exit = True
                 
-            if self.model.changedTeam():
+            if self.model.getCurrentTeam() != currentTeam:
+                currentTeam = self.model.getCurrentTeam()
                 self.controller.onTurnChanged()
             self.controller.onUpdate()
             #Get data from model to update:

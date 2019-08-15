@@ -327,7 +327,7 @@ class MCTS:
             #And finally, add to root:
             self.root.addStatistic(valueEstimate,probability)
             #Done!
-            
+            print("Simulation",i,"completed.")
         
     """
     Get the current simulation count from the current tree root.

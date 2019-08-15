@@ -270,18 +270,6 @@ class GameState:
         results,probs = combineDistributions(ForwardStateCommand(), results, probs)
         
         return results,probs
-
-    """
-    Determine what the possible results of a given option
-    would be, and their probabilities.
-    Returns a list of game states, and a list of corresponding
-    probabilities.
-    """
-    def getResultsOf(self, option):
-        if option == None:
-            return [self.currentState], [1.0]
-        else:
-            return option.apply(self.currentState)
             
     def getBoard(self):
         return self.currentState

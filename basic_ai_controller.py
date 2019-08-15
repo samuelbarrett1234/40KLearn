@@ -38,7 +38,7 @@ class BasicAIController:
         self.model = model
         self.tau = 0.2
         self.exploratoryParam = 1.4
-        self.N = 500
+        self.N = 50
         self.tree = None
         self.onTurnChanged() #Sets up the MCTS tree
         
@@ -61,7 +61,7 @@ class BasicAIController:
             self.tree.commit(None, self.model.getState())
             
             #Log what happened
-            i,j = self.model.getActiveUnit()
+            i,j = self.model.getCurrentUnit()
             unit = self.model.getState().getBoard().getUnitOnSquare(i,j)
             print("AI decided to skip with", unit["name"])
         else:
@@ -99,6 +99,7 @@ class BasicAIController:
         pass #AI doesn't care about clicks
         
     def onTurnChanged(self):
+        print("AI ON TURN CHANGED.")
         #Reconstruct MCTS tree
         #MCTS components:
         rootState = self.model.getState().createCopy()
