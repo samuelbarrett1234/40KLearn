@@ -9,6 +9,13 @@ namespace c40kl
 {
 
 
+enum class CommandType
+{
+	UNIT_ORDER,
+	END_PHASE
+};
+
+
 //Forward definition
 class GameState;
 
@@ -57,6 +64,13 @@ public:
 	/// </summary>
 	/// <returns>This command in a human-readable string representation.</returns>
 	virtual String ToString() const = 0;
+
+	/// <summary>
+	/// To help distinguish between the different kinds of commands,
+	/// a type enum is used.
+	/// </summary>
+	/// <returns>The type of this command object.</returns>
+	virtual CommandType GetType() const = 0;
 };
 
 
@@ -87,6 +101,8 @@ public:
 	/// </summary>
 	/// <returns>(x,y) of the target.</returns>
 	virtual Position GetTargetPosition() const = 0;
+
+	virtual inline CommandType GetType() const override { return CommandType::UNIT_ORDER; }
 };
 
 

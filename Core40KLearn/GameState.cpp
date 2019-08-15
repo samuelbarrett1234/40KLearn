@@ -18,11 +18,7 @@ GameCommandArray GameState::GetCommands() const
 {
 	C40KL_ASSERT_PRECONDITION(!IsFinished(), "Can't produce command list for finished game.");
 
-	//TODO: finish!
-	switch (m_Phase)
-	{
 
-	}
 }
 
 

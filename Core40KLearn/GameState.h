@@ -3,7 +3,7 @@
 
 #include "Utility.h"
 #include "Board.h"
-#include "GameCommands.h"
+#include "IGameCommand.h"
 
 
 namespace c40kl
@@ -105,10 +105,6 @@ private:
 	int m_Team;
 	Phase m_Phase;
 	BoardState m_Board;
-	
-	//A unit's position is added to this array if it has acted this
-	// phase and thus can no longer act.
-	PositionArray m_ActedPositions;
 };
 
 
