@@ -33,6 +33,15 @@ namespace c40kl
 {
 
 
+enum class Phase
+{
+	MOVEMENT,
+	SHOOTING,
+	CHARGE,
+	FIGHT
+};
+
+
 typedef std::pair<int, int> Position;
 
 
