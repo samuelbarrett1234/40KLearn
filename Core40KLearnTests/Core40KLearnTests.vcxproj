@@ -160,6 +160,7 @@
     <ClCompile Include="BoardTests.cpp" />
     <ClCompile Include="GameStateTests.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MovementCommandTests.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
