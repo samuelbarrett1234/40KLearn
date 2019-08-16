@@ -1,5 +1,9 @@
 #include "GameState.h"
 #include "UnitMovementCommand.h"
+#include "UnitShootCommand.h"
+#include "UnitChargeCommand.h"
+#include "UnitFightCommand.h"
+#include "EndPhaseCommand.h"
 #include <functional>
 
 
@@ -9,7 +13,11 @@ namespace c40kl
 
 std::function<void(const GameState&, GameCommandArray&)> commandCreators[] =
 {
-	&UnitMovementCommand::GetPossibleCommands
+	&UnitMovementCommand::GetPossibleCommands,
+	&UnitShootCommand::GetPossibleCommands,
+	&UnitChargeCommand::GetPossibleCommands,
+	&UnitFightCommand::GetPossibleCommands,
+	&EndPhaseCommand::GetPossibleCommands
 };
 
 

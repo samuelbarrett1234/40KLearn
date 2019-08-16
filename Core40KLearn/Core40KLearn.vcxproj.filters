@@ -60,6 +60,9 @@
     <ClInclude Include="UnitShootCommand.h">
       <Filter>Header Files\Game\Commands</Filter>
     </ClInclude>
+    <ClInclude Include="UnitFightCommand.h">
+      <Filter>Header Files\Game\Commands</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Board.cpp">
@@ -81,6 +84,9 @@
       <Filter>Source Files\Game\Commands</Filter>
     </ClCompile>
     <ClCompile Include="UnitShootCommand.cpp">
+      <Filter>Source Files\Game\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="UnitFightCommand.cpp">
       <Filter>Source Files\Game\Commands</Filter>
     </ClCompile>
   </ItemGroup>

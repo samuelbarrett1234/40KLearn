@@ -148,6 +148,7 @@
     <ClInclude Include="IGameCommand.h" />
     <ClInclude Include="MCTS.h" />
     <ClInclude Include="Unit.h" />
+    <ClInclude Include="UnitFightCommand.h" />
     <ClInclude Include="UnitMovementCommand.h" />
     <ClInclude Include="UnitShootCommand.h" />
     <ClInclude Include="Utility.h" />
@@ -157,6 +158,7 @@
     <ClCompile Include="GameMechanics.cpp" />
     <ClCompile Include="GameState.cpp" />
     <ClCompile Include="MCTS.cpp" />
+    <ClCompile Include="UnitFightCommand.cpp" />
     <ClCompile Include="UnitMovementCommand.cpp" />
     <ClCompile Include="UnitShootCommand.cpp" />
     <ClCompile Include="Utility.cpp" />
