@@ -37,11 +37,11 @@ class CheckMoraleCommand:
                 newboard = board.createCopy()
                 u = newboard.getUnitOnSquare(self.x,self.y)
                 u["count"] -= numRunAway
+                u["total_w"] = u["count"] * u["w"]
                 if u["count"] <= 0:
                     newboard.clearSquare(self.x,self.y)
                 else:
                     newboard.setUnitOnSquare(self.x,self.y,u,team)
-                u["total_w"] = u["count"] * u["w"]
                 states.append(newboard)
                 probs.append(1/6)
             return states,probs
