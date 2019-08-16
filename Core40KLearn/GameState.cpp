@@ -21,12 +21,36 @@ std::function<void(const GameState&, GameCommandArray&)> commandCreators[] =
 };
 
 
-GameState::GameState(int team, Phase phase, const BoardState& board) :
-	m_Team(team),
+GameState::GameState(int internalTeam, int actingTeam, Phase phase, const BoardState& board) :
+	m_InternalTeam(internalTeam),
+	m_ActingTeam(actingTeam),
 	m_Phase(phase),
 	m_Board(board)
 {
-	C40KL_ASSERT_PRECONDITION(team == 0 || team == 1, "Must be a valid team.");
+	C40KL_ASSERT_PRECONDITION(internalTeam == 0 || internalTeam == 1, "Must be a valid team.");
+	C40KL_ASSERT_PRECONDITION(actingTeam == 0 || actingTeam == 1, "Must be a valid team.");
+	C40KL_ASSERT_PRECONDITION(m_ActingTeam == m_InternalTeam || m_Phase == Phase::FIGHT,
+		"Acting team and internal team should be the same unless it's the fight phase.");
+}
+
+
+int GameState::GetActiveTeam() const
+{
+	C40KL_ASSERT_PRECONDITION(!IsFinished(),
+		"Can't produce current team value for finished game.");
+	C40KL_ASSERT_INVARIANT(m_ActingTeam == m_InternalTeam || m_Phase == Phase::FIGHT,
+		"Acting team and internal team should be the same unless it's the fight phase.");
+	return m_ActingTeam;
+}
+
+
+int GameState::GetInternalTeam() const
+{
+	C40KL_ASSERT_PRECONDITION(!IsFinished(),
+		"Can't produce current team value for finished game.");
+	C40KL_ASSERT_INVARIANT(m_ActingTeam == m_InternalTeam || m_Phase == Phase::FIGHT,
+		"Acting team and internal team should be the same unless it's the fight phase.");
+	return m_InternalTeam;
 }
 
 

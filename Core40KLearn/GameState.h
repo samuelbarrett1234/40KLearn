@@ -32,10 +32,12 @@ public:
 	/// Furthermore, constructing states like
 	/// this follows the RAII principle.
 	/// </summary>
-	/// <param name="team">0 or 1, representing the team about to start.</param>
+	/// <param name="internalTeam">0 or 1, representing the team whose turn it is.</param>
+	/// <param name="actingTeam">0 or 1, representing the team to make
+	/// the next decision. If not fight phase, should be the same as internalTeam!</param>
 	/// <param name="phase">The phase to begin in.</param>
 	/// <param name="board">The state of the board when the game begins.</param>
-	GameState(int team, Phase phase, const BoardState& board);
+	GameState(int internalTeam, int actingTeam, Phase phase, const BoardState& board);
 
 	//TODO: binary file I/O
 
@@ -44,12 +46,14 @@ public:
 	/// Precondition: !IsFinished()
 	/// </summary>
 	/// <returns>0 or 1, depending on the team.</returns>
-	inline int GetTeam() const
-	{
-		C40KL_ASSERT_PRECONDITION(!IsFinished(),
-			"Can't produce current team value for finished game.");
-		return m_Team;
-	}
+	int GetActingTeam() const;
+
+	/// <summary>
+	/// Get the team which whose turn it is.
+	/// Precondition: !IsFinished()
+	/// </summary>
+	/// <returns>0 or 1, depending on the team.</returns>
+	int GetInternalTeam() const;
 
 	/// <summary>
 	/// Get the current phase.
@@ -104,12 +108,15 @@ public:
 
 	inline bool operator == (const GameState& other) const
 	{
-		return (m_Team == other.m_Team && m_Phase == other.m_Phase
-			&& m_Board == other.m_Board);
+		return (m_InternalTeam == other.m_InternalTeam && m_Phase == other.m_Phase
+			&& m_Board == other.m_Board && m_ActingTeam == other.m_ActingTeam);
 	}
 
 private:
-	int m_Team;
+	int m_InternalTeam, //The internal team is "whose turn it is"
+		m_ActingTeam; //The acting team is "who is about to perform the next move".
+	//The distinction is required because players take turns in fighting in the fight phase.
+
 	Phase m_Phase;
 	BoardState m_Board;
 };

@@ -17,12 +17,12 @@ void UnitFightCommand::GetPossibleCommands(const GameState& state, GameCommandAr
 	Unit stats;
 
 	//Cache these:
-	const auto ourTeam = state.GetTeam();
+	const auto ourTeam = state.GetActingTeam();
 	const auto& board = state.GetBoardState();
 
 	//Get all units for this team:
-	const auto units = board.GetAllUnits(state.GetTeam());
-	const auto targets = board.GetAllUnits(1 - state.GetTeam());
+	const auto units = board.GetAllUnits(ourTeam);
+	const auto targets = board.GetAllUnits(1 - ourTeam);
 
 	//Consider each (allied) unit for fighting
 	for (const auto& unitPos : units)
@@ -121,7 +121,12 @@ void UnitFightCommand::Apply(const GameState& state,
 			newBoard.ClearSquare(m_Target);
 		}
 
-		outStates.emplace_back(team, Phase::FIGHT, newBoard);
+		//After we have fought, change the acting
+		// team (because we are supposed to alternate
+		// between teams in the fight phase), however
+		// the internal team (whose turn it is) doesn't
+		// change.
+		outStates.emplace_back(state.GetInternalTeam(), 1-state.GetActiveTeam(), Phase::FIGHT, newBoard);
 		outDistribution.push_back(targetProbs[i]);
 	}
 

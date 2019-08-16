@@ -80,7 +80,7 @@ void EndPhaseCommand::Apply(const GameState& state,
 	}
 
 	//Determine the next phase and team:
-	int nextTeam = state.GetTeam();
+	int nextTeam = state.GetInternalTeam();
 	Phase nextPhase = state.GetPhase();
 	switch (nextPhase)
 	{
@@ -102,7 +102,7 @@ void EndPhaseCommand::Apply(const GameState& state,
 	}
 
 	//Create next game state
-	outStates.emplace_back(nextTeam, nextPhase, board);
+	outStates.emplace_back(nextTeam, nextTeam, nextPhase, board);
 	outDistribution.push_back(1.0f);
 }
 

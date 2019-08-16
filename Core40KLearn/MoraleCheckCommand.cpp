@@ -81,7 +81,7 @@ void MoraleCheckCommand::Apply(const GameState& state,
 			}
 			else
 			{
-				outStates.emplace_back(team, state.GetPhase(), newboard);
+				outStates.emplace_back(state.GetInternalTeam(), state.GetActiveTeam(), state.GetPhase(), newboard);
 				outDistribution.push_back(1.0f / 6.0f);
 			}
 		}

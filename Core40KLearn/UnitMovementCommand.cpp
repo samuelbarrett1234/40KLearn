@@ -17,7 +17,7 @@ void UnitMovementCommand::GetPossibleCommands(const GameState& state, GameComman
 	Unit stats;
 
 	//Cache these:
-	const auto ourTeam = state.GetTeam();
+	const auto ourTeam = state.GetActiveTeam();
 	const auto& board = state.GetBoardState();
 
 	//Get all units for this team:
@@ -93,7 +93,7 @@ void UnitMovementCommand::Apply(const GameState& state,
 	board.SetUnitOnSquare(m_Target, unitStats, team);
 
 	//Deterministic action:
-	outStates.emplace_back(team, Phase::MOVEMENT, board);
+	outStates.emplace_back(team, team, Phase::MOVEMENT, board);
 	outDistribution.push_back(1.0f);
 }
 
