@@ -103,6 +103,14 @@ public:
 	/// <returns>The real world distance between a and b</returns>
 	float GetDistance(Position a, Position b) const;
 
+
+	inline bool operator == (const BoardState& other) const
+	{
+		return (m_Size == other.m_Size && m_Scale == other.m_Scale
+			&& m_Units == other.m_Units && m_Positions == other.m_Positions
+			&& m_Teams == other.m_Teams);
+	}
+
 private:
 	const int m_Size;
 	const float m_Scale;

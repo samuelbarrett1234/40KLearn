@@ -101,6 +101,13 @@ public:
 		return m_Board;
 	}
 
+
+	inline bool operator == (const GameState& other) const
+	{
+		return (m_Team == other.m_Team && m_Phase == other.m_Phase
+			&& m_Board == other.m_Board);
+	}
+
 private:
 	int m_Team;
 	Phase m_Phase;
