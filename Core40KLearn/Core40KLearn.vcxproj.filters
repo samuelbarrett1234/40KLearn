@@ -75,6 +75,9 @@
     <ClInclude Include="MoraleCheckCommand.h">
       <Filter>Header Files\Game\Commands</Filter>
     </ClInclude>
+    <ClInclude Include="EndPhaseCommand.h">
+      <Filter>Header Files\Game\Commands</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Board.cpp">
@@ -111,6 +114,9 @@
       <Filter>Source Files\Game\Commands</Filter>
     </ClCompile>
     <ClCompile Include="MoraleCheckCommand.cpp">
+      <Filter>Source Files\Game\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="EndPhaseCommand.cpp">
       <Filter>Source Files\Game\Commands</Filter>
     </ClCompile>
   </ItemGroup>

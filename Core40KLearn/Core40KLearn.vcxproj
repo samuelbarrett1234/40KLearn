@@ -144,6 +144,7 @@
   <ItemGroup>
     <ClInclude Include="Board.h" />
     <ClInclude Include="CompositeCommand.h" />
+    <ClInclude Include="EndPhaseCommand.h" />
     <ClInclude Include="GameMechanics.h" />
     <ClInclude Include="GameState.h" />
     <ClInclude Include="IGameCommand.h" />
@@ -160,6 +161,7 @@
   <ItemGroup>
     <ClCompile Include="Board.cpp" />
     <ClCompile Include="CompositeCommand.cpp" />
+    <ClCompile Include="EndPhaseCommand.cpp" />
     <ClCompile Include="GameMechanics.cpp" />
     <ClCompile Include="GameState.cpp" />
     <ClCompile Include="MCTS.cpp" />
