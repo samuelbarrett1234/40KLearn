@@ -121,6 +121,7 @@ void BoardState::ClearSquare(Position pos)
 
 bool BoardState::HasAdjacentEnemy(Position pos, int team) const
 {
+	C40KL_ASSERT_PRECONDITION(team == 0 || team == 1, "Invalid team value.");
 	for (int i = pos.first - 1; i <= pos.first + 1; i++)
 	{
 		for (int j = pos.second - 1; j <= pos.second + 1; j++)
@@ -140,8 +141,8 @@ bool BoardState::HasAdjacentEnemy(Position pos, int team) const
 
 PositionArray BoardState::GetSquaresInRange(Position centre, float radius) const
 {
-	const int intRad = (int)(radius / m_Scale);
-	const int intRadSq = intRad * intRad;
+	const int intRad = (int)ceil(radius / m_Scale);
+	const int intRadSq = (int)floor(radius * radius / m_Scale / m_Scale);
 
 	//Compute 'loose' rectangle
 	const int left = std::max(0, centre.first - intRad);

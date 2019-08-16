@@ -78,7 +78,7 @@ bool GameState::IsFinished() const
 
 int GameState::GetGameValue(int team) const
 {
-	C40KL_ASSERT_PRECONDITION(!IsFinished(), "Can't produce winner value for unfinished game.");
+	C40KL_ASSERT_PRECONDITION(IsFinished(), "Can't produce winner value for unfinished game.");
 
 	const bool bAlliesFinished = m_Board.GetAllUnits(team).empty();
 	const bool bEnemiesFinished = m_Board.GetAllUnits(1-team).empty(); //1-team is the enemy team
