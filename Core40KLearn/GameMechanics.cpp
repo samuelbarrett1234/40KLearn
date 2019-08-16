@@ -40,18 +40,28 @@ void ApplyCommand(GameCommandPtr pCmd,
 	std::vector<float> probs;
 	for (size_t i = 0; i < n; i++)
 	{
-		//Apply to get states and probabilities of result of command
-		pCmd->Apply(inStates[i], outStates, probs);
+		//Can only apply commands to states which are not finished
+		if (!inStates[i].IsFinished())
+		{
+			//Apply to get states and probabilities of result of command
+			pCmd->Apply(inStates[i], outStates, probs);
 
-		//The law of total probability
-		const float p = inProbabilities[i];
-		for (size_t j = 0; j < probs.size(); j++)
-			probs[j] *= p;
+			//The law of total probability
+			const float p = inProbabilities[i];
+			for (size_t j = 0; j < probs.size(); j++)
+				probs[j] *= p;
 
-		outProbabilities.insert(outProbabilities.end(), probs.begin(), probs.end());
+			outProbabilities.insert(outProbabilities.end(), probs.begin(), probs.end());
 
-		//Clear for next round of the loop
-		probs.clear();
+			//Clear for next round of the loop
+			probs.clear();
+		}
+		else
+		{
+			//If state is finished then ignore the command
+			outStates.push_back(inStates[i]);
+			outProbabilities.push_back(inProbabilities[i]);
+		}
 	}
 }
 
