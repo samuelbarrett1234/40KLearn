@@ -63,6 +63,15 @@
     <ClInclude Include="UnitFightCommand.h">
       <Filter>Header Files\Game\Commands</Filter>
     </ClInclude>
+    <ClInclude Include="CompositeCommand.h">
+      <Filter>Header Files\Game\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="UnitChargeCommand.h">
+      <Filter>Header Files\Game\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="OverwatchCommand.h">
+      <Filter>Header Files\Game\Commands</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Board.cpp">
@@ -87,6 +96,15 @@
       <Filter>Source Files\Game\Commands</Filter>
     </ClCompile>
     <ClCompile Include="UnitFightCommand.cpp">
+      <Filter>Source Files\Game\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="CompositeCommand.cpp">
+      <Filter>Source Files\Game\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="UnitChargeCommand.cpp">
+      <Filter>Source Files\Game\Commands</Filter>
+    </ClCompile>
+    <ClCompile Include="OverwatchCommand.cpp">
       <Filter>Source Files\Game\Commands</Filter>
     </ClCompile>
   </ItemGroup>

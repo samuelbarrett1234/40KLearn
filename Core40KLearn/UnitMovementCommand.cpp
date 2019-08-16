@@ -71,8 +71,9 @@ void UnitMovementCommand::Apply(const GameState& state,
 		&& board.IsOccupied(m_Source)
 		&& !board.IsOccupied(m_Target)
 		&& !board.HasAdjacentEnemy(m_Target, 
-			board.GetTeamOnSquare(m_Source)),
-		"Movement action preconditions must be satisfied.");
+			board.GetTeamOnSquare(m_Source))
+		&& !board.GetUnitOnSquare(m_Source).movedThisTurn
+		,"Movement action preconditions must be satisfied.");
 
 	//Get info:
 	auto team = board.GetTeamOnSquare(m_Source);

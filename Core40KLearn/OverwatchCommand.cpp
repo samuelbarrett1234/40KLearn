@@ -1,4 +1,4 @@
-#include "UnitShootCommand.h"
+#include "OverwatchCommand.h"
 #include "GameState.h"
 #include "GameMechanics.h"
 #include <sstream>
@@ -8,70 +8,35 @@ namespace c40kl
 {
 
 
-void UnitShootCommand::GetPossibleCommands(const GameState& state, GameCommandArray& outCommands)
-{
-	//If not in the shooting phase, we can't do anything.
-	if (state.GetPhase() != Phase::SHOOTING)
-		return;
-
-	Unit stats;
-
-	//Cache these:
-	const auto ourTeam = state.GetTeam();
-	const auto& board = state.GetBoardState();
-
-	//Get all units for this team:
-	const auto units = board.GetAllUnits(state.GetTeam());
-	
-	//Get all units for the other team, to check distances
-	const auto targets = board.GetAllUnits(1 - state.GetTeam());
-
-	//Consider each (allied) unit for shooting
-	for (const auto& unitPos : units)
-	{
-		//Get the unit's stats
-		stats = board.GetUnitOnSquare(unitPos);
-
-		if (!stats.firedThisTurn //Can't shoot twice per turn!
-			&& !board.HasAdjacentEnemy(unitPos, ourTeam) //We also can't shoot if we're in melee
-			//Can't shoot if just left combat
-			&& !stats.movedOutOfCombatThisTurn
-			&& HasStandardRangedWeapon(stats)) //We also actually need a ranged weapon
-		{
-			//For each possible target to shoot at...
-			for (const auto& targetPos : targets)
-			{
-				//If weapon is in range...
-				if (board.GetDistance(unitPos, targetPos) <= stats.rg_range
-					&& !board.HasAdjacentEnemy(targetPos, 1-ourTeam)) //And the enemy is not in melee!
-				{
-					//The command is viable!
-					outCommands.push_back(std::make_shared<UnitShootCommand>(unitPos, targetPos));
-				}
-			}
-		}
-	}
-}
-
-
-UnitShootCommand::UnitShootCommand(Position source, Position target) :
+OverwatchCommand::OverwatchCommand(Position source, Position target) :
 	m_Source(source),
 	m_Target(target)
 {
 }
 
 
-void UnitShootCommand::Apply(const GameState& state,
+void OverwatchCommand::Apply(const GameState& state,
 	std::vector<GameState>& outStates, std::vector<float>& outDistribution) const
 {
 	const auto board = state.GetBoardState();
 	const auto distance = board.GetDistance(m_Source, m_Target);
+	
+	//Note: if the target position is not occupied,
+	// then the target unit was killed in prior overwatch,
+	// and we can ignore this command.
+	if (!board.IsOccupied(m_Target))
+	{
+		//Keep state as-is:
+		outStates.push_back(state);
+		outDistribution.push_back(1.0f);
+		return;
+	}
 
 	//Check that this action is still valid:
 	C40KL_ASSERT_PRECONDITION(
-		state.GetPhase() == Phase::SHOOTING
+		state.GetPhase() == Phase::CHARGE
 		&& board.IsOccupied(m_Source) //Must be a unit at source position
-		&& board.IsOccupied(m_Target) //Must be a unit at target position
+		//[Don't need to check target position]
 		&& !board.HasAdjacentEnemy(m_Source, //Shooter cannot be in melee
 			board.GetTeamOnSquare(m_Source))
 		&& !board.HasAdjacentEnemy(m_Target, //Target cannot be in melee
@@ -80,11 +45,9 @@ void UnitShootCommand::Apply(const GameState& state,
 		&& board.GetTeamOnSquare(m_Source) != board.GetTeamOnSquare(m_Target)
 		//Unit must be in range:
 		&& distance <= board.GetUnitOnSquare(m_Source).rg_range
-		//Can't shoot if just left combat:
-		&& !board.GetUnitOnSquare(m_Source).movedOutOfCombatThisTurn
 		//Needs ranged weapon:
 		&& HasStandardRangedWeapon(board.GetUnitOnSquare(m_Source))
-		,"Shooting action preconditions must be satisfied.");
+		, "Overwatch action preconditions must be satisfied.");
 
 	//Get info:
 	const auto team = board.GetTeamOnSquare(m_Source);
@@ -96,16 +59,16 @@ void UnitShootCommand::Apply(const GameState& state,
 	std::vector<Unit> targetResults;
 	std::vector<float> targetProbs;
 
+	//NOTE: SET HIT SKILL TO 6 BECAUSE OVERWATCH!
+	unitStats.bs = 6;
+
 	//Use this function to resolve the damage:
 	ResolveRawShootingDamage(unitStats, targetStats,
 		distance, targetResults, targetProbs);
 
 	C40KL_ASSERT_INVARIANT(targetResults.size() == targetProbs.size(),
 		"Needs to return valid distribution.");
-
-	//Flag that this unit has fired
-	unitStats.firedThisTurn = true;
-
+	
 	const size_t n = targetResults.size();
 	outStates.reserve(outStates.size() + n);
 	outDistribution.reserve(outDistribution.size() + n);
@@ -121,9 +84,6 @@ void UnitShootCommand::Apply(const GameState& state,
 			targetStats.count == (targetStats.total_w + targetStats.w - 1) / targetStats.w,
 			"Shooting damage calculation has forgot to sync count and total_w.");
 
-		//Update shooter:
-		newBoard.SetUnitOnSquare(m_Source, unitStats, team);
-
 		//If target alive, update info, else clear the cell:
 		if (targetStats.count > 0)
 		{
@@ -134,16 +94,16 @@ void UnitShootCommand::Apply(const GameState& state,
 			newBoard.ClearSquare(m_Target);
 		}
 
-		outStates.emplace_back(team, Phase::SHOOTING, newBoard);
+		outStates.emplace_back(team, Phase::CHARGE, newBoard);
 		outDistribution.push_back(targetProbs[i]);
 	}
-	
+
 }
 
 
-bool UnitShootCommand::Equals(const IGameCommand& cmd) const
+bool OverwatchCommand::Equals(const IGameCommand& cmd) const
 {
-	if (auto pCmd = dynamic_cast<const UnitShootCommand*>(&cmd))
+	if (auto pCmd = dynamic_cast<const OverwatchCommand*>(&cmd))
 	{
 		return (m_Source == pCmd->m_Source && m_Target == pCmd->m_Target);
 	}
@@ -151,7 +111,7 @@ bool UnitShootCommand::Equals(const IGameCommand& cmd) const
 }
 
 
-String UnitShootCommand::ToString() const
+String OverwatchCommand::ToString() const
 {
 	std::stringstream c;
 	c << "shoot order from (" << m_Source.first << ',' << m_Source.second
