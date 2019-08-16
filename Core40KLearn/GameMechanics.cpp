@@ -66,6 +66,15 @@ bool HasStandardRangedWeapon(const Unit& unit)
 }
 
 
+bool HasStandardMeleeWeapon(const Unit& unit)
+{
+	//All of these things have to be strictly positive
+	// in order to hope to cause any damage against
+	// anything:
+	return (unit.ml_s > 0 && unit.ml_dmg > 0 && unit.a > 0);
+}
+
+
 float GetPenetrationProbability(int hitSkill, int wpnS, int wpnAp, int targetT, int targetSv, int targetInv)
 {
 	C40KL_ASSERT_PRECONDITION(
@@ -106,6 +115,9 @@ float GetPenetrationProbability(int hitSkill, int wpnS, int wpnAp, int targetT, 
 void ResolveRawShootingDamage(const Unit& shooter, const Unit& target, float distanceApart,
 	std::vector<Unit>& results, std::vector<float>& probabilities)
 {
+	C40KL_ASSERT_PRECONDITION(distanceApart <= shooter.rg_range, "Weapon needs to be in range.");
+	C40KL_ASSERT_PRECONDITION(HasStandardRangedWeapon(shooter), "Shooter needs a ranged weapon.");
+
 	int hitSkill = shooter.bs;
 
 	//Heavy weapons and movement don't mix!
@@ -150,6 +162,65 @@ void ResolveRawShootingDamage(const Unit& shooter, const Unit& target, float dis
 		// of penetrating shots
 		const float probOfResult = nCr(numShots, i)
 			* std::pow(pPen, i) * std::pow(1.0f - pPen, numShots - i);
+
+		//Note: we need to make sure that the targets
+		// we return are distinct. The only way this
+		// would fail is if different numbers of shots
+		// all resulted in reducing the target wounds
+		// to zero. Hence check if the target is a change
+		// from the last one.
+		if (results.back() != newTarget)
+		{
+			results.push_back(newTarget);
+			probabilities.push_back(probOfResult);
+		}
+		else
+		{
+			probabilities.back() += probOfResult;
+		}
+	}
+}
+
+
+void ResolveRawMeleeDamage(const Unit& fighter, const Unit& target,
+	std::vector<Unit>& results, std::vector<float>& probabilities)
+{
+	C40KL_ASSERT_PRECONDITION(HasStandardMeleeWeapon(fighter), "Fighter needs a melee weapon.");
+
+	//Get damage
+	int dmg = fighter.ml_dmg;
+
+	int numHits = fighter.a * fighter.count;
+
+	//Penetration probability:
+	float pPen = GetPenetrationProbability(fighter.ws, fighter.ml_s,
+		fighter.ml_ap, target.t, target.sv, target.inv);
+
+	//Each different number of shots represents
+	// a different resulting target state
+	for (int i = 0; i <= numHits; i++)
+	{
+		Unit newTarget = target;
+
+		//Apply damage (make sure total_w doesn't go negative).
+		newTarget.total_w -= dmg * i;
+		if (newTarget.total_w < 0)
+			newTarget.total_w = 0;
+
+		//Compute the new number of models in the unit (wounds
+		// are applied to a single model until that model is
+		// destroyed and then spill over into the next model.)
+		newTarget.count = newTarget.total_w / newTarget.w;
+		if (newTarget.total_w % newTarget.w != 0)
+			newTarget.count++;
+
+		//Stack losses:
+		newTarget.modelsLostThisPhase += (target.count - newTarget.count);
+
+		//Compute the probability of achieving this number
+		// of penetrating shots
+		const float probOfResult = nCr(numHits, i)
+			* std::pow(pPen, i) * std::pow(1.0f - pPen, numHits - i);
 
 		//Note: we need to make sure that the targets
 		// we return are distinct. The only way this

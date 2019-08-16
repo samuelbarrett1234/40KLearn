@@ -51,15 +51,20 @@ float GetPenetrationProbability(int hitSkill, int wpnS, int wpnAp,
 
 
 /// <summary>
-/// Let the shooter unit fire at the target unit
-/// and inflict any damage on the target unit by
-/// modifying its stats.
-/// Does not set firedThisTurn or anything like that.
-/// NOTE: this function returns distinct units as the
-/// result, i.e. it won't return the same target unit
-/// twice.
+/// Make "shooter" fire at "target" (given their distance apart)
+/// and output the distribution of results.
+/// Preconditions: HasStandardRangedWeapon(shooter) && shooter range >= distanceApart
 /// </summary>
 void ResolveRawShootingDamage(const Unit& shooter, const Unit& target, float distanceApart,
+	std::vector<Unit>& results, std::vector<float>& probabilities);
+
+
+/// <summary>
+/// Make "fighter" attack "target" and output distribution of
+/// resulting targets.
+/// Precondition: HasStandardMeleeWeapon(fighter)
+/// </summary>
+void ResolveRawMeleeDamage(const Unit& fighter, const Unit& target,
 	std::vector<Unit>& results, std::vector<float>& probabilities);
 
 

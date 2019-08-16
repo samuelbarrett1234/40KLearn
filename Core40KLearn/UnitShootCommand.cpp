@@ -63,6 +63,7 @@ void UnitShootCommand::Apply(const GameState& state,
 	std::vector<GameState>& outStates, std::vector<float>& outDistribution) const
 {
 	const auto board = state.GetBoardState();
+	const auto distance = board.GetDistance(m_Source, m_Target);
 
 	//Check that this action is still valid:
 	C40KL_ASSERT_PRECONDITION(
@@ -74,7 +75,9 @@ void UnitShootCommand::Apply(const GameState& state,
 		&& !board.HasAdjacentEnemy(m_Target, //Target cannot be in melee
 			board.GetTeamOnSquare(m_Target))
 		//No friendly fire:
-		&& board.GetTeamOnSquare(m_Source) != board.GetTeamOnSquare(m_Target),
+		&& board.GetTeamOnSquare(m_Source) != board.GetTeamOnSquare(m_Target)
+		//Unit must be in range:
+		&& distance <= board.GetUnitOnSquare(m_Source).rg_range,
 		"Shooting action preconditions must be satisfied.");
 
 	//Get info:
@@ -88,7 +91,8 @@ void UnitShootCommand::Apply(const GameState& state,
 	std::vector<float> targetProbs;
 
 	//Use this function to resolve the damage:
-	ResolveRawShootingDamage(unitStats, targetStats, targetResults, targetProbs);
+	ResolveRawShootingDamage(unitStats, targetStats,
+		distance, targetResults, targetProbs);
 
 	C40KL_ASSERT_INVARIANT(targetResults.size() == targetProbs.size(),
 		"Needs to return valid distribution.");
@@ -124,7 +128,6 @@ void UnitShootCommand::Apply(const GameState& state,
 			newBoard.ClearSquare(m_Target);
 		}
 
-		//Deterministic action:
 		outStates.emplace_back(team, Phase::SHOOTING, newBoard);
 		outDistribution.push_back(targetProbs[i]);
 	}
