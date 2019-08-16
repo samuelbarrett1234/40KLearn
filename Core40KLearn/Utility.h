@@ -63,6 +63,15 @@ public:
 	String(const std::string& s) :
 		std::string(s)
 	{ }
+
+	bool operator == (const String& other) const
+	{
+		return (std::string)(*this) == (std::string)(other);
+	}
+	bool operator != (const String& other) const
+	{
+		return !(*this == other);
+	}
 };
 
 

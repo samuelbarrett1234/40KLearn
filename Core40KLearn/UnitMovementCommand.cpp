@@ -16,21 +16,25 @@ void UnitMovementCommand::GetPossibleCommands(const GameState& state, GameComman
 	PositionArray possiblePositions;
 	Unit stats;
 
+	//Cache these:
+	const auto ourTeam = state.GetTeam();
+	const auto& board = state.GetBoardState();
+
 	//Get all units for this team:
-	auto units = state.GetBoardState().GetAllUnits(state.GetTeam());
+	const auto units = board.GetAllUnits(ourTeam);
 
 	//Consider each unit for movement
 	for (const auto& unitPos : units)
 	{
 		//Get the unit's stats
-		stats = state.GetBoardState().GetUnitOnSquare(unitPos.first, unitPos.second);
+		stats = board.GetUnitOnSquare(unitPos);
 
 		//Can't move twice per turn!
 		if (!stats.movedThisTurn)
 		{
 			//Get all of the possible positions to move to
 			// (just by returning all cells within distance).
-			possiblePositions = state.GetBoardState().GetSquaresInRange(unitPos.first, unitPos.second, stats.movement);
+			possiblePositions = board.GetSquaresInRange(unitPos, stats.movement);
 
 			//For each possible position...
 			for (const auto& targetPos : possiblePositions)
@@ -38,8 +42,8 @@ void UnitMovementCommand::GetPossibleCommands(const GameState& state, GameComman
 				//Can only move to a position which is not occupied and has no adjacent enemies
 				// otherwise we'd be moving into melee combat.
 				//Note that we don't care whether or not the unit is in combat already.
-				if (!state.GetBoardState().IsOccupied(targetPos.first, targetPos.second)
-					&& !state.GetBoardState().HasAdjacentEnemy(targetPos.first, targetPos.second, state.GetTeam()))
+				if (!board.IsOccupied(targetPos)
+					&& !board.HasAdjacentEnemy(targetPos, ourTeam))
 				{
 					outCommands.push_back(std::make_shared<UnitMovementCommand>(unitPos, targetPos));
 				}
@@ -64,15 +68,15 @@ void UnitMovementCommand::Apply(const GameState& state,
 	//Check that this action is still valid:
 	C40KL_ASSERT_PRECONDITION(
 		state.GetPhase() == Phase::MOVEMENT
-		&& board.IsOccupied(m_Source.first, m_Source.second)
-		&& !board.IsOccupied(m_Target.first, m_Target.second)
-		&& !board.HasAdjacentEnemy(m_Target.first, m_Target.second, 
-			board.GetTeamOnSquare(m_Source.first, m_Source.second)),
+		&& board.IsOccupied(m_Source)
+		&& !board.IsOccupied(m_Target)
+		&& !board.HasAdjacentEnemy(m_Target, 
+			board.GetTeamOnSquare(m_Source)),
 		"Movement action preconditions must be satisfied.");
 
 	//Get info:
-	auto team = board.GetTeamOnSquare(m_Source.first, m_Source.second);
-	auto unitStats = board.GetUnitOnSquare(m_Source.first, m_Source.second);
+	auto team = board.GetTeamOnSquare(m_Source);
+	auto unitStats = board.GetUnitOnSquare(m_Source);
 
 	//Flag that this unit has moved
 	unitStats.movedThisTurn = true;
@@ -81,11 +85,11 @@ void UnitMovementCommand::Apply(const GameState& state,
 	// has just fallen out of combat (which happens
 	// if there is an adjacent enemy from the position
 	// it has moved from).
-	unitStats.movedOutOfCombatThisTurn = board.HasAdjacentEnemy(m_Source.first, m_Source.second, team);
+	unitStats.movedOutOfCombatThisTurn = board.HasAdjacentEnemy(m_Source, team);
 
 	//Move the unit:
-	board.ClearSquare(m_Source.first, m_Source.second);
-	board.SetUnitOnSquare(m_Target.first, m_Target.second, unitStats, team);
+	board.ClearSquare(m_Source);
+	board.SetUnitOnSquare(m_Target, unitStats, team);
 
 	//Deterministic action:
 	outStates.emplace_back(team, Phase::MOVEMENT, board);
