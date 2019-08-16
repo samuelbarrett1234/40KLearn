@@ -4,6 +4,11 @@
 #include <cassert>
 #include <exception>
 #include <vector>
+#include <string>
+
+
+//We are using the same compiler version for all projects
+#pragma warning(disable:4251)
 
 
 #ifdef CORE_40KLEARN_EXPORTS
@@ -45,34 +50,9 @@ enum class Phase
 typedef std::pair<int, int> Position;
 
 
-class C40KL_API PositionArray : public std::vector<Position>
-{ };
-
-
-class C40KL_API IntArray : public std::vector<int>
-{ };
-
-
-class C40KL_API String : public std::string
-{
-public:
-	String() = default;
-	String(const String& s) :
-		std::string((std::string)s)
-	{ }
-	String(const std::string& s) :
-		std::string(s)
-	{ }
-
-	bool operator == (const String& other) const
-	{
-		return (std::string)(*this) == (std::string)(other);
-	}
-	bool operator != (const String& other) const
-	{
-		return !(*this == other);
-	}
-};
+typedef std::vector<Position> PositionArray;
+typedef std::vector<int> IntArray;
+typedef std::string String;
 
 
 } // namespace c40kl

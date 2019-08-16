@@ -126,7 +126,7 @@ void UnitFightCommand::Apply(const GameState& state,
 		// between teams in the fight phase), however
 		// the internal team (whose turn it is) doesn't
 		// change.
-		outStates.emplace_back(state.GetInternalTeam(), 1-state.GetActiveTeam(), Phase::FIGHT, newBoard);
+		outStates.emplace_back(state.GetInternalTeam(), 1-state.GetActingTeam(), Phase::FIGHT, newBoard);
 		outDistribution.push_back(targetProbs[i]);
 	}
 

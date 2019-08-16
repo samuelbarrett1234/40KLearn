@@ -51,9 +51,6 @@
     <ClInclude Include="GameMechanics.h">
       <Filter>Header Files\Game</Filter>
     </ClInclude>
-    <ClInclude Include="IGameCommand.h">
-      <Filter>Header Files\Game</Filter>
-    </ClInclude>
     <ClInclude Include="UnitMovementCommand.h">
       <Filter>Header Files\Game\Commands</Filter>
     </ClInclude>
@@ -76,6 +73,9 @@
       <Filter>Header Files\Game\Commands</Filter>
     </ClInclude>
     <ClInclude Include="EndPhaseCommand.h">
+      <Filter>Header Files\Game\Commands</Filter>
+    </ClInclude>
+    <ClInclude Include="IGameCommand.h">
       <Filter>Header Files\Game\Commands</Filter>
     </ClInclude>
   </ItemGroup>

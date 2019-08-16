@@ -34,7 +34,7 @@ GameState::GameState(int internalTeam, int actingTeam, Phase phase, const BoardS
 }
 
 
-int GameState::GetActiveTeam() const
+int GameState::GetActingTeam() const
 {
 	C40KL_ASSERT_PRECONDITION(!IsFinished(),
 		"Can't produce current team value for finished game.");

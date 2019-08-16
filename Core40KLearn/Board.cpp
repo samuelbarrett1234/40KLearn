@@ -157,9 +157,9 @@ PositionArray BoardState::GetSquaresInRange(Position centre, float radius) const
 
 	//Loop through loose rectangle, push_back
 	// elements which are within the circle.
-	for (size_t i = left; i <= right; i++)
+	for (int i = left; i <= right; i++)
 	{
-		for (size_t j = top; j <= bottom; j++)
+		for (int j = top; j <= bottom; j++)
 		{
 			const int dx = centre.first - i, dy = centre.second - j;
 			if (dx*dx + dy * dy <= intRadSq)
@@ -177,7 +177,7 @@ float BoardState::GetDistance(Position a, Position b) const
 {
 	const auto dx = a.first - b.first;
 	const auto dy = a.second - b.second;
-	return m_Scale * std::sqrt(dx*dx+dy*dy);
+	return m_Scale * std::sqrtf(static_cast<float>(dx*dx+dy*dy));
 }
 
 

@@ -94,7 +94,7 @@ void OverwatchCommand::Apply(const GameState& state,
 			newBoard.ClearSquare(m_Target);
 		}
 
-		outStates.emplace_back(state.GetInternalTeam(), state.GetActiveTeam(), Phase::CHARGE, newBoard);
+		outStates.emplace_back(state.GetInternalTeam(), state.GetActingTeam(), Phase::CHARGE, newBoard);
 		outDistribution.push_back(targetProbs[i]);
 	}
 

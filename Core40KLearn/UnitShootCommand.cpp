@@ -17,14 +17,14 @@ void UnitShootCommand::GetPossibleCommands(const GameState& state, GameCommandAr
 	Unit stats;
 
 	//Cache these:
-	const auto ourTeam = state.GetActiveTeam();
+	const auto ourTeam = state.GetActingTeam();
 	const auto& board = state.GetBoardState();
 
 	//Get all units for this team:
-	const auto units = board.GetAllUnits(state.GetActiveTeam());
+	const auto units = board.GetAllUnits(state.GetActingTeam());
 	
 	//Get all units for the other team, to check distances
-	const auto targets = board.GetAllUnits(1 - state.GetActiveTeam());
+	const auto targets = board.GetAllUnits(1 - state.GetActingTeam());
 
 	//Consider each (allied) unit for shooting
 	for (const auto& unitPos : units)

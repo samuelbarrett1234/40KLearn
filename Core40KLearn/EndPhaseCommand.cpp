@@ -36,7 +36,7 @@ void EndPhaseCommand::GetPossibleCommands(const GameState& state, GameCommandArr
 	//Follow all morale checks up with the end phase command
 	// then add the composite command to the output
 	arr.push_back(std::make_shared<EndPhaseCommand>());
-	outCommands.push_back(std::make_shared<CompositeCommand>(arr.begin(), arr.end()));
+	outCommands.push_back(std::make_shared<CompositeCommand>(arr.begin(), arr.end(), CommandType::END_PHASE));
 }
 
 

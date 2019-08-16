@@ -38,7 +38,7 @@ void UnitChargeCommand::GetPossibleCommands(const GameState& state, GameCommandA
 	Unit stats;
 
 	//Cache these:
-	const auto ourTeam = state.GetActiveTeam();
+	const auto ourTeam = state.GetActingTeam();
 	const auto& board = state.GetBoardState();
 
 	//Get all units for this team:
@@ -106,7 +106,7 @@ void UnitChargeCommand::GetPossibleCommands(const GameState& state, GameCommandA
 					arr.push_back(std::make_shared<UnitChargeCommand>(unitPos, targetPos));
 
 					//Push composite command to options:
-					outCommands.push_back(std::make_shared<CompositeCommand>(arr.begin(), arr.end()));
+					outCommands.push_back(std::make_shared<CompositeCommand>(arr.begin(), arr.end(), CommandType::UNIT_ORDER));
 				}
 			}
 		}

@@ -17,7 +17,7 @@ void UnitMovementCommand::GetPossibleCommands(const GameState& state, GameComman
 	Unit stats;
 
 	//Cache these:
-	const auto ourTeam = state.GetActiveTeam();
+	const auto ourTeam = state.GetActingTeam();
 	const auto& board = state.GetBoardState();
 
 	//Get all units for this team:
@@ -34,7 +34,7 @@ void UnitMovementCommand::GetPossibleCommands(const GameState& state, GameComman
 		{
 			//Get all of the possible positions to move to
 			// (just by returning all cells within distance).
-			possiblePositions = board.GetSquaresInRange(unitPos, stats.movement);
+			possiblePositions = board.GetSquaresInRange(unitPos, (float)stats.movement);
 
 			//For each possible position...
 			for (const auto& targetPos : possiblePositions)

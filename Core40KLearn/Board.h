@@ -112,8 +112,8 @@ public:
 	}
 
 private:
-	const int m_Size;
-	const float m_Scale;
+	int m_Size;
+	float m_Scale;
 
 	//All of these arrays should be the same size
 	UnitArray m_Units;

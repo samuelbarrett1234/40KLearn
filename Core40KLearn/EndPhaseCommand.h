@@ -30,6 +30,10 @@ public:
 		std::vector<float>& outDistribution) const override;
 	virtual bool Equals(const IGameCommand& cmd) const override;
 	virtual String ToString() const override;
+	virtual inline CommandType GetType() const override
+	{
+		return CommandType::END_PHASE;
+	}
 };
 
 

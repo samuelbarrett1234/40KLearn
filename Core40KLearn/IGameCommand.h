@@ -11,8 +11,9 @@ namespace c40kl
 
 enum class CommandType
 {
-	UNIT_ORDER,
-	END_PHASE
+	UNIT_ORDER, //Move/shoot/charge/fight
+	END_PHASE, //Choosing to end turn
+	HELPER //A 'helper' command, typically not chosen by a player, but rather forms part of a larger command
 };
 
 
@@ -107,10 +108,7 @@ public:
 
 
 typedef std::shared_ptr<IGameCommand> GameCommandPtr;
-
-
-class C40KL_API GameCommandArray : public std::vector<GameCommandPtr>
-{ };
+typedef std::vector<GameCommandPtr> GameCommandArray;
 
 
 } // namespace c40kl

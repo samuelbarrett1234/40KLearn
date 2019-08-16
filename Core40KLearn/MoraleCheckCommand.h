@@ -21,6 +21,11 @@ public:
 	virtual bool Equals(const IGameCommand& cmd) const override;
 	virtual String ToString() const override;
 
+	virtual CommandType GetType() const override
+	{
+		return CommandType::HELPER;
+	}
+
 private:
 	Position m_UnitPos;
 };
