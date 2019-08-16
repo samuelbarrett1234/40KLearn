@@ -69,7 +69,34 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)Output/</OutDir>
+    <IntDir>$(SolutionDir)Temp/$(ProjectName)_$(Configuration)$(Platform)/</IntDir>
+    <TargetName>$(ProjectName)_$(Configuration)$(Platform)</TargetName>
+    <IncludePath>$(SolutionDir)Core40KLearn/;$(BOOST_DIR);$(IncludePath)</IncludePath>
+    <LibraryPath>$(BOOST_DIR)stage/lib/;$(OutDir);$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)Output/</OutDir>
+    <IntDir>$(SolutionDir)Temp/$(ProjectName)_$(Configuration)$(Platform)/</IntDir>
+    <TargetName>$(ProjectName)_$(Configuration)$(Platform)</TargetName>
+    <IncludePath>$(SolutionDir)Core40KLearn/;$(BOOST_DIR);$(IncludePath)</IncludePath>
+    <LibraryPath>$(BOOST_DIR)stage/lib/;$(OutDir);$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)Output/</OutDir>
+    <IntDir>$(SolutionDir)Temp/$(ProjectName)_$(Configuration)$(Platform)/</IntDir>
+    <TargetName>$(ProjectName)_$(Configuration)$(Platform)</TargetName>
+    <IncludePath>$(SolutionDir)Core40KLearn/;$(BOOST_DIR);$(IncludePath)</IncludePath>
+    <LibraryPath>$(BOOST_DIR)stage/lib/;$(OutDir);$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)Output/</OutDir>
+    <IntDir>$(SolutionDir)Temp/$(ProjectName)_$(Configuration)$(Platform)/</IntDir>
+    <TargetName>$(ProjectName)_$(Configuration)$(Platform)</TargetName>
+    <IncludePath>$(SolutionDir)Core40KLearn/;$(BOOST_DIR);$(IncludePath)</IncludePath>
+    <LibraryPath>$(BOOST_DIR)stage/lib/;$(OutDir);$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -77,6 +104,9 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>Core40KLearn_$(Configuration)$(Platform).lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -85,6 +115,9 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>Core40KLearn_$(Configuration)$(Platform).lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -98,6 +131,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>Core40KLearn_$(Configuration)$(Platform).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -112,6 +146,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>Core40KLearn_$(Configuration)$(Platform).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
