@@ -7,3 +7,10 @@
 #include <boost/test/data/monomorphic.hpp>
 
 
+#include <Board.h>
+#include <GameState.h>
+
+
+using namespace c40kl;
+
+

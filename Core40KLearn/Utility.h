@@ -21,14 +21,14 @@
 #ifdef _DEBUG
 
 #define C40KL_ASSERT_INVARIANT(expr, msg) assert(expr && msg)
-#define C40KL_ASSERT_POSTCONDITION(expr, msg) if(!(expr)) throw new std::runtime_error(msg)
-#define C40KL_ASSERT_PRECONDITION(expr, msg) if(!(expr)) throw new std::runtime_error(msg)
+#define C40KL_ASSERT_POSTCONDITION(expr, msg) if(!(expr)) throw std::runtime_error(msg)
+#define C40KL_ASSERT_PRECONDITION(expr, msg) if(!(expr)) throw std::runtime_error(msg)
 
 #else
 
 #define C40KL_ASSERT_INVARIANT(expr, msg) (void)
-#define C40KL_ASSERT_POSTCONDITION(expr, msg) if(!(expr)) throw new std::runtime_error(msg)
-#define C40KL_ASSERT_PRECONDITION(expr, msg) if(!(expr)) throw new std::runtime_error(msg)
+#define C40KL_ASSERT_POSTCONDITION(expr, msg) if(!(expr)) throw std::runtime_error(msg)
+#define C40KL_ASSERT_PRECONDITION(expr, msg) if(!(expr)) throw std::runtime_error(msg)
 
 
 #endif
