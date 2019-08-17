@@ -162,6 +162,7 @@ PositionArray BoardState::GetSquaresInRange(Position centre, float radius) const
 	{
 		for (int j = top; j <= bottom; j++)
 		{
+			C40KL_ASSERT_INVARIANT(i >= 0 && j >= 0 && i < m_Size && j < m_Size, "Coordinates should be valid.");
 			const int dx = centre.first - i, dy = centre.second - j;
 			if (dx*dx + dy * dy <= intRadSq)
 			{

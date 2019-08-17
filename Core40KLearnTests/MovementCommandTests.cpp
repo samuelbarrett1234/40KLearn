@@ -1,7 +1,25 @@
 #include "Test.h"
+#include <set>
 
 
 BOOST_AUTO_TEST_SUITE(MovementCommandTests, *boost::unit_test::depends_on("GameStateTests"));
+
+
+/// <summary>
+/// Remove all commands in the array which are not directly
+/// ordering 'unit'.
+/// </summary>
+void stripCommandsNotFor(Position unit, GameCommandArray& cmds)
+{
+	cmds.erase(std::remove_if(cmds.begin(), cmds.end(), [unit](GameCommandPtr pCmd)
+	{
+		if (auto pOrderCmd = dynamic_cast<const IUnitOrderCommand*>(pCmd.get()))
+		{
+			return (pOrderCmd->GetSourcePosition() != unit);
+		}
+		else return true;
+	}), cmds.end());
+}
 
 
 //Test that it registers the right commands
@@ -12,28 +30,34 @@ BOOST_AUTO_TEST_CASE(PossibleCommandsTest)
 	u.movement = 1;
 	BoardState b(25, 1.0f);
 	b.SetUnitOnSquare(Position(1, 1), u, 0);
-	b.SetUnitOnSquare(Position(2, 3), u, 1);
+	b.SetUnitOnSquare(Position(3, 4), u, 1);
 	GameState s(0, 0, Phase::MOVEMENT, b);
 
 	//Check that the right movement commands are available:
 	auto cmds = s.GetCommands();
 
 	//Extract the movement command positions:
-	PositionArray sources, targets;
+	PositionArray targets;
 
 	for (auto pCmd : cmds)
 	{
 		if (auto pMvmtCmd = dynamic_cast<const IUnitOrderCommand*>(pCmd.get()))
 		{
-			sources.push_back(pMvmtCmd->GetSourcePosition());
+			BOOST_TEST((pMvmtCmd->GetSourcePosition() == Position(1, 1)));
 			targets.push_back(pMvmtCmd->GetTargetPosition());
 		}
 	}
 
-	BOOST_REQUIRE(sources.size() == 1);
-	BOOST_TEST((sources[0] == Position(1, 1)));
-
 	auto correct = b.GetSquaresInRange(Position(1, 1), 1);
+
+	//The aim is for correct=target
+	//However GetSquaresInRange also returns the
+	// centre square, whereas target will not (and
+	// should not), but to check equality we will
+	// add (1,1) to target, which should make the
+	// arrays equal:
+	targets.push_back(Position(1, 1));
+
 	std::sort(targets.begin(), targets.end());
 	std::sort(correct.begin(), correct.end());
 
@@ -57,12 +81,13 @@ BOOST_AUTO_TEST_CASE(MovementCommandIssueTest)
 	GameState s(0, 0, Phase::MOVEMENT, b);
 
 	auto cmds = s.GetCommands();
-	BOOST_REQUIRE(cmds.size() == 2);
+
+	stripCommandsNotFor(Position(0, 1), cmds);
+
+	BOOST_REQUIRE(cmds.size() == 1);
 
 	//Get movement command:
-	GameCommandPtr pMvmtCmd = cmds[0];
-	if (pMvmtCmd->GetType() != CommandType::UNIT_ORDER)
-		pMvmtCmd = cmds[1];
+	GameCommandPtr pMvmtCmd = cmds.front();
 
 	//Test application of movement:
 	std::vector<GameState> resultStates;
@@ -103,12 +128,13 @@ BOOST_AUTO_TEST_CASE(MovingOutOfMeleeTest)
 	GameState s(0, 0, Phase::MOVEMENT, b);
 
 	auto cmds = s.GetCommands();
-	BOOST_REQUIRE(cmds.size() == 2);
+
+	stripCommandsNotFor(Position(0, 1), cmds);
+
+	BOOST_REQUIRE(cmds.size() == 1);
 
 	//Get movement command:
-	GameCommandPtr pMvmtCmd = cmds[0];
-	if (pMvmtCmd->GetType() != CommandType::UNIT_ORDER)
-		pMvmtCmd = cmds[1];
+	GameCommandPtr pMvmtCmd = cmds.front();
 
 	//Test application of movement:
 	std::vector<GameState> resultStates;
@@ -131,6 +157,24 @@ BOOST_AUTO_TEST_CASE(MovingOutOfMeleeTest)
 BOOST_AUTO_TEST_CASE(NotMovingIntoCombatOrEnemiesTest)
 {
 
+	//Set up unit, board, and game state:
+	Unit u;
+	u.movement = 1;
+	BoardState b(25, 1.0f);
+
+	//Set up so that there is only one possible square to move to:
+	b.SetUnitOnSquare(Position(0, 0), u, 0);
+	b.SetUnitOnSquare(Position(0, 2), u, 1);
+	b.SetUnitOnSquare(Position(1, 1), u, 1);
+	b.SetUnitOnSquare(Position(2, 0), u, 1);
+
+	GameState s(0, 0, Phase::MOVEMENT, b);
+
+	auto cmds = s.GetCommands();
+
+	stripCommandsNotFor(Position(0, 0), cmds);
+
+	BOOST_TEST(cmds.empty());
 }
 
 
