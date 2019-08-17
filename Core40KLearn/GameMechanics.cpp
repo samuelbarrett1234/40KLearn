@@ -113,7 +113,7 @@ float GetPenetrationProbability(int hitSkill, int wpnS, int wpnAp, int targetT, 
 		pWound = 2.0f / 6.0f;
 	//Else it will be left as 3 / 6
 
-	float pArmourSv = (7.0f - targetSv + wpnAp) / 6.0f;
+	float pArmourSv = std::max((7.0f - targetSv + wpnAp) / 6.0f, 0.0f);
 	float pInvSv = (7.0f - targetInv) / 6.0f;
 	//We only get to make one saving throw:
 	float pOverallSv = std::max(pArmourSv, pInvSv);
@@ -179,7 +179,7 @@ void ResolveRawShootingDamage(const Unit& shooter, const Unit& target, float dis
 		// all resulted in reducing the target wounds
 		// to zero. Hence check if the target is a change
 		// from the last one.
-		if (results.back() != newTarget)
+		if (results.empty() || results.back() != newTarget)
 		{
 			results.push_back(newTarget);
 			probabilities.push_back(probOfResult);

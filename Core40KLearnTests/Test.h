@@ -14,3 +14,10 @@
 using namespace c40kl;
 
 
+/// <summary>
+/// Remove all commands in the array which are not directly
+/// ordering 'unit'.
+/// </summary>
+void stripCommandsNotFor(Position unit, GameCommandArray& cmds);
+
+

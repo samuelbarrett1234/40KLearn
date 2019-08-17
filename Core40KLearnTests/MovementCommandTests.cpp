@@ -5,23 +5,6 @@
 BOOST_AUTO_TEST_SUITE(MovementCommandTests, *boost::unit_test::depends_on("GameStateTests"));
 
 
-/// <summary>
-/// Remove all commands in the array which are not directly
-/// ordering 'unit'.
-/// </summary>
-void stripCommandsNotFor(Position unit, GameCommandArray& cmds)
-{
-	cmds.erase(std::remove_if(cmds.begin(), cmds.end(), [unit](GameCommandPtr pCmd)
-	{
-		if (auto pOrderCmd = dynamic_cast<const IUnitOrderCommand*>(pCmd.get()))
-		{
-			return (pOrderCmd->GetSourcePosition() != unit);
-		}
-		else return true;
-	}), cmds.end());
-}
-
-
 //Test that it registers the right commands
 BOOST_AUTO_TEST_CASE(PossibleCommandsTest)
 {

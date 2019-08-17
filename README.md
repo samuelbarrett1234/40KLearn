@@ -21,3 +21,13 @@ In the future it may be easy to work in global abilities (e.g. an orbital
 bombardment) and psykers with exactly one psychic power, but this is currently
 not the case.
 
+## TODO
+
+- BUG: fix issue of nCr not working when there are ~40 shots (split into smaller groups and recombine distributions? Or make nCr more efficient? Warning: nCr with n=50,r=25 is way bigger than what can be stored in a 4-byte integer. Maybe if n is too large we approximate the binomial distribution?).
+- Finish unit testing the core game rules.
+- Write MCTS implementation in C++.
+- Write Python wrapper (using Boost.Python) for the game rules and MCTS searching.
+- Incorporate the core C++ module into the existing Python code.
+- Update the modifications to the game rules (units can be commanded in any order, alternating fights in fight phase).
+- Implement value and policy networks using TensorFlow.
+
