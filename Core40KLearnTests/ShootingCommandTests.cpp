@@ -5,7 +5,7 @@ BOOST_AUTO_TEST_SUITE(ShootingCommandTests, *boost::unit_test::depends_on("GameS
 
 
 //A space marine with an AP-1 bolter.
-Unit unitWithGun{
+static Unit unitWithGun{
 	"", 5, 6, 3, 3,
 	4, 1, 5, 1, 8,
 	3, 7, 24, 4, -1,
