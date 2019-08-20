@@ -16,7 +16,7 @@ namespace c40kl
 /// type.
 /// </summary>
 class CompositeCommand :
-	public IGameCommand
+	public virtual IGameCommand
 {
 public:
 	template<typename Iter_t>

@@ -22,7 +22,7 @@ public:
 	static void GetPossibleCommands(const GameState& state, GameCommandArray& outCommands);
 
 public:
-	UnitChargeCommand(Position source, Position target);
+	UnitChargeCommand(Position source, Position target, GameCommandArray&& overwatchCommands);
 
 	//Interface functions
 
@@ -40,7 +40,17 @@ public:
 	}
 
 private:
+	//This helper function applies the charge portion
+	// of the command to the given state (probOfCurrentState
+	// is just multiplied with the probabilities of the
+	// output distribution before being written to
+	// outDistribution).
+	void ApplyChargeCmd(const GameState& state, float probOfCurrentState, std::vector<GameState>& outStates,
+		std::vector<float>& outDistribution) const;
+
+private:
 	Position m_Source, m_Target;
+	GameCommandArray m_Overwatch;
 };
 
 

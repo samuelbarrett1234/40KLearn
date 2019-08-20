@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(OutOfChargeRangeTest)
 	BoardState b(25, 1.0f);
 
 	b.SetUnitOnSquare(Position(0, 0), unitWithGun, 0);
-	b.SetUnitOnSquare(Position(0, 13), unitWithGun, 1);
+	b.SetUnitOnSquare(Position(0, 14), unitWithGun, 1);
 
 	GameState gs(0, 0, Phase::CHARGE, b);
 
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(ChargeRangeLimitTest)
 	BoardState b(25, 1.0f);
 
 	b.SetUnitOnSquare(Position(0, 0), unitWithGun, 0);
-	b.SetUnitOnSquare(Position(0, 12), unitWithGun, 1);
+	b.SetUnitOnSquare(Position(0, 13), unitWithGun, 1);
 
 	GameState gs(0, 0, Phase::CHARGE, b);
 
@@ -147,11 +147,9 @@ BOOST_AUTO_TEST_CASE(OverwatchDistributionTest)
 	u.w = 2;
 	u.total_w = 2;
 	u.rg_shots = 1;
-	//4+ armour save is easier to work with
-	u.sv = 4;
 
 	b.SetUnitOnSquare(Position(0, 0), u, 0);
-	b.SetUnitOnSquare(Position(0, 12), u, 1);
+	b.SetUnitOnSquare(Position(0, 13), u, 1);
 
 	GameState gs(0, 0, Phase::CHARGE, b);
 
@@ -211,7 +209,7 @@ BOOST_AUTO_TEST_CASE(OverwatchRangeTest)
 	u.rg_range = 6; //Short range
 
 	b.SetUnitOnSquare(Position(0, 0), u, 0);
-	b.SetUnitOnSquare(Position(0, 12), u, 1);
+	b.SetUnitOnSquare(Position(0, 13), u, 1);
 
 	GameState gs(0, 0, Phase::CHARGE, b);
 
@@ -247,8 +245,6 @@ BOOST_AUTO_TEST_CASE(ChargingUnitDestroyedTest)
 	u.count = 1;
 	u.total_w = 1;
 	u.rg_shots = 1;
-	//4+ armour save is easier to work with
-	u.sv = 4;
 
 	//Units are very close so we are guaranteed to make it into combat:
 	b.SetUnitOnSquare(Position(0, 0), u, 0);
@@ -347,13 +343,141 @@ BOOST_AUTO_TEST_CASE(MultipleOverwatchTest)
 {
 	//Test that, if we are charging to a position with multiple surrounding enemy
 	// units, that we receive overwatch fire from all of them.
+
+	BoardState b(25, 1.0f);
+
+	//Simplify the unit so that there is only one shot
+	//Also 4 wounds so we can't get destroyed by 3 rounds of overwatch
+	Unit u = unitWithGun;
+	u.rg_is_rapid = false;
+	u.count = 1;
+	u.w = 4;
+	u.total_w = 4;
+	u.rg_shots = 1;
+
+	b.SetUnitOnSquare(Position(1, 0), u, 0);
+	b.SetUnitOnSquare(Position(0, 13), u, 1);
+	b.SetUnitOnSquare(Position(1, 13), u, 1);
+	b.SetUnitOnSquare(Position(2, 13), u, 1);
+	//Set up so only possible charge position is (1,11).
+
+	GameState gs(0, 0, Phase::CHARGE, b);
+
+	auto cmds = gs.GetCommands();
+
+	stripCommandsNotFor(Position(1, 0), cmds);
+
+	BOOST_REQUIRE(cmds.size() == 1);
+
+	std::vector<GameState> results;
+	std::vector<float> probs;
+	cmds.front()->Apply(gs, results, probs);
+
+	//There should be three people firing on overwatch
+	//Even if all cause a wound, the charging unit would not die,
+	// so there should be 8 possibilities:
+	// (charge pass / charge fail) x (0, 1, 2, or 3 wounds caused)
+
+	BOOST_TEST(results.size() == 8);
+	BOOST_TEST(probs.size() == results.size());
 }
 
 
 BOOST_AUTO_TEST_CASE(CloseChargeTest)
 {
-	//Test that if we are charging from 2 units of distance or less,
+	//Test that if we are charging from 2 units of distance,
 	// then we always make it into combat.
+
+	BoardState b(25, 1.0f);
+
+	Unit unitWithoutGun = unitWithGun;
+	unitWithoutGun.rg_range = 0; //Set range to 0 to disable gun
+
+	b.SetUnitOnSquare(Position(0, 0), unitWithoutGun, 0);
+	b.SetUnitOnSquare(Position(0, 3), unitWithoutGun, 1);
+
+	GameState gs(0, 0, Phase::CHARGE, b);
+
+	auto cmds = gs.GetCommands();
+
+	stripCommandsNotFor(Position(0, 0), cmds);
+
+	//Since we are at an edge, and quite close to the
+	// enemy, there should be 5 possible charging locations
+	BOOST_TEST(cmds.size() == 5);
+
+	//Determine the closest charging position, which is (0,2)
+	GameCommandPtr pClosest;
+	for (auto pCmd : cmds)
+	{
+		if (auto pOrder = dynamic_cast<IUnitOrderCommand*>(pCmd.get()))
+		{
+			if (pOrder->GetTargetPosition() == Position(0, 2))
+			{
+				pClosest = pCmd;
+			}
+		}
+	}
+
+	BOOST_REQUIRE(pClosest.get() != nullptr);
+
+	std::vector<GameState> results;
+	std::vector<float> probs;
+	pClosest->Apply(gs, results, probs);
+
+	//Now, for the key part of this test: this charge range is
+	// so short that it should be certain that we pass:
+	BOOST_TEST(results.size() == 1);
+	BOOST_TEST(probs.size() == results.size());
+}
+
+
+BOOST_AUTO_TEST_CASE(EvenCloserChargeTest)
+{
+	//Test that if we are charging from 1 unit of distance,
+	// then we always make it into combat.
+
+	BoardState b(25, 1.0f);
+
+	Unit unitWithoutGun = unitWithGun;
+	unitWithoutGun.rg_range = 0; //Set range to 0 to disable gun
+
+	b.SetUnitOnSquare(Position(0, 0), unitWithoutGun, 0);
+	b.SetUnitOnSquare(Position(0, 2), unitWithoutGun, 1);
+
+	GameState gs(0, 0, Phase::CHARGE, b);
+
+	auto cmds = gs.GetCommands();
+
+	stripCommandsNotFor(Position(0, 0), cmds);
+
+	//Since we are at an edge, and quite close to the
+	// enemy, there should be 5 possible charging locations
+	BOOST_TEST(cmds.size() == 5);
+
+	//Determine the closest charging position, which is (0,1)
+	GameCommandPtr pClosest;
+	for (auto pCmd : cmds)
+	{
+		if (auto pOrder = dynamic_cast<IUnitOrderCommand*>(pCmd.get()))
+		{
+			if (pOrder->GetTargetPosition() == Position(0, 1))
+			{
+				pClosest = pCmd;
+			}
+		}
+	}
+
+	BOOST_REQUIRE(pClosest.get() != nullptr);
+
+	std::vector<GameState> results;
+	std::vector<float> probs;
+	pClosest->Apply(gs, results, probs);
+
+	//Now, for the key part of this test: this charge range is
+	// so short that it should be certain that we pass:
+	BOOST_TEST(results.size() == 1);
+	BOOST_TEST(probs.size() == results.size());
 }
 
 
@@ -363,6 +487,40 @@ BOOST_AUTO_TEST_CASE(MultipleOverwatchAndDestroyTest)
 	// units, and any successful shot would destroy the charging
 	// unit, then make sure that the remainder of the overwatch
 	// shots don't fail because they are firing at a blank cell.
+
+	BoardState b(25, 1.0f);
+
+	//Simplify the unit so that there is only one shot
+	Unit u = unitWithGun;
+	u.rg_is_rapid = false;
+	u.count = 1;
+	u.total_w = 1;
+	u.rg_shots = 1;
+
+	b.SetUnitOnSquare(Position(1, 0), u, 0);
+	b.SetUnitOnSquare(Position(0, 13), u, 1);
+	b.SetUnitOnSquare(Position(1, 13), u, 1);
+	b.SetUnitOnSquare(Position(2, 13), u, 1);
+	//Set up so only possible charge position is (1,11).
+
+	GameState gs(0, 0, Phase::CHARGE, b);
+
+	auto cmds = gs.GetCommands();
+
+	stripCommandsNotFor(Position(1, 0), cmds);
+
+	BOOST_REQUIRE(cmds.size() == 1);
+
+	std::vector<GameState> results;
+	std::vector<float> probs;
+	cmds.front()->Apply(gs, results, probs);
+
+	//Possibilities: either we pass or fail the charge and take no damage,
+	// or we take at least one damage and die. Thus, three possibilities,
+	// even though 3 shots.
+
+	BOOST_TEST(results.size() == 3);
+	BOOST_TEST(probs.size() == results.size());
 }
 
 
@@ -371,14 +529,38 @@ BOOST_AUTO_TEST_CASE(RapidFireInOverwatchTest)
 	//Test that rapid fire still works in overwatch (and distance
 	// is measured from the charging position, not the charging
 	// target.)
-}
 
+	BoardState b(25, 1.0f);
 
-BOOST_AUTO_TEST_CASE(ScaledBoardTests)
-{
-	//Test that charge ranges are still correct on scaled boards
-	// (e.g. with scale 2.0 you should be able to charge a maximum
-	// of 6 cells).
+	Unit u = unitWithGun;
+	u.rg_range = 10000; //Definitely within rapid fire range
+	u.rg_is_rapid = true;
+	u.w = 3; //3 wounds so can't be killed by overwatch
+	u.total_w = 3;
+	u.count = 1;
+	u.rg_shots = 1;
+
+	b.SetUnitOnSquare(Position(0, 0), u, 0);
+	b.SetUnitOnSquare(Position(0, 13), u, 1);
+
+	GameState gs(0, 0, Phase::CHARGE, b);
+
+	auto cmds = gs.GetCommands();
+
+	stripCommandsNotFor(Position(0, 0), cmds);
+
+	//Should be one charge possibility:
+	BOOST_REQUIRE(cmds.size() == 1);
+
+	//Apply the command:
+	std::vector<GameState> results;
+	std::vector<float> probs;
+	cmds.front()->Apply(gs, results, probs);
+
+	//6 possibilities because:
+	// (charge pass / charge fail) x (0, 1 or 2 wounds taken from overwatch)
+	BOOST_TEST(results.size() == 6);
+	BOOST_TEST(probs.size() == results.size());
 }
 
 

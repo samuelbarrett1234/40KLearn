@@ -102,11 +102,8 @@ void UnitChargeCommand::GetPossibleCommands(const GameState& state, GameCommandA
 						}
 					}
 
-					//After overwatch, add the charge command:
-					arr.push_back(std::make_shared<UnitChargeCommand>(unitPos, targetPos));
-
-					//Push composite command to options:
-					outCommands.push_back(std::make_shared<CompositeCommand>(arr.begin(), arr.end(), CommandType::UNIT_ORDER));
+					//Push charge command with overwatch commands as argument:
+					outCommands.push_back(std::make_shared<UnitChargeCommand>(unitPos, targetPos, std::move(arr)));
 				}
 			}
 		}
@@ -114,14 +111,69 @@ void UnitChargeCommand::GetPossibleCommands(const GameState& state, GameCommandA
 }
 
 
-UnitChargeCommand::UnitChargeCommand(Position source, Position target) :
+UnitChargeCommand::UnitChargeCommand(Position source, Position target, GameCommandArray&& overwatchCommands) :
 	m_Source(source),
-	m_Target(target)
+	m_Target(target),
+	m_Overwatch(overwatchCommands)
 {
 }
 
 
-void UnitChargeCommand::Apply(const GameState& state,
+void UnitChargeCommand::Apply(const GameState& startState,
+	std::vector<GameState>& outStates, std::vector<float>& outDistribution) const
+{
+	std::vector<GameState> workingStates;
+	std::vector<float> workingDist;
+	workingStates.push_back(startState);
+	workingDist.push_back(1.0f);
+
+	//First apply overwatch, then apply the charge command
+	// to the distribution of results of the overwatch:
+
+	for (auto pCmd : m_Overwatch)
+	{
+		auto inStates = std::move(workingStates);
+		auto inDist = std::move(workingDist);
+
+		C40KL_ASSERT_INVARIANT(workingStates.empty() && workingDist.empty(),
+			"Move semantics should clear workingStates and workingDist");
+
+		ApplyCommand(pCmd, inStates, inDist, workingStates, workingDist);
+	}
+
+	C40KL_ASSERT_INVARIANT(workingStates.size() == workingDist.size(), "Distribution needs to match.");
+
+	const size_t n = workingStates.size();
+
+	//Apply the charge logic to each resulting overwatch state
+	for (size_t i = 0; i < n; i++)
+	{
+		ApplyChargeCmd(workingStates[i], workingDist[i],
+			outStates, outDistribution);
+	}
+}
+
+
+bool UnitChargeCommand::Equals(const IGameCommand& cmd) const
+{
+	if (auto pCmd = dynamic_cast<const UnitChargeCommand*>(&cmd))
+	{
+		return (m_Source == pCmd->m_Source && m_Target == pCmd->m_Target);
+	}
+	else return false;
+}
+
+
+String UnitChargeCommand::ToString() const
+{
+	std::stringstream c;
+	c << "charge order from (" << m_Source.first << ',' << m_Source.second
+		<< ") to (" << m_Target.first << ',' << m_Target.second << ')';
+	return c.str();
+}
+
+
+void UnitChargeCommand::ApplyChargeCmd(const GameState& state, float probOfCurrentState,
 	std::vector<GameState>& outStates, std::vector<float>& outDistribution) const
 {
 	auto board = state.GetBoardState();
@@ -133,7 +185,7 @@ void UnitChargeCommand::Apply(const GameState& state,
 	{
 		//Keep state as-is:
 		outStates.push_back(state);
-		outDistribution.push_back(1.0f);
+		outDistribution.push_back(1.0f*probOfCurrentState);
 		return;
 	}
 
@@ -152,7 +204,7 @@ void UnitChargeCommand::Apply(const GameState& state,
 		&& !board.GetUnitOnSquare(m_Source).attemptedChargeThisTurn
 		//Must have not moved out of combat this turn
 		&& !board.GetUnitOnSquare(m_Source).movedOutOfCombatThisTurn
-		,"Charge action preconditions must be satisfied.");
+		, "Charge action preconditions must be satisfied.");
 
 	//Get info:
 	auto team = board.GetTeamOnSquare(m_Source);
@@ -186,7 +238,7 @@ void UnitChargeCommand::Apply(const GameState& state,
 	if (pFail > 0)
 	{
 		outStates.push_back(state);
-		outDistribution.push_back(pFail);
+		outDistribution.push_back(pFail*probOfCurrentState);
 	}
 
 	//Compute & output the pass state:
@@ -199,26 +251,7 @@ void UnitChargeCommand::Apply(const GameState& state,
 
 	//Deterministic action:
 	outStates.emplace_back(team, team, Phase::CHARGE, board);
-	outDistribution.push_back(pPass);
-}
-
-
-bool UnitChargeCommand::Equals(const IGameCommand& cmd) const
-{
-	if (auto pCmd = dynamic_cast<const UnitChargeCommand*>(&cmd))
-	{
-		return (m_Source == pCmd->m_Source && m_Target == pCmd->m_Target);
-	}
-	else return false;
-}
-
-
-String UnitChargeCommand::ToString() const
-{
-	std::stringstream c;
-	c << "charge order from (" << m_Source.first << ',' << m_Source.second
-		<< ") to (" << m_Target.first << ',' << m_Target.second << ')';
-	return c.str();
+	outDistribution.push_back(pPass*probOfCurrentState);
 }
 
 

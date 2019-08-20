@@ -54,6 +54,11 @@ void OverwatchCommand::Apply(const GameState& state,
 	auto unitStats = board.GetUnitOnSquare(m_Source);
 	const auto targetStats = board.GetUnitOnSquare(m_Target);
 
+	//Check that the unit is initially in a valid state:
+	C40KL_ASSERT_PRECONDITION(
+		targetStats.count == (targetStats.total_w + targetStats.w - 1) / targetStats.w,
+		"Total wounds / wounds per model / model count must be in sync.");
+
 	//This shooting attack will result in a probability
 	// distribution of different targets.
 	std::vector<Unit> targetResults;
@@ -81,13 +86,13 @@ void OverwatchCommand::Apply(const GameState& state,
 
 		//Check that target health has been handled correctly:
 		C40KL_ASSERT_INVARIANT(
-			targetStats.count == (targetStats.total_w + targetStats.w - 1) / targetStats.w,
+			newStats.count == (newStats.total_w + newStats.w - 1) / newStats.w,
 			"Shooting damage calculation has forgot to sync count and total_w.");
 
 		//If target alive, update info, else clear the cell:
-		if (targetStats.count > 0)
+		if (newStats.count > 0)
 		{
-			newBoard.SetUnitOnSquare(m_Target, targetStats, 1 - team);
+			newBoard.SetUnitOnSquare(m_Target, newStats, 1 - team);
 		}
 		else
 		{
@@ -97,7 +102,6 @@ void OverwatchCommand::Apply(const GameState& state,
 		outStates.emplace_back(state.GetInternalTeam(), state.GetActingTeam(), Phase::CHARGE, newBoard);
 		outDistribution.push_back(targetProbs[i]);
 	}
-
 }
 
 

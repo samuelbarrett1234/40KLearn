@@ -91,6 +91,11 @@ void UnitShootCommand::Apply(const GameState& state,
 	auto unitStats = board.GetUnitOnSquare(m_Source);
 	const auto targetStats = board.GetUnitOnSquare(m_Target);
 
+	//Check that the unit is initially in a valid state:
+	C40KL_ASSERT_PRECONDITION(
+		targetStats.count == (targetStats.total_w + targetStats.w - 1) / targetStats.w,
+		"Total wounds / wounds per model / model count must be in sync.");
+
 	//This shooting attack will result in a probability
 	// distribution of different targets.
 	std::vector<Unit> targetResults;
