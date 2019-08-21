@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(ChargeRangeLimitTest)
 }
 
 
-BOOST_AUTO_TEST_CASE(OverwatchDistributionTest)
+BOOST_AUTO_TEST_CASE(OverwatchDistributionTest, *boost::unit_test::tolerance(1.0e-4f))
 {
 	//Test that overwatch provides a correct damage distribution (6+ to hit)
 
@@ -186,11 +186,13 @@ BOOST_AUTO_TEST_CASE(OverwatchDistributionTest)
 	};
 	std::sort(correctProbs, correctProbs + 4);
 
-	//Test correct probabilities:
-	BOOST_TEST(std::abs(correctProbs[0] - probsSorted[0]) < 1.0e-6f);
-	BOOST_TEST(std::abs(correctProbs[1] - probsSorted[1]) < 1.0e-6f);
-	BOOST_TEST(std::abs(correctProbs[2] - probsSorted[2]) < 1.0e-6f);
-	BOOST_TEST(std::abs(correctProbs[3] - probsSorted[3]) < 1.0e-6f);
+	//Test correct probabilities
+	//Note that Boost automatically checks that
+	// the floats are "approximately equal".
+	BOOST_TEST(correctProbs[0] == probsSorted[0]);
+	BOOST_TEST(correctProbs[1] == probsSorted[1]);
+	BOOST_TEST(correctProbs[2] == probsSorted[2]);
+	BOOST_TEST(correctProbs[3] == probsSorted[3]);
 
 	//We may assume that charging is done correctly (tested earlier) and
 	// we may assume that overwatch results are resolved correctly (shares

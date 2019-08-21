@@ -37,30 +37,73 @@ void ApplyCommand(GameCommandPtr pCmd,
 
 	const size_t n = inStates.size();
 
-	std::vector<float> probs;
 	for (size_t i = 0; i < n; i++)
 	{
 		//Can only apply commands to states which are not finished
 		if (!inStates[i].IsFinished())
 		{
+			std::vector<GameState> results;
+			std::vector<float> probs;
+
 			//Apply to get states and probabilities of result of command
-			pCmd->Apply(inStates[i], outStates, probs);
+			pCmd->Apply(inStates[i], results, probs);
 
 			//The law of total probability
 			const float p = inProbabilities[i];
 			for (size_t j = 0; j < probs.size(); j++)
+			{
 				probs[j] *= p;
+			}
 
-			outProbabilities.insert(outProbabilities.end(), probs.begin(), probs.end());
+			//Add each state in turn:
+			for (size_t j = 0; j < results.size(); j++)
+			{
+				bool bAddedYet = false;
 
-			//Clear for next round of the loop
-			probs.clear();
+				//Ensure that we never add duplicate states:
+				for (size_t k = 0; k < outStates.size(); k++)
+				{
+					//Don't add duplicate states!
+					if (outStates[k] == results[j])
+					{
+						outProbabilities[k] += probs[j];
+						bAddedYet = true;
+						break;
+					}
+				}
+
+				//Else we have a new state!
+				if (!bAddedYet)
+				{
+					outStates.push_back(results[j]);
+					outProbabilities.push_back(probs[j]);
+				}
+			}
 		}
 		else
 		{
 			//If state is finished then ignore the command
-			outStates.push_back(inStates[i]);
-			outProbabilities.push_back(inProbabilities[i]);
+
+			bool bAddedYet = false;
+
+			//Ensure that we never add duplicate states:
+			for (size_t j = 0; j < outStates.size(); j++)
+			{
+				//Don't add duplicate states!
+				if (outStates[j] == inStates[i])
+				{
+					outProbabilities[j] += inProbabilities[i];
+					bAddedYet = true;
+					break;
+				}
+			}
+
+			//Else we have a new state!
+			if (!bAddedYet)
+			{
+				outStates.push_back(inStates[i]);
+				outProbabilities.push_back(inProbabilities[i]);
+			}
 		}
 	}
 }
