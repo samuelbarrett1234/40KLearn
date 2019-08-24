@@ -1,26 +1,17 @@
 #include "GameMechanics.h"
 #include <algorithm>
+#include <boost/math/distributions.hpp>
 
 
 namespace c40kl
 {
 
 
-int nCr(int n, int r)
+float BinomialProbability(int n, int r, float p)
 {
-	C40KL_ASSERT_PRECONDITION(n > 0 && r <= n && r >= 0,
-		"Need valid nCr arguments.");
+	const auto dist = boost::math::binomial_distribution<float>(n, p);
 
-	int nFact = 1, rFact = 1, nmrFact = 1;
-	for (int i = 2; i <= n; i++)
-	{
-		nFact *= i;
-		if (i <= r)
-			rFact *= i;
-		if (i <= n - r)
-			nmrFact *= i;
-	}
-	return nFact / (rFact * nmrFact);
+	return boost::math::pdf(dist, r);
 }
 
 
@@ -180,6 +171,10 @@ void ResolveRawShootingDamage(const Unit& shooter, const Unit& target, float dis
 	//Get damage
 	int dmg = shooter.rg_dmg;
 
+	//Don't forget that damage doesn't spill over
+	// per model, hence clip the damage as so:
+	dmg = std::min(dmg, target.w);
+
 	int numShots = shooter.rg_shots * shooter.count;
 
 	//Rapid fire:
@@ -213,8 +208,7 @@ void ResolveRawShootingDamage(const Unit& shooter, const Unit& target, float dis
 
 		//Compute the probability of achieving this number
 		// of penetrating shots
-		const float probOfResult = nCr(numShots, i)
-			* std::pow(pPen, i) * std::pow(1.0f - pPen, numShots - i);
+		const float probOfResult = BinomialProbability(numShots, i, pPen);
 
 		//Note: we need to make sure that the targets
 		// we return are distinct. The only way this
@@ -242,6 +236,10 @@ void ResolveRawMeleeDamage(const Unit& fighter, const Unit& target,
 
 	//Get damage
 	int dmg = fighter.ml_dmg;
+
+	//Don't forget that damage doesn't spill over
+	// per model, hence clip the damage as so:
+	dmg = std::min(dmg, target.w);
 
 	int numHits = fighter.a * fighter.count;
 
@@ -272,8 +270,7 @@ void ResolveRawMeleeDamage(const Unit& fighter, const Unit& target,
 
 		//Compute the probability of achieving this number
 		// of penetrating shots
-		const float probOfResult = nCr(numHits, i)
-			* std::pow(pPen, i) * std::pow(1.0f - pPen, numHits - i);
+		const float probOfResult = BinomialProbability(numHits, i, pPen);
 
 		//Note: we need to make sure that the targets
 		// we return are distinct. The only way this
@@ -281,7 +278,7 @@ void ResolveRawMeleeDamage(const Unit& fighter, const Unit& target,
 		// all resulted in reducing the target wounds
 		// to zero. Hence check if the target is a change
 		// from the last one.
-		if (results.back() != newTarget)
+		if (results.empty() || results.back() != newTarget)
 		{
 			results.push_back(newTarget);
 			probabilities.push_back(probOfResult);

@@ -118,8 +118,31 @@ void EndPhaseCommand::Apply(const GameState& state,
 		C40KL_ASSERT_INVARIANT(false, "Invalid game phase! Corrupted memory?");
 	}
 
+	//Edge case: if we are about to change to the fight
+	// phase, and if the internal team has no units that
+	// can possibly fight BUT if the opposing team DOES,
+	// which will happen if one of them has no melee weapon,
+	// then we need to set the active team to be the opposing
+	// team.
+
+	int activeTeam = nextTeam;
+
+	if (nextPhase == Phase::FIGHT)
+	{
+		//Get fightable units for each team
+		PositionArray curTeamFightableUnits, oppTeamFightableUnits;
+		GetFightableUnits(board, nextTeam, curTeamFightableUnits);
+		GetFightableUnits(board, 1 - nextTeam, oppTeamFightableUnits);
+
+		//Handle the edge case:
+		if (curTeamFightableUnits.empty() && !oppTeamFightableUnits.empty())
+		{
+			activeTeam = 1 - nextTeam;
+		}
+	}
+
 	//Create next game state
-	outStates.emplace_back(nextTeam, nextTeam, nextPhase, board);
+	outStates.emplace_back(nextTeam, activeTeam, nextPhase, board);
 	outDistribution.push_back(1.0f);
 }
 

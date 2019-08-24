@@ -345,7 +345,117 @@ BOOST_AUTO_TEST_CASE(MultiDamageWeaponTest)
 {
 	//Test that a weapon with more than 1 damage
 	// correctly allocates that damage to the target
-	BOOST_TEST(false);
+
+	Unit unit = unitWithGun;
+	unit.w = 3;
+	unit.count = 1;
+	unit.total_w = unit.w * unit.count;
+	unit.rg_dmg = 2;
+	unit.rg_shots = 2;
+	unit.rg_is_rapid = false;
+
+	BoardState b(25, 1.0f);
+
+	b.SetUnitOnSquare(Position(0, 0), unit, 0);
+	b.SetUnitOnSquare(Position(0, 3), unit, 1);
+
+	GameState gs(0, 0, Phase::SHOOTING, b);
+
+	auto cmds = gs.GetCommands();
+
+	stripCommandsNotFor(Position(0, 0), cmds);
+
+	BOOST_REQUIRE(cmds.size() == 1);
+	BOOST_REQUIRE((cmds.front()->GetType() == CommandType::UNIT_ORDER));
+
+	//Apply it:
+	std::vector<GameState> results;
+	std::vector<float> probs;
+	cmds.front()->Apply(gs, results, probs);
+
+	//Since the unit has three wounds and two damage,
+	// the only three possible results are (i) dead and
+	// (ii) lost two wounds (down to one) and (iii) no
+	// damage taken:
+
+	BOOST_TEST(results.size() == 3);
+
+	//numEncounters[i] is the number of states
+	// which resulted in i wounds left for the
+	// target.
+	std::vector<int> numEncounters;
+	numEncounters.resize(4, 0);
+
+	for (const auto& state : results)
+	{
+		if (state.GetBoardState().IsOccupied(Position(0, 3)))
+		{
+			const int wleft = state.GetBoardState().GetUnitOnSquare(Position(0, 3)).total_w;
+			BOOST_REQUIRE(wleft <= 3);
+			numEncounters[wleft]++;
+		}
+		else
+		{
+			numEncounters[0]++;
+		}
+	}
+
+	//Now test results:
+	BOOST_TEST(numEncounters[0] == 1);
+	BOOST_TEST(numEncounters[1] == 1);
+	BOOST_TEST(numEncounters[2] == 0);
+	BOOST_TEST(numEncounters[3] == 1);
+}
+
+
+BOOST_AUTO_TEST_CASE(ExcessDamageNoSpillTest)
+{
+	//Test that a single shot from a high damage weapon
+	// does not let its damage "spill over" to wound
+	// more models than there are shots.
+	
+	Unit unit = unitWithGun;
+	unit.count = 1;
+	unit.total_w = unit.w * unit.count;
+	unit.rg_dmg = 6;
+	unit.rg_shots = 1;
+	unit.rg_is_rapid = false;
+
+	BoardState b(25, 1.0f);
+
+	b.SetUnitOnSquare(Position(0, 0), unit, 0);
+	b.SetUnitOnSquare(Position(0, 3), unitWithGun, 1);
+
+	GameState gs(0, 0, Phase::SHOOTING, b);
+
+	auto cmds = gs.GetCommands();
+
+	stripCommandsNotFor(Position(0, 0), cmds);
+
+	BOOST_REQUIRE(cmds.size() == 1);
+	BOOST_REQUIRE((cmds.front()->GetType() == CommandType::UNIT_ORDER));
+
+	//Apply it:
+	std::vector<GameState> results;
+	std::vector<float> probs;
+	cmds.front()->Apply(gs, results, probs);
+
+	//Since the shooting weapon is one shot only,
+	// there should only be two results (hit/miss),
+	// killing up to one model:
+
+	BOOST_REQUIRE(results.size() == 2);
+	BOOST_TEST(probs.size() == results.size());
+
+	for (const auto& state : results)
+	{
+		BOOST_REQUIRE(state.GetBoardState().IsOccupied(Position(0, 3)));
+
+		int modelsLeft = state.GetBoardState().GetUnitOnSquare(Position(0, 3)).count;
+
+		//Can lose either 0 or 1 models, but no more
+		BOOST_TEST((modelsLeft == unitWithGun.count || modelsLeft == unitWithGun.count - 1));
+	}
 }
 
 

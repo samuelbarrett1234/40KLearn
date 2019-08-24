@@ -1,4 +1,5 @@
 #include "Test.h"
+#include <boost/math/distributions.hpp>
 
 
 BOOST_AUTO_TEST_SUITE(FightCommandTests, *boost::unit_test::depends_on("GameStateTests"));
@@ -41,12 +42,12 @@ BOOST_AUTO_TEST_CASE(FightDistributionTest, *boost::unit_test::tolerance(1.0e-4f
 	auto cmds = gs.GetCommands();
 
 	BOOST_REQUIRE(cmds.size() == 1);
-	BOOST_REQUIRE(cmds.front()->GetType() == CommandType::UNIT_ORDER);
+	BOOST_REQUIRE((cmds.front()->GetType() == CommandType::UNIT_ORDER));
 	BOOST_REQUIRE(dynamic_cast<IUnitOrderCommand*>(cmds.front().get()) != nullptr);
-	BOOST_REQUIRE(dynamic_cast<IUnitOrderCommand*>(
-		cmds.front().get())->GetSourcePosition() == Position(0, 0));
-	BOOST_REQUIRE(dynamic_cast<IUnitOrderCommand*>(
-		cmds.front().get())->GetTargetPosition() == Position(0, 1));
+	BOOST_REQUIRE((dynamic_cast<IUnitOrderCommand*>(
+		cmds.front().get())->GetSourcePosition() == Position(0, 0)));
+	BOOST_REQUIRE((dynamic_cast<IUnitOrderCommand*>(
+		cmds.front().get())->GetTargetPosition() == Position(0, 1)));
 
 	std::vector<GameState> results;
 	std::vector<float> probs;
@@ -59,13 +60,17 @@ BOOST_AUTO_TEST_CASE(FightDistributionTest, *boost::unit_test::tolerance(1.0e-4f
 	//Each attach has a 2/3 * 1/2 * 1/3 = 1/9 chance of
 	// wounding (3+ to hit, 4+ to wound, 3+ armour save)
 	//Hence it is (8/9)^4 chance of no wounds total,
-	// 4*(1/9)*(8/9^3 chance of exactly one wound total,
+	// 4*(1/9)*(8/9)^3 chance of exactly one wound total,
 	// and 1-the sum of the above for exactly two wounds total:
 
-	const float PNoWounds = std::powf(8.0f / 9.0f, 4.0f);
-	const float POneWound = 4.0f / 9.0f*std::powf(8.0f / 9.0f, 3.0f);
-	const float PTwoWounds = 1.0f - PNoWounds - POneWound;
-	const float woundProbs[3] = { PNoWounds, POneWound, PTwoWounds };
+	const auto woundDist = boost::math::binomial_distribution<float>(4.0f, 1.0f / 9.0f);
+	const float woundProbs[3] =
+	{
+		boost::math::pdf(woundDist, 0.0f),
+		boost::math::pdf(woundDist, 1.0f),
+		boost::math::pdf(woundDist, 2.0f) + boost::math::pdf(woundDist, 3.0f) + boost::math::pdf(woundDist, 4.0f),
+	};
+	// woundProbs[i] is the probability of causing i wounds
 
 	//Test that each resulting number of wounds was (i) encountered
 	// in the array, and (ii) had the correct probability.
@@ -88,7 +93,7 @@ BOOST_AUTO_TEST_CASE(FightDistributionTest, *boost::unit_test::tolerance(1.0e-4f
 		}
 		// else 0 wounds left, hence destroyed
 
-		BOOST_TEST(j <= 2);
+		BOOST_TEST(j <= 2U);
 
 		//Perform sanity check:
 		BOOST_TEST(results[i].GetBoardState().IsOccupied(Position(0, 0)));
@@ -98,8 +103,14 @@ BOOST_AUTO_TEST_CASE(FightDistributionTest, *boost::unit_test::tolerance(1.0e-4f
 		bEncountered[j] = true;
 
 		//Boost automatically checks for tolerance (see test decorator)
-		BOOST_TEST(probs[i] == woundProbs[j]);
+		//Need 2-j because j is number of wounds REMAINING, but woundProbs[j]
+		// is the probability of CAUSING j wounds.
+		BOOST_TEST(probs[i] == woundProbs[2 - j]);
 	}
+
+	BOOST_TEST(bEncountered[0]);
+	BOOST_TEST(bEncountered[1]);
+	BOOST_TEST(bEncountered[2]);
 }
 
 
@@ -130,8 +141,8 @@ BOOST_AUTO_TEST_CASE(FightOrderTwoTwoTest)
 	auto cmds = gs.GetCommands();
 	
 	BOOST_REQUIRE(cmds.size() == 2);
-	BOOST_TEST(cmds.front()->GetType() == CommandType::UNIT_ORDER);
-	BOOST_TEST(cmds.back()->GetType() == CommandType::UNIT_ORDER);
+	BOOST_TEST((cmds.front()->GetType() == CommandType::UNIT_ORDER));
+	BOOST_TEST((cmds.back()->GetType() == CommandType::UNIT_ORDER));
 
 	stripCommandsNotFor(Position(0, 0), cmds);
 
@@ -154,8 +165,8 @@ BOOST_AUTO_TEST_CASE(FightOrderTwoTwoTest)
 	cmds = gs.GetCommands();
 
 	BOOST_REQUIRE(cmds.size() == 2);
-	BOOST_TEST(cmds.front()->GetType() == CommandType::UNIT_ORDER);
-	BOOST_TEST(cmds.back()->GetType() == CommandType::UNIT_ORDER);
+	BOOST_TEST((cmds.front()->GetType() == CommandType::UNIT_ORDER));
+	BOOST_TEST((cmds.back()->GetType() == CommandType::UNIT_ORDER));
 
 	stripCommandsNotFor(Position(0, 1), cmds);
 
@@ -177,7 +188,7 @@ BOOST_AUTO_TEST_CASE(FightOrderTwoTwoTest)
 	cmds = gs.GetCommands();
 
 	BOOST_REQUIRE(cmds.size() == 1);
-	BOOST_TEST(cmds.front()->GetType() == CommandType::UNIT_ORDER);
+	BOOST_TEST((cmds.front()->GetType() == CommandType::UNIT_ORDER));
 
 	//Apply the fight command
 	results.clear();
@@ -195,7 +206,7 @@ BOOST_AUTO_TEST_CASE(FightOrderTwoTwoTest)
 	cmds = gs.GetCommands();
 
 	BOOST_REQUIRE(cmds.size() == 1);
-	BOOST_TEST(cmds.front()->GetType() == CommandType::UNIT_ORDER);
+	BOOST_TEST((cmds.front()->GetType() == CommandType::UNIT_ORDER));
 
 	//Apply the fight command
 	results.clear();
@@ -213,7 +224,7 @@ BOOST_AUTO_TEST_CASE(FightOrderTwoTwoTest)
 	cmds = gs.GetCommands();
 
 	BOOST_REQUIRE(cmds.size() == 1);
-	BOOST_TEST(cmds.front()->GetType() == CommandType::END_PHASE);
+	BOOST_TEST((cmds.front()->GetType() == CommandType::END_PHASE));
 
 	//Done!
 }
@@ -245,8 +256,8 @@ BOOST_AUTO_TEST_CASE(FightOrderTwoOneTest)
 	auto cmds = gs.GetCommands();
 
 	BOOST_REQUIRE(cmds.size() == 2);
-	BOOST_TEST(cmds.front()->GetType() == CommandType::UNIT_ORDER);
-	BOOST_TEST(cmds.back()->GetType() == CommandType::UNIT_ORDER);
+	BOOST_TEST((cmds.front()->GetType() == CommandType::UNIT_ORDER));
+	BOOST_TEST((cmds.back()->GetType() == CommandType::UNIT_ORDER));
 
 	stripCommandsNotFor(Position(0, 0), cmds);
 
@@ -269,8 +280,8 @@ BOOST_AUTO_TEST_CASE(FightOrderTwoOneTest)
 	cmds = gs.GetCommands();
 
 	BOOST_REQUIRE(cmds.size() == 2); //Should still be two commands because there are two adjacent enemies
-	BOOST_TEST(cmds.front()->GetType() == CommandType::UNIT_ORDER);
-	BOOST_TEST(cmds.back()->GetType() == CommandType::UNIT_ORDER);
+	BOOST_TEST((cmds.front()->GetType() == CommandType::UNIT_ORDER));
+	BOOST_TEST((cmds.back()->GetType() == CommandType::UNIT_ORDER));
 
 	//Apply a fight command
 	results.clear();
@@ -288,7 +299,7 @@ BOOST_AUTO_TEST_CASE(FightOrderTwoOneTest)
 	cmds = gs.GetCommands();
 
 	BOOST_REQUIRE(cmds.size() == 1);
-	BOOST_TEST(cmds.front()->GetType() == CommandType::UNIT_ORDER);
+	BOOST_TEST((cmds.front()->GetType() == CommandType::UNIT_ORDER));
 
 	//Apply the fight command
 	results.clear();
@@ -306,7 +317,7 @@ BOOST_AUTO_TEST_CASE(FightOrderTwoOneTest)
 	cmds = gs.GetCommands();
 
 	BOOST_REQUIRE(cmds.size() == 1);
-	BOOST_TEST(cmds.front()->GetType() == CommandType::END_PHASE);
+	BOOST_TEST((cmds.front()->GetType() == CommandType::END_PHASE));
 
 	//Done!
 }
@@ -338,8 +349,8 @@ BOOST_AUTO_TEST_CASE(FightOrderOneTwoTest)
 	auto cmds = gs.GetCommands();
 
 	BOOST_REQUIRE(cmds.size() == 2); //Should still have two commands because there are two adjacent enemies
-	BOOST_TEST(cmds.front()->GetType() == CommandType::UNIT_ORDER);
-	BOOST_TEST(cmds.back()->GetType() == CommandType::UNIT_ORDER);
+	BOOST_TEST((cmds.front()->GetType() == CommandType::UNIT_ORDER));
+	BOOST_TEST((cmds.back()->GetType() == CommandType::UNIT_ORDER));
 
 	std::vector<GameState> results;
 	std::vector<float> probs;
@@ -358,8 +369,8 @@ BOOST_AUTO_TEST_CASE(FightOrderOneTwoTest)
 	cmds = gs.GetCommands();
 
 	BOOST_REQUIRE(cmds.size() == 2);
-	BOOST_TEST(cmds.front()->GetType() == CommandType::UNIT_ORDER);
-	BOOST_TEST(cmds.back()->GetType() == CommandType::UNIT_ORDER);
+	BOOST_TEST((cmds.front()->GetType() == CommandType::UNIT_ORDER));
+	BOOST_TEST((cmds.back()->GetType() == CommandType::UNIT_ORDER));
 
 	//Apply a fight command
 	results.clear();
@@ -377,7 +388,7 @@ BOOST_AUTO_TEST_CASE(FightOrderOneTwoTest)
 	cmds = gs.GetCommands();
 
 	BOOST_REQUIRE(cmds.size() == 1);
-	BOOST_TEST(cmds.front()->GetType() == CommandType::UNIT_ORDER);
+	BOOST_TEST((cmds.front()->GetType() == CommandType::UNIT_ORDER));
 
 	//Apply the fight command
 	results.clear();
@@ -395,7 +406,7 @@ BOOST_AUTO_TEST_CASE(FightOrderOneTwoTest)
 	cmds = gs.GetCommands();
 
 	BOOST_REQUIRE(cmds.size() == 1);
-	BOOST_TEST(cmds.front()->GetType() == CommandType::END_PHASE);
+	BOOST_TEST((cmds.front()->GetType() == CommandType::END_PHASE));
 
 	//Done!
 }
@@ -488,6 +499,7 @@ BOOST_AUTO_TEST_CASE(MultiDamageWeaponTest)
 	Unit unit = unitSingleAttack;
 	unit.w = unit.total_w = 3;
 	unit.ml_dmg = 2;
+	unit.a = 2; //Two attacks to include possibility of destroying enemy unit
 
 	BoardState b(25, 1.0f);
 
@@ -499,7 +511,7 @@ BOOST_AUTO_TEST_CASE(MultiDamageWeaponTest)
 	auto cmds = gs.GetCommands();
 
 	BOOST_REQUIRE(cmds.size() == 1);
-	BOOST_REQUIRE(cmds.front()->GetType() == CommandType::UNIT_ORDER);
+	BOOST_REQUIRE((cmds.front()->GetType() == CommandType::UNIT_ORDER));
 
 	//Apply it:
 	std::vector<GameState> results;
@@ -534,10 +546,58 @@ BOOST_AUTO_TEST_CASE(MultiDamageWeaponTest)
 	}
 
 	//Now test results:
-	BOOST_TEST(results[0] == 1);
-	BOOST_TEST(results[1] == 1);
-	BOOST_TEST(results[2] == 0);
-	BOOST_TEST(results[3] == 1);
+	BOOST_TEST(numEncounters[0] == 1);
+	BOOST_TEST(numEncounters[1] == 1);
+	BOOST_TEST(numEncounters[2] == 0);
+	BOOST_TEST(numEncounters[3] == 1);
+}
+
+
+BOOST_AUTO_TEST_CASE(ExcessDamageNoSpillTest)
+{
+	//Test that a single attack from a high damage weapon
+	// does not let its damage "spill over" to wound
+	// more models than there are shots.
+
+	Unit unit = unitSingleAttack;
+	unit.count = 1;
+	unit.total_w = unit.w * unit.count;
+	unit.ml_dmg = 6;
+	unit.a = 1;
+
+	BoardState b(25, 1.0f);
+
+	b.SetUnitOnSquare(Position(0, 0), unit, 0);
+	b.SetUnitOnSquare(Position(0, 1), squadMultipleAttacks, 1);
+
+	GameState gs(0, 0, Phase::FIGHT, b);
+
+	auto cmds = gs.GetCommands();
+
+	BOOST_REQUIRE(cmds.size() == 1);
+	BOOST_REQUIRE((cmds.front()->GetType() == CommandType::UNIT_ORDER));
+
+	//Apply it:
+	std::vector<GameState> results;
+	std::vector<float> probs;
+	cmds.front()->Apply(gs, results, probs);
+
+	//Since the shooting weapon is one shot only,
+	// there should only be two results (hit/miss),
+	// killing up to one model:
+
+	BOOST_REQUIRE(results.size() == 2);
+	BOOST_TEST(probs.size() == results.size());
+
+	for (const auto& state : results)
+	{
+		BOOST_REQUIRE(state.GetBoardState().IsOccupied(Position(0, 1)));
+
+		int modelsLeft = state.GetBoardState().GetUnitOnSquare(Position(0, 1)).count;
+
+		//Can lose either 0 or 1 models, but no more
+		BOOST_TEST((modelsLeft == squadMultipleAttacks.count || modelsLeft == squadMultipleAttacks.count - 1));
+	}
 }
 
 
@@ -551,12 +611,15 @@ BOOST_AUTO_TEST_CASE(TestNoFriendlyFighting)
 	b.SetUnitOnSquare(Position(0, 0), squadMultipleAttacks, 0);
 	b.SetUnitOnSquare(Position(0, 1), squadMultipleAttacks, 0);
 
+	//Need an enemy unit to ensure unfinished game
+	b.SetUnitOnSquare(Position(3, 3), squadMultipleAttacks, 1);
+
 	GameState gs(0, 0, Phase::FIGHT, b);
 
 	auto cmds = gs.GetCommands();
 
 	BOOST_REQUIRE(cmds.size() == 1);
-	BOOST_TEST(cmds.front()->GetType() == CommandType::END_PHASE);
+	BOOST_TEST((cmds.front()->GetType() == CommandType::END_PHASE));
 }
 
 
@@ -580,7 +643,7 @@ BOOST_AUTO_TEST_CASE(TestNoMeleeWeaponCantFight)
 	auto cmds = gs.GetCommands();
 
 	BOOST_REQUIRE(cmds.size() == 1);
-	BOOST_TEST(cmds.front()->GetType() == CommandType::UNIT_ORDER);
+	BOOST_TEST((cmds.front()->GetType() == CommandType::UNIT_ORDER));
 
 	std::vector<GameState> results;
 	std::vector<float> probs;
@@ -598,7 +661,7 @@ BOOST_AUTO_TEST_CASE(TestNoMeleeWeaponCantFight)
 	// get a fight command; it should end turn straight away.
 
 	BOOST_REQUIRE(cmds.size() == 1);
-	BOOST_TEST(cmds.front()->GetType() == CommandType::END_PHASE);
+	BOOST_TEST((cmds.front()->GetType() == CommandType::END_PHASE));
 }
 
 
@@ -615,6 +678,7 @@ BOOST_AUTO_TEST_CASE(NoAbleUnitsTest)
 	Unit noMeleeWeaponUnit = squadMultipleAttacks;
 	noMeleeWeaponUnit.a = 0;
 	noMeleeWeaponUnit.w = noMeleeWeaponUnit.total_w = 5; //High wounds so can't die
+	noMeleeWeaponUnit.count = 1;
 
 	BoardState b(25, 1.0f);
 
@@ -626,7 +690,7 @@ BOOST_AUTO_TEST_CASE(NoAbleUnitsTest)
 	auto cmds = gs.GetCommands();
 
 	BOOST_REQUIRE(cmds.size() == 1);
-	BOOST_REQUIRE(cmds.front()->GetType() == CommandType::END_PHASE);
+	BOOST_REQUIRE((cmds.front()->GetType() == CommandType::END_PHASE));
 
 	//End phase
 
@@ -648,7 +712,7 @@ BOOST_AUTO_TEST_CASE(NoAbleUnitsTest)
 
 	cmds = gs.GetCommands();
 	BOOST_REQUIRE(cmds.size() == 1);
-	BOOST_REQUIRE(cmds.front()->GetType() == CommandType::UNIT_ORDER);
+	BOOST_REQUIRE((cmds.front()->GetType() == CommandType::UNIT_ORDER));
 	results.clear();
 	probs.clear();
 	cmds.front()->Apply(gs, results, probs);
@@ -661,7 +725,7 @@ BOOST_AUTO_TEST_CASE(NoAbleUnitsTest)
 	BOOST_TEST(gs.GetActingTeam() == 0);
 	cmds = gs.GetCommands();
 	BOOST_REQUIRE(cmds.size() == 1);
-	BOOST_TEST(cmds.front()->GetType() == CommandType::END_PHASE);
+	BOOST_TEST((cmds.front()->GetType() == CommandType::END_PHASE));
 }
 
 
