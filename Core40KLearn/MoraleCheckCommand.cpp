@@ -74,7 +74,7 @@ void MoraleCheckCommand::Apply(const GameState& state,
 			//Avoid creating new states where necessary
 			//This may happen when several dice rolls
 			// result in the total destruction of a unit.
-			if (outStates.back().GetBoardState() == newboard)
+			if (!outStates.empty() && outStates.back().GetBoardState() == newboard)
 			{
 				//Add to the probability
 				outDistribution.back() += 1.0f / 6.0f;

@@ -159,6 +159,7 @@
   <ItemGroup>
     <ClCompile Include="BoardTests.cpp" />
     <ClCompile Include="ChargeCommandTests.cpp" />
+    <ClCompile Include="EndPhaseTests.cpp" />
     <ClCompile Include="FightCommandTests.cpp" />
     <ClCompile Include="GameStateTests.cpp" />
     <ClCompile Include="Main.cpp" />

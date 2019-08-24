@@ -6,7 +6,7 @@ BOOST_AUTO_TEST_SUITE(FightCommandTests, *boost::unit_test::depends_on("GameStat
 
 
 //A single space marine
-static Unit unitSingleAttack{
+static const Unit unitSingleAttack{
 	"", 1, 6, 3, 3,
 	4, 1, 1, 1, 8,
 	3, 7, 24, 4, 0,
@@ -16,7 +16,7 @@ static Unit unitSingleAttack{
 	false, false
 };
 //2 space marines with 2 attacks each
-static Unit squadMultipleAttacks{
+static const Unit squadMultipleAttacks{
 "", 2, 6, 3, 3,
 4, 1, 2, 2, 8,
 3, 7, 24, 4, 0,
