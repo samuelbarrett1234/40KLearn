@@ -156,7 +156,8 @@
     <ClInclude Include="GameMechanics.h" />
     <ClInclude Include="GameState.h" />
     <ClInclude Include="IGameCommand.h" />
-    <ClInclude Include="MCTS.h" />
+    <ClInclude Include="IPolicyStrategy.h" />
+    <ClInclude Include="MCTSNode.h" />
     <ClInclude Include="MoraleCheckCommand.h" />
     <ClInclude Include="OverwatchCommand.h" />
     <ClInclude Include="Unit.h" />
@@ -172,7 +173,7 @@
     <ClCompile Include="EndPhaseCommand.cpp" />
     <ClCompile Include="GameMechanics.cpp" />
     <ClCompile Include="GameState.cpp" />
-    <ClCompile Include="MCTS.cpp" />
+    <ClCompile Include="MCTSNode.cpp" />
     <ClCompile Include="MoraleCheckCommand.cpp" />
     <ClCompile Include="OverwatchCommand.cpp" />
     <ClCompile Include="UnitChargeCommand.cpp" />
