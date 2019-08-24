@@ -566,6 +566,53 @@ BOOST_AUTO_TEST_CASE(RapidFireInOverwatchTest)
 }
 
 
+BOOST_AUTO_TEST_CASE(ModelsLostTest)
+{
+	//Test that damage caused is added to the modelsLostThisPhase variable.
+
+	const int numModels = unitWithGun.count;
+
+	BoardState b(25, 1.0f);
+
+	b.SetUnitOnSquare(Position(0, 0), unitWithGun, 0);
+	b.SetUnitOnSquare(Position(0, 3), unitWithGun, 1);
+
+	GameState gs(0, 0, Phase::CHARGE, b);
+
+	auto cmds = gs.GetCommands();
+
+	stripCommandsNotFor(Position(0, 0), cmds);
+
+	std::vector<GameState> results;
+	std::vector<float> probs;
+	cmds.front()->Apply(gs, results, probs); //Apply any of the charge commands
+
+	BOOST_REQUIRE(dynamic_cast<IUnitOrderCommand*>(cmds.front().get()) != nullptr);
+	
+	//Track this, so we know where the unit is charging
+	const auto chargeTargetPos = dynamic_cast<IUnitOrderCommand*>(cmds.front().get())->GetTargetPosition();
+
+	//Check that, for every possible result, that the number of
+	// models left and the number of models lost this phase
+	// tie up.
+	for (size_t i = 0; i < results.size(); i++)
+	{
+		if (results[i].GetBoardState().IsOccupied(Position(0, 0)))
+		{
+			auto unit = results[i].GetBoardState().GetUnitOnSquare(Position(0, 0));
+
+			BOOST_TEST(unit.modelsLostThisPhase == numModels - unit.count);
+		}
+		else if (results[i].GetBoardState().IsOccupied(chargeTargetPos))
+		{
+			auto unit = results[i].GetBoardState().GetUnitOnSquare(chargeTargetPos);
+
+			BOOST_TEST(unit.modelsLostThisPhase == numModels - unit.count);
+		}
+	}
+}
+
+
 BOOST_AUTO_TEST_SUITE_END();
 
 

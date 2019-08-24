@@ -72,6 +72,14 @@ void ResolveRawMeleeDamage(const Unit& fighter, const Unit& target,
 	std::vector<Unit>& results, std::vector<float>& probabilities);
 
 
+/// <summary>
+/// Get a list of all units available to fight, belonging
+/// to the given team, on the given board, and write their
+/// positions to outPositions.
+/// </summary>
+void GetFightableUnits(const BoardState& board, int team, PositionArray& outPositions);
+
+
 } // namespace c40kl
 
 

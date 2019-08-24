@@ -451,7 +451,7 @@ BOOST_AUTO_TEST_CASE(ModelsLostTest)
 	// numTimesEncountered[i] is the number of
 	// states where unit (0,1) had i models left.
 	std::vector<int> numTimesEncountered;
-	numTimesEncountered.resize(numModels, 0);
+	numTimesEncountered.resize(numModels+1, 0);
 
 	//Check that, for every possible result, that the number of
 	// models left and the number of models lost this phase

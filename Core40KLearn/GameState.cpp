@@ -31,6 +31,19 @@ GameState::GameState(int internalTeam, int actingTeam, Phase phase, const BoardS
 	C40KL_ASSERT_PRECONDITION(actingTeam == 0 || actingTeam == 1, "Must be a valid team.");
 	C40KL_ASSERT_PRECONDITION(m_ActingTeam == m_InternalTeam || m_Phase == Phase::FIGHT,
 		"Acting team and internal team should be the same unless it's the fight phase.");
+
+	//Ensure the game state is valid:
+	if (!IsFinished())
+	{
+		//This situation might occur when the game starts in the fight phase
+		// for a team which has no units that can possibly fight, BUT the
+		// opposing team DOES. In this case, the end phase command won't be
+		// available.
+		if (GetCommands().empty())
+		{
+			throw std::runtime_error("Invalid game state - was not finished but no available actions to take.");
+		}
+	}
 }
 
 

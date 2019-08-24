@@ -1,5 +1,6 @@
 #include "EndPhaseCommand.h"
 #include "GameState.h"
+#include "GameMechanics.h"
 #include "CompositeCommand.h"
 #include "MoraleCheckCommand.h"
 
@@ -10,6 +11,22 @@ namespace c40kl
 
 void EndPhaseCommand::GetPossibleCommands(const GameState& state, GameCommandArray& outCommands)
 {
+	if (state.GetPhase() == Phase::FIGHT)
+	{
+		//Note: we cannot end the fight phase until all fights are finished
+		//Hacky solution: UnitFightCommand::GetPossibleCommands and then check
+		// there are none possible!
+
+		PositionArray fightableUnits;
+		GetFightableUnits(state.GetBoardState(), 0, fightableUnits);
+		GetFightableUnits(state.GetBoardState(), 1, fightableUnits);
+
+		//If there are any units with fighting options, they must fight before
+		// we can allow them to end turn:
+		if (!fightableUnits.empty())
+			return;
+	}
+
 	//Construct composite command which performs a morale
 	// check for every unit which has taken damage,
 	// and then ends the phase:
@@ -20,7 +37,7 @@ void EndPhaseCommand::GetPossibleCommands(const GameState& state, GameCommandArr
 	{
 		PositionArray restOfUnits = state.GetBoardState().GetAllUnits(1);
 		allUnits.insert(allUnits.end(), restOfUnits.begin(), restOfUnits.end());
-	}
+	}	
 
 	for (const auto& unitPos : allUnits)
 	{

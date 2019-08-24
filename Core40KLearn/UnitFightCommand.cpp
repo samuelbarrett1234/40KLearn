@@ -19,30 +19,24 @@ void UnitFightCommand::GetPossibleCommands(const GameState& state, GameCommandAr
 	//Cache these:
 	const auto ourTeam = state.GetActingTeam();
 	const auto& board = state.GetBoardState();
-
-	//Get all units for this team:
-	const auto units = board.GetAllUnits(ourTeam);
 	const auto targets = board.GetAllUnits(1 - ourTeam);
 
-	//Consider each (allied) unit for fighting
-	for (const auto& unitPos : units)
-	{
-		//Get the unit's stats
-		stats = board.GetUnitOnSquare(unitPos);
+	//Get the positions of all our units which can possibly fight:
+	PositionArray fightable;
+	GetFightableUnits(board, ourTeam, fightable);
 
-		//We can't fight if we don't have a melee weapon
-		if (HasStandardMeleeWeapon(stats))
+	for (auto unitPos : fightable)
+	{
+		//Convert position to command
+		for (const auto& targetPos : targets)
 		{
-			for (const auto& targetPos : targets)
+			//Must be adjacent:
+			if (std::abs(unitPos.first - targetPos.first) <= 1
+				&& std::abs(unitPos.second - targetPos.second) <= 1)
 			{
-				//Must be adjacent:
-				if (std::abs(unitPos.first - targetPos.first) <= 1
-					&& std::abs(unitPos.second - targetPos.second) <= 1)
-				{
-					//Valid command!
-					outCommands.push_back(
-						std::make_shared<UnitFightCommand>(unitPos, targetPos));
-				}
+				//Push command:
+				outCommands.push_back(
+					std::make_shared<UnitFightCommand>(unitPos, targetPos));
 			}
 		}
 	}
@@ -126,12 +120,28 @@ void UnitFightCommand::Apply(const GameState& state,
 			newBoard.ClearSquare(m_Target);
 		}
 
-		//After we have fought, change the acting
-		// team (because we are supposed to alternate
-		// between teams in the fight phase), however
-		// the internal team (whose turn it is) doesn't
-		// change.
-		outStates.emplace_back(state.GetInternalTeam(), 1-state.GetActingTeam(), Phase::FIGHT, newBoard);
+		// * Determining the next active team *
+		// If there are units available left for the other team, switch team
+		// Else if there are no units left for EITHER team, set active team = internal team
+		// Else stay same team because the other team has run out of units
+
+		bool bUnitsLeft[2];
+		for (int i = 0; i < 2; i++)
+		{
+			PositionArray temp;
+			GetFightableUnits(newBoard, i, temp);
+			bUnitsLeft[i] = !temp.empty();
+		}
+
+		int nextTeam;
+		if (bUnitsLeft[1 - team])
+			nextTeam = 1 - team; //Time for opponent to make move
+		else if (!bUnitsLeft[team])
+			nextTeam = state.GetInternalTeam(); //Time for internal team to end phase
+		else
+			nextTeam = team; //Opponent has no fight moves left so we proceed by default		
+
+		outStates.emplace_back(state.GetInternalTeam(), nextTeam, Phase::FIGHT, newBoard);
 		outDistribution.push_back(targetProbs[i]);
 	}
 

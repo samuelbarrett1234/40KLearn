@@ -294,6 +294,37 @@ void ResolveRawMeleeDamage(const Unit& fighter, const Unit& target,
 }
 
 
+void GetFightableUnits(const BoardState& board, int team, PositionArray& outPositions)
+{
+	//Get all units for this team:
+	const auto units = board.GetAllUnits(team);
+	const auto targets = board.GetAllUnits(1 - team);
+
+	//Consider each (allied) unit for fighting
+	for (const auto& unitPos : units)
+	{
+		//Get the unit's stats
+		auto stats = board.GetUnitOnSquare(unitPos);
+
+		//We can't fight if we don't have a melee weapon
+		if (HasStandardMeleeWeapon(stats) && !stats.foughtThisTurn)
+		{
+			for (const auto& targetPos : targets)
+			{
+				//Must be adjacent:
+				if (std::abs(unitPos.first - targetPos.first) <= 1
+					&& std::abs(unitPos.second - targetPos.second) <= 1)
+				{
+					//Success! This is a "fightable" unit:
+					outPositions.push_back(unitPos);
+					break;
+				}
+			}
+		}
+	}
+}
+
+
 } // namespace c40kl
 
 
