@@ -160,7 +160,7 @@ GameCommandArray MCTSNode::GetActions() const
 }
 
 
-std::vector<float> MCTSNode::GetActionPriorDisribution() const
+std::vector<float> MCTSNode::GetActionPriorDistribution() const
 {
 	C40KL_ASSERT_PRECONDITION(!IsLeaf(), "Cannot get priors of leaf node.");
 

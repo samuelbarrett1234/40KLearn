@@ -24,7 +24,7 @@ std::vector<float> UCB1PolicyStrategy::GetActionDistribution(const MCTSNode& nod
 		"UCB1 only works for non-leaf nodes!");
 
 	const int curTeam = node.GetState().GetActingTeam();
-	const auto priors = node.GetActionPriorDisribution();
+	const auto priors = node.GetActionPriorDistribution();
 	const auto actionVals = node.GetActionValueEstimates();
 	const auto actionVisitCounts = node.GetActionVisitCounts();
 	

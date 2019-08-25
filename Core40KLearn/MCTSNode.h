@@ -143,7 +143,7 @@ public:
 	/// node when it was expanded.
 	/// PRECONDITION: !IsLeaf().
 	/// </summary>
-	std::vector<float> GetActionPriorDisribution() const;
+	std::vector<float> GetActionPriorDistribution() const;
 
 
 	/// <summary>

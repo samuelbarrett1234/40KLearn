@@ -520,7 +520,7 @@ BOOST_AUTO_TEST_CASE(PriorTest, *boost::unit_test::tolerance(1.0e-4f))
 	pRoot->Expand(prior);
 
 	//Now test the prior:
-	const auto testPrior = pRoot->GetActionPriorDisribution();
+	const auto testPrior = pRoot->GetActionPriorDistribution();
 
 	//Check the priors are equal:
 	// (note that, here, they must be the same order)
@@ -650,7 +650,7 @@ BOOST_AUTO_TEST_CASE(LeafThrowTest)
 
 	//All of these functions make no sense for a leaf
 	// node, hence should all throw exceptions:
-	BOOST_CHECK_THROW(pRoot->GetActionPriorDisribution(), std::runtime_error);
+	BOOST_CHECK_THROW(pRoot->GetActionPriorDistribution(), std::runtime_error);
 	BOOST_CHECK_THROW(pRoot->GetActionVisitCounts(), std::runtime_error);
 	BOOST_CHECK_THROW(pRoot->GetActionValueEstimates(), std::runtime_error);
 	BOOST_CHECK_THROW(pRoot->GetStateResultDistribution(0), std::runtime_error);
@@ -700,7 +700,7 @@ BOOST_AUTO_TEST_CASE(WrongSizedPriorThrowTest)
 	BOOST_TEST(!pRoot->IsTerminal());
 
 	//Check that we cannot obtain the prior as a leaf node:
-	BOOST_CHECK_THROW(pRoot->GetActionPriorDisribution(), std::runtime_error);
+	BOOST_CHECK_THROW(pRoot->GetActionPriorDistribution(), std::runtime_error);
 
 	//This should be true
 	BOOST_REQUIRE(pRoot->GetNumActions() > 1);
