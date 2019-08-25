@@ -81,6 +81,9 @@
     <ClInclude Include="IPolicyStrategy.h">
       <Filter>Header Files\AI</Filter>
     </ClInclude>
+    <ClInclude Include="UCB1PolicyStrategy.h">
+      <Filter>Header Files\AI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Board.cpp">
@@ -120,6 +123,9 @@
       <Filter>Source Files\Game\Commands</Filter>
     </ClCompile>
     <ClCompile Include="MCTSNode.cpp">
+      <Filter>Source Files\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="UCB1PolicyStrategy.cpp">
       <Filter>Source Files\AI</Filter>
     </ClCompile>
   </ItemGroup>
