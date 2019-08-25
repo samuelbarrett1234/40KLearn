@@ -82,8 +82,7 @@ struct Unit
 
 
 
-class C40KL_API UnitArray : public std::vector<Unit>
-{ };
+typedef std::vector<Unit> UnitArray;
 
 
 } // namespace c40kl
