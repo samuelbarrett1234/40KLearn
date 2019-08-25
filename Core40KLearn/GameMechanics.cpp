@@ -9,7 +9,7 @@ namespace c40kl
 
 float BinomialProbability(int n, int r, float p)
 {
-	const auto dist = boost::math::binomial_distribution<float>(n, p);
+	const auto dist = boost::math::binomial_distribution<float>((float)n, p);
 
 	return boost::math::pdf(dist, r);
 }

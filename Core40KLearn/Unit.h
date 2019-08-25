@@ -67,7 +67,8 @@ struct Unit
 			&& rg_is_rapid == other.rg_is_rapid
 			&& rg_is_heavy == other.rg_is_heavy
 			&& movedThisTurn == other.movedThisTurn
-			&& firedThisTurn == attemptedChargeThisTurn
+			&& firedThisTurn == other.firedThisTurn
+			&& attemptedChargeThisTurn == other.attemptedChargeThisTurn
 			&& successfulChargeThisTurn == other.successfulChargeThisTurn
 			&& foughtThisTurn == other.foughtThisTurn
 			&& movedOutOfCombatThisTurn == other.movedOutOfCombatThisTurn);
