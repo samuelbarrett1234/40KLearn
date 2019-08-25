@@ -53,5 +53,8 @@
     <ClCompile Include="ShootingCommandTests.cpp">
       <Filter>Source Files\Game Tests</Filter>
     </ClCompile>
+    <ClCompile Include="MCTSNodeTests.cpp">
+      <Filter>Source Files\MCTS Tests</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

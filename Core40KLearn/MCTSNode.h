@@ -13,6 +13,9 @@ class MCTSNode;
 typedef std::shared_ptr<MCTSNode> MCTSNodePtr;
 
 
+typedef std::vector<MCTSNodePtr> MCTSNodeArray;
+
+
 /// <summary>
 /// This represents a STATE NODE in the MCTS tree,
 /// which has a set of actions it can perform, and
@@ -22,9 +25,28 @@ typedef std::shared_ptr<MCTSNode> MCTSNodePtr;
 class C40KL_API MCTSNode
 {
 public:
-	MCTSNode(GameState state, MCTSNode* pParent);
+	/// <summary>
+	/// Create a new MCTS tree root node from the given
+	/// state, and return it.
+	/// </summary>
+	static MCTSNodePtr CreateRootNode(GameState state);
 
 
+private:
+	/// <summary>
+	/// Create a new MCTS node from the given state.
+	/// If you want this to be a root node, then pass nullptr
+	/// for the parent. If you do not pass nullptr, you must
+	/// also pass weightFromParent, which is the probability
+	/// of ending in this state by applying whatever action was
+	/// used to get here from the parent.
+	/// NOTE: this is a private constructor because users
+	/// of the MCTS tree will only ever be allocating root nodes.
+	/// </summary>
+	MCTSNode(GameState state, MCTSNode* pParent, float weightFromParent);
+
+
+public:
 	/// <summary>
 	/// Determine if the current node is a leaf node, meaning
 	/// that it has not been expanded yet. Note that terminal
@@ -63,15 +85,29 @@ public:
 	/// all parent nodes in the tree, up to the root.
 	///
 	/// Important note: the terminal node edge case!
-	/// If this is a terminal node, we already know its
-	/// true value, however it is still worth knowing
-	/// that we've visited this node again, as it affects
-	/// our action distributions much earlier on in the
-	/// tree. Hence, if you call this on a terminal node,
-	/// the value estimate you provide will be ignored, but
-	/// will still be backpropagated!
+	/// If this is a terminal node, you shouldn't need
+	/// to estimate the state's value, however this
+	/// function will check nothing of the sort and will
+	/// update its value just as any other node would.
 	/// </summary>
 	void AddValueStatistic(float value);
+
+
+	/// <summary>
+	/// Get the estimated value of this state using ONLY
+	/// the available statistics (and not anything about
+	/// the state). Returns zero if GetNumValueSamples()
+	/// is zero (i.e. our prior is a draw before any information
+	/// is received.)
+	/// </summary>
+	float GetValueEstimate() const;
+
+
+	/// <summary>
+	/// Return the number of samples used to compute the
+	/// GetValueEstimate() estimate.
+	/// </summary>
+	size_t GetNumValueSamples() const;
 
 
 	/// <summary>
@@ -82,6 +118,24 @@ public:
 	/// PRECONDITION: !IsRoot()
 	/// </summary>
 	void Detach();
+
+
+	/// <summary>
+	/// Returns the number of possible actions to take.
+	/// (no precondition; terminal states always return
+	/// 0 here and leaf states still return the correct
+	/// number).
+	/// </summary>
+	size_t GetNumActions() const;
+
+
+	/// <summary>
+	/// Return the actions possible from this node.
+	/// (Can be called on non-leaf nodes).
+	/// The size of the returned array is equal to
+	/// GetNumPossibleActions().
+	/// </summary>
+	GameCommandArray GetActions() const;
 
 
 	/// <summary>
@@ -113,10 +167,13 @@ public:
 
 
 	/// <summary>
-	/// Return the actions possible from this node.
-	/// (Can be called on non-leaf nodes).
+	/// Returns the number of states that result
+	/// from applying action with index = actionIdx.
+	/// This is the same as the size of the GetStateResultDistribution()
+	/// and GetStateResults() returned arrays.
+	/// PRECONDITION: !IsLeaf().
 	/// </summary>
-	GameCommandArray GetActions() const;
+	size_t GetNumResultingStates(size_t actionIdx) const;
 
 
 	/// <summary>
@@ -138,25 +195,60 @@ public:
 	/// <summary>
 	/// Get the game state represented by this node.
 	/// </summary>
-	const GameState& GetCurrentState() const;
+	const GameState& GetState() const;
 
 
 	/// <summary>
-	/// Convert the tree rooted at this node to a
-	/// multiline string format.
+	/// Return the depth of this node in the search tree.
+	/// The depth is the minimum number of edges required
+	/// to traverse through the tree to reach the root.
+	/// I.e. the root is depth 0.
 	/// </summary>
-	String ToString() const;
+	size_t GetDepth() const;
 
 
 private:
-	// Current state
-	// Parent node pointer
-	// Is expanded?
-	// Priors (only if expanded)
-	// Value statistic sum and counts and weights (can be before expanding)
-	// Child actions (only if expanded)
-	// Child states per action (only if expanded) AS NODES
-	// Child weights per action (only if expanded)
+	//The current game state at this node:
+	const GameState m_State;
+	
+	//The parent node:
+	MCTSNode *m_pParent;
+
+	const float m_WeightFromParent;
+
+	//True if and only if this node is not a leaf
+	// node (if this state is terminal then this
+	// cannot be true; this is made true by calling
+	// Expand()).
+	bool m_bExpanded;
+
+	//The action prior is set when expanded
+	std::vector<float> m_ActionPrior;
+
+	//This is the number of value samples we have
+	// received for this node
+	size_t m_NumEstimates;
+
+	//This is the sum of the values*weights, and
+	// just the sum of the weights, respectively.
+	// m_ValueSum / m_WeightSum gives us the estimate
+	// of this node's value, provided m_WeightSum > 0.
+	float m_ValueSum, m_WeightSum;
+
+	//This is the list of actions we can take from
+	// this node, which is set as soon as the node is
+	// initialised:
+	const GameCommandArray m_pActions;
+
+	//This is the list of child nodes PER ACTION:
+	// So m_pChildren[i] represents all the resulting
+	// states from applying action i.
+	std::vector<MCTSNodeArray> m_pChildren;
+	
+	//This is the distribution of states PER ACTION:
+	// So m_Weights[i] represents the probabilities
+	// of each state resulting from action i.
+	std::vector<std::vector<float>> m_Weights;
 };
 
 

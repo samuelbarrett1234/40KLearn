@@ -163,6 +163,7 @@
     <ClCompile Include="FightCommandTests.cpp" />
     <ClCompile Include="GameStateTests.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MCTSNodeTests.cpp" />
     <ClCompile Include="MovementCommandTests.cpp" />
     <ClCompile Include="ShootingCommandTests.cpp" />
     <ClCompile Include="Test.cpp" />
