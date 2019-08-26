@@ -5,6 +5,9 @@ using namespace c40kl;
 
 void ExportMCTS()
 {
+	class_<MCTSNodeArray>("MCTSNodeArray")
+		.def(vector_indexing_suite<MCTSNodeArray>());
+        
 	class_<MCTSNode, std::shared_ptr<MCTSNode>>("MCTSNode", no_init)
 		.def("create_root_node", &MCTSNode::CreateRootNode)
 		.staticmethod("create_root_node")

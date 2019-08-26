@@ -1,6 +1,7 @@
 #pragma once
 
 
+#define BOOST_PYTHON_STATIC_LIB
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <boost/python/str.hpp>

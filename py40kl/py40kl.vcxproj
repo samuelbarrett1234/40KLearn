@@ -75,7 +75,7 @@
     <TargetName>$(ProjectName)_$(Configuration)$(Platform)</TargetName>
     <TargetExt>.dll</TargetExt>
     <IncludePath>$(SolutionDir);$(BOOST_DIR);$(PYTHONPATH);$(IncludePath)</IncludePath>
-    <LibraryPath>$(OutDir);$(BOOST_DIR)stage\lib\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(OutDir);$(BOOST_DIR)stage\lib\;$(PYTHONPATH);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)Output/</OutDir>
@@ -83,7 +83,7 @@
     <TargetName>$(ProjectName)_$(Configuration)$(Platform)</TargetName>
     <TargetExt>.dll</TargetExt>
     <IncludePath>$(SolutionDir);$(BOOST_DIR);$(PYTHONPATH);$(IncludePath)</IncludePath>
-    <LibraryPath>$(OutDir);$(BOOST_DIR)stage\lib\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(OutDir);$(BOOST_DIR)stage\lib\;$(PYTHONPATH);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)Output/</OutDir>
@@ -91,7 +91,7 @@
     <TargetName>$(ProjectName)_$(Configuration)$(Platform)</TargetName>
     <TargetExt>.dll</TargetExt>
     <IncludePath>$(SolutionDir);$(BOOST_DIR);$(PYTHONPATH);$(IncludePath)</IncludePath>
-    <LibraryPath>$(OutDir);$(BOOST_DIR)stage\lib\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(OutDir);$(BOOST_DIR)stage\lib\;$(PYTHONPATH);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)Output/</OutDir>
@@ -99,7 +99,7 @@
     <TargetName>$(ProjectName)_$(Configuration)$(Platform)</TargetName>
     <TargetExt>.dll</TargetExt>
     <IncludePath>$(SolutionDir);$(BOOST_DIR);$(PYTHONPATH);$(IncludePath)</IncludePath>
-    <LibraryPath>$(OutDir);$(BOOST_DIR)stage\lib\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(OutDir);$(BOOST_DIR)stage\lib\;$(PYTHONPATH);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

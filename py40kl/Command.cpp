@@ -1,32 +1,35 @@
 #include "BoostPython.h"
 #include <IGameCommand.h>
+#include <GameState.h>
 using namespace c40kl;
 
 
-struct CommandWrapper :
-	public IGameCommand, wrapper<IGameCommand>
+//Note: this function is to allow Python users to call
+// get_source_position on any command object, throwing
+// an exception if the command does not inherit from
+// IUnitOrderCommand.
+Position GetSourcePositionOptional(const IGameCommand* _pCmd)
 {
-	void apply(const GameState& state, std::vector<GameState>& outStates,
-		std::vector<float>& outDistribution) const
+	if (auto pCmd = dynamic_cast<const IUnitOrderCommand*>(_pCmd))
 	{
-		get_override("apply")(state, outStates, outDistribution);
+		return pCmd->GetSourcePosition();
 	}
+	else throw std::runtime_error("Command object was not a unit order command.");
+}
 
-	bool equals(GameCommandPtr pCmd) const
-	{
-		return get_override("equals")(*pCmd);
-	}
 
-	String to_string() const
+//Note: this function is to allow Python users to call
+// get_target_position on any command object, throwing
+// an exception if the command does not inherit from
+// IUnitOrderCommand.
+Position GetTargetPositionOptional(const IGameCommand* _pCmd)
+{
+	if (auto pCmd = dynamic_cast<const IUnitOrderCommand*>(_pCmd))
 	{
-		return get_override("__str__")();
+		return pCmd->GetTargetPosition();
 	}
-
-	CommandType get_type() const
-	{
-		return get_override("get_type")();
-	}
-};
+	else throw std::runtime_error("Command object was not a unit order command.");
+}
 
 
 void ExportCommands()
@@ -41,16 +44,13 @@ void ExportCommands()
 		.value("HELPER", CommandType::HELPER);
 
 
-	class_<CommandWrapper, std::shared_ptr<IGameCommand>>("IGameCommand", no_init)
+	class_<IGameCommand, std::shared_ptr<IGameCommand>, boost::noncopyable>("IGameCommand", no_init)
 		.def("apply", pure_virtual(&IGameCommand::Apply))
 		.def("equals", pure_virtual(&IGameCommand::Equals))
 		.def("__str__", pure_virtual(&IGameCommand::ToString))
-		.def("get_type", pure_virtual(&IGameCommand::GetType));
-
-
-	class_<IUnitOrderCommand, bases<IGameCommand>>("IUnitOrderCommand")
-		.def("get_source_position", pure_virtual(&IUnitOrderCommand::GetSourcePosition))
-		.def("get_target_position", pure_virtual(&IUnitOrderCommand::GetTargetPosition));
+		.def("get_type", pure_virtual(&IGameCommand::GetType))
+		.def("get_source_position", &GetSourcePositionOptional)
+		.def("get_target_position", &GetTargetPositionOptional);
 }
 
 
