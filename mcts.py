@@ -23,7 +23,7 @@ class MCTS:
     by MCTS.
     Returns [actions], [probabilities].
     """
-    def getCurrentDistribution(self):
+    def get_distribution(self):
         values = self.root.get_action_value_estimates()
         visit_counts = self.root.get_action_visit_counts()
         priors = self.root.get_action_prior_distribution()
@@ -124,6 +124,6 @@ class MCTS:
     might go down (because not all simulations would've taken the
     path that actually did occur).
     """
-    def getNumSamples(self):
+    def get_num_samples(self):
         return self.root.get_num_value_samples()
         

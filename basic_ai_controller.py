@@ -4,30 +4,6 @@ from game_util import *
 import math
 
 
-class BasicEstimatorStrategy(EstimatorStrategy):
-    def __init__(self,team):
-        self.team=team
-        
-    def computeValueEstimate(self, rootState):
-        #Compute value of game by uniform random simulation
-        allies = rootState.getBoard().getAllUnits(self.team)
-        allies = [rootState.getBoard().getUnitOnSquare(x,y) for x,y in allies]
-        enemies = rootState.getBoard().getAllUnits(1-self.team)
-        enemies = [rootState.getBoard().getUnitOnSquare(x,y) for x,y in enemies]
-        aw = [a["total_w"] for a in allies]
-        astr = [a["rg_s"]+a["ml_s"] for a in allies]
-        aprod = [w*s for w,s in zip(aw,astr)]
-        ew = [e["total_w"] for e in enemies]
-        estr = [e["rg_s"]+e["ml_s"] for e in enemies]
-        eprod = [w*s for w,s in zip(ew,estr)]
-        return math.tanh((sum(aprod)-sum(eprod))*0.2)
-        
-    def computePriorDistribution(self, state, actions):
-        #Just return uniform distribution:
-        N = len(actions)
-        return [1 / N for a in actions]
-
-
 """
 This AI controller uses MCTS without neural networks; in particular,
 it just uses UCB1 with a uniform simulation strategy until the game
@@ -44,53 +20,50 @@ class BasicAIController:
         
     def onUpdate(self):        
         #Simulate:
-        self.tree.simulate(self.N-self.tree.getNumSamples())
-
-        #Save MCTS tree:
-        file = open("mcts_tree_output.txt", "w")
-        file.write(str(self.tree))
-        file.close()
+        self.tree.simulate(self.N-self.tree.get_num_samples())
         
         #Get results:
-        actions,dist = self.tree.getCurrentDistribution()
+        actions,dist = self.tree.get_distribution()
         
         #Select and apply:
         action = selectRandomly(actions,dist)
-        if action is None or action.getTargetPosition() is None:
+        if action.get_type() == py40kl.END_PHASE:
             self.model.skip()
-            self.tree.commit(None, self.model.getState())
+            self.tree.commit(self.model.getState())
             
             #Log what happened
             i,j = self.model.getCurrentUnit()
-            unit = self.model.getState().getBoard().getUnitOnSquare(i,j)
-            print("AI decided to skip with", unit["name"])
+            unit = self.model.getState().get_board().get_unit_on_square(i,j)
+            print("AI decided to skip with", unit.name)
         else:
-            x,y = action.getTargetPosition()
+            pos = action.get_target_position()
+            x,y = pos.x, pos.y
             
             #Log what happened:
-            i,j = self.model.getActivePosition()
-            unit = self.model.getState().getBoard().getUnitOnSquare(i,j)
+            pos = self.model.getActivePosition()
+            i,j = pos.x, pos.y
+            unit = self.model.getState().get_board().get_unit_on_square(i,j)
             verb,subject = "",""
-            if self.model.getPhase() == MOVEMENT_PHASE:
+            if self.model.getPhase() == py40kl.MOVEMENT_PHASE:
                 verb = "move to"
                 subject = str((x,y))
-            elif self.model.getPhase() == SHOOTING_PHASE:
+            elif self.model.getPhase() == py40kl.SHOOTING_PHASE:
                 verb = "shoot"
-                target = self.model.getState().getBoard().getUnitOnSquare(x,y)
-                subject = target["name"]
-            elif self.model.getPhase() == CHARGE_PHASE:
+                target = self.model.getState().get_board().get_unit_on_square(x,y)
+                subject = target.name
+            elif self.model.getPhase() == py40kl.CHARGE_PHASE:
                 verb = "charge location"
                 subject = str((x,y))
             else:
                 verb = "fight"
-                target = self.model.getState().getBoard().getUnitOnSquare(x,y)
-                subject = target["name"]
+                target = self.model.getState().get_board().get_unit_on_square(x,y)
+                subject = target.name
             
-            print("AI decided for",unit["name"],"to",verb,subject)
+            print("AI decided for",unit.name,"to",verb,subject)
             
             #Actually apply the changes
-            self.model.choosePosition(x,y)
-            self.tree.commit((x,y), self.model.getState())
+            self.model.choose_action(action)
+            self.tree.commit(action, self.model.getState())
     
     def onClickPosition(self, x, y, bLeft):
         pass #AI doesn't care about clicks
@@ -102,12 +75,10 @@ class BasicAIController:
         print("AI ON TURN CHANGED.")
         #Reconstruct MCTS tree
         #MCTS components:
-        rootState = self.model.getState().createCopy()
-        treePolicy = UCB1PolicyStrategy(self.exploratoryParam)
+        rootState = self.model.getState()
+        treePolicy = py40kl.UCB1PolicyStrategy(self.exploratoryParam, self.model.getCurrentTeam())
         finalPolicy = VisitCountStochasticPolicyStrategy(self.tau)
-        simStrategy = BasicEstimatorStrategy(self.model.getCurrentTeam())
-        
-        assert(len(rootState.activeUnits) > 0)
+        simStrategy = UniformRandomEstimatorStrategy(self.model.getCurrentTeam())
         
         #Create MCTS tree
         self.tree = MCTS(rootState,treePolicy,finalPolicy,simStrategy)
