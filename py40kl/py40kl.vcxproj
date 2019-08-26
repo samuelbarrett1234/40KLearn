@@ -73,7 +73,7 @@
     <OutDir>$(SolutionDir)Output\</OutDir>
     <IntDir>$(SolutionDir)Temp\$(ProjectName)_$(Configuration)$(Platform)\</IntDir>
     <TargetName>$(ProjectName)_$(Configuration)$(Platform)</TargetName>
-    <TargetExt>.dll</TargetExt>
+    <TargetExt>.pyd</TargetExt>
     <IncludePath>$(SolutionDir);$(BOOST_DIR);$(PYTHONPATH);$(IncludePath)</IncludePath>
     <LibraryPath>$(OutDir);$(BOOST_DIR)stage\lib\;$(PYTHONPATH);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
@@ -81,7 +81,7 @@
     <OutDir>$(SolutionDir)Output\</OutDir>
     <IntDir>$(SolutionDir)Temp\$(ProjectName)_$(Configuration)$(Platform)\</IntDir>
     <TargetName>$(ProjectName)_$(Configuration)$(Platform)</TargetName>
-    <TargetExt>.dll</TargetExt>
+    <TargetExt>.pyd</TargetExt>
     <IncludePath>$(SolutionDir);$(BOOST_DIR);$(PYTHONPATH);$(IncludePath)</IncludePath>
     <LibraryPath>$(OutDir);$(BOOST_DIR)stage\lib\;$(PYTHONPATH);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
@@ -89,7 +89,7 @@
     <OutDir>$(SolutionDir)Output\</OutDir>
     <IntDir>$(SolutionDir)Temp\$(ProjectName)_$(Configuration)$(Platform)\</IntDir>
     <TargetName>$(ProjectName)_$(Configuration)$(Platform)</TargetName>
-    <TargetExt>.dll</TargetExt>
+    <TargetExt>.pyd</TargetExt>
     <IncludePath>$(SolutionDir);$(BOOST_DIR);$(PYTHONPATH);$(IncludePath)</IncludePath>
     <LibraryPath>$(OutDir);$(BOOST_DIR)stage\lib\;$(PYTHONPATH);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
@@ -97,7 +97,7 @@
     <OutDir>$(SolutionDir)Output\</OutDir>
     <IntDir>$(SolutionDir)Temp\$(ProjectName)_$(Configuration)$(Platform)\</IntDir>
     <TargetName>$(ProjectName)_$(Configuration)$(Platform)</TargetName>
-    <TargetExt>.dll</TargetExt>
+    <TargetExt>.pyd</TargetExt>
     <IncludePath>$(SolutionDir);$(BOOST_DIR);$(PYTHONPATH);$(IncludePath)</IncludePath>
     <LibraryPath>$(OutDir);$(BOOST_DIR)stage\lib\;$(PYTHONPATH);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
@@ -112,7 +112,7 @@
       <AdditionalDependencies>Core40KLearn_$(Configuration)$(Platform).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(OutDir)$(ProjectName)_$(Configuration)$(Platform).dll" "$(SolutionDir)..\$(ProjectName).dll"</Command>
+      <Command>copy "$(OutDir)$(ProjectName)_$(Configuration)$(Platform)$(TargetExt)" "$(SolutionDir)..\$(ProjectName)$(TargetExt)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -126,7 +126,7 @@
       <AdditionalDependencies>Core40KLearn_$(Configuration)$(Platform).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(OutDir)$(ProjectName)_$(Configuration)$(Platform).dll" "$(SolutionDir)..\$(ProjectName).dll"</Command>
+      <Command>copy "$(OutDir)$(ProjectName)_$(Configuration)$(Platform)$(TargetExt)" "$(SolutionDir)..\$(ProjectName)$(TargetExt)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -144,7 +144,7 @@
       <AdditionalDependencies>Core40KLearn_$(Configuration)$(Platform).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(OutDir)$(ProjectName)_$(Configuration)$(Platform).dll" "$(SolutionDir)..\$(ProjectName).dll"</Command>
+      <Command>copy "$(OutDir)$(ProjectName)_$(Configuration)$(Platform)$(TargetExt)" "$(SolutionDir)..\$(ProjectName)$(TargetExt)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -162,7 +162,7 @@
       <AdditionalDependencies>Core40KLearn_$(Configuration)$(Platform).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(OutDir)$(ProjectName)_$(Configuration)$(Platform).dll" "$(SolutionDir)..\$(ProjectName).dll"</Command>
+      <Command>copy "$(OutDir)$(ProjectName)_$(Configuration)$(Platform)$(TargetExt)" "$(SolutionDir)..\$(ProjectName)$(TargetExt)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
