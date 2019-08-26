@@ -111,6 +111,16 @@ public:
 			&& m_Teams == other.m_Teams);
 	}
 
+	inline int GetSize() const
+	{
+		return m_Size;
+	}
+
+	inline float GetScale() const
+	{
+		return m_Scale;
+	}
+
 private:
 	int m_Size;
 	float m_Scale;

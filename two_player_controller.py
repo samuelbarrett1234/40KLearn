@@ -10,15 +10,15 @@ class TwoPlayerController:
         self.model = model
         self.controllers = [controller0, controller1]
         
-    def onUpdate(self):
-        self.controllers[self.model.getCurrentTeam()].onUpdate()
+    def on_update(self):
+        self.controllers[self.model.get_acting_team()].on_update()
     
-    def onClickPosition(self, x, y, bLeft):
-        self.controllers[self.model.getCurrentTeam()].onClickPosition(x,y,bLeft)
+    def on_click_position(self, pos, bLeft):
+        self.controllers[self.model.get_acting_team()].on_click_position(pos,bLeft)
             
-    def onReturn(self):
-        self.controllers[self.model.getCurrentTeam()].onReturn()
+    def on_return(self):
+        self.controllers[self.model.get_acting_team()].on_return()
         
-    def onTurnChanged(self):
-        self.controllers[self.model.getCurrentTeam()].onTurnChanged()
+    def on_turn_changed(self):
+        self.controllers[self.model.get_acting_team()].on_turn_changed()
     

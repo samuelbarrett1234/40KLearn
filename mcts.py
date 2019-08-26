@@ -1,4 +1,4 @@
-from game_util import selectRandomly
+from game_util import select_randomly
 import py40kl
 
 
@@ -68,7 +68,7 @@ class MCTS:
                 
                 actions = cur_node.get_actions()
                 #Select an action according to our tree policy:
-                action_idx = selectRandomly([i for i in range(len(actions))], action_dist)
+                action_idx = select_randomly([i for i in range(len(actions))], action_dist)
                 
                 #Get resulting state distribution:
                 state_results = cur_node.get_state_results(action_idx)
@@ -76,7 +76,7 @@ class MCTS:
                 
                 #Select a state (via the random state transition dynamics)
                 # and then update the current node
-                cur_node = selectRandomly(state_results, state_dist)
+                cur_node = select_randomly(state_results, state_dist)
                 
             #Compute value estimate of this state
             value_estimate = None
@@ -88,11 +88,11 @@ class MCTS:
                 #Expand the leaf node BEFORE doing a simulation
                 #This means we need to get actions and prior probabilities
                 actions = cur_node.get_actions()
-                priors = self.sim_strategy.compute_prior_distribution(cur_node.getState(), actions)
+                priors = self.sim_strategy.compute_prior_distribution(cur_node.get_state(), actions)
                 cur_node.expand(priors)
                 
                 #Apply an action sampled from the prior:
-                action_idx = selectRandomly([i for i in range(len(actions))],priors)
+                action_idx = select_randomly([i for i in range(len(actions))],priors)
                                 
                 #Get resulting state distribution:
                 state_results = cur_node.get_state_results(action_idx)
@@ -100,7 +100,7 @@ class MCTS:
                 
                 #Select a state (via the random state transition dynamics)
                 # and then update the current node
-                cur_node = selectRandomly(state_results, state_dist)
+                cur_node = select_randomly(state_results, state_dist)
                 
                 #Simulate to compute its value:
                 value_estimate = self.sim_strategy.compute_value_estimate(cur_node.get_state())

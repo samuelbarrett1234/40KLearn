@@ -1,4 +1,5 @@
 import pygame
+import py40kl
 
 
 """
@@ -12,110 +13,122 @@ class GameView:
         self.model = model
         self.controller = controller
         #Configurable:
-        self.pixelsPerCell = 20
+        self.pixels_per_cell = 20
         self.padding = 20
-        self.boardSize = model.getSize() #Board size measured in number-of-cells
-        self.boardLength = self.boardSize * self.pixelsPerCell
+        self.board_size = model.get_board_size() #Board size measured in number-of-cells
+        self.board_length = self.board_size * self.pixels_per_cell
         #Computed positions:
-        self.titleTop = self.padding
-        self.titleLeft = self.padding
-        self.boardTop = 3 * self.padding
-        self.boardLeft = self.padding
-        self.selectedTop = self.padding * 3
-        self.selectedLeft = self.padding * 2 + self.boardLength
-        self.activeTop = self.padding * 4 + 0.5 * (self.boardLength-self.padding)
-        self.activeLeft = self.padding * 2 + self.boardLength
-        self.updateTop = self.padding * 4 + self.boardLength
-        self.updateLeft = self.padding
-        self.display = pygame.display.set_mode((3*self.padding+2*self.boardLength,\
-            4*self.padding+self.boardLength))
+        self.title_top = self.padding
+        self.title_left = self.padding
+        self.board_top = 3 * self.padding
+        self.board_left = self.padding
+        self.selected_top = self.padding * 3
+        self.selected_left = self.padding * 2 + self.board_length
+        self.active_top = self.padding * 4 + 0.5 * (self.board_length-self.padding)
+        self.active_left = self.padding * 2 + self.board_length
+        self.update_top = self.padding * 4 + self.board_length
+        self.update_left = self.padding
+        self.display = pygame.display.set_mode((3 * self.padding\
+            + 2 * self.board_length,\
+            4 * self.padding + self.board_length))
         #Colours:
-        self.windowBackground = (149,150,156)
-        self.boardBackground = (227,165,59)
-        self.activeColour = (13,252,45)
-        self.optionColour = (255,235,13)
-        self.alliedColour = (66,135,245)
-        self.enemyColour = (252,37,13)
+        self.window_background = (149,150,156)
+        self.board_background = (227,165,59)
+        self.active_colour = (13,252,45)
+        self.option_colour = (255,235,13)
+        self.allied_colour = (66,135,245)
+        self.enemy_colour = (252,37,13)
         #Other values:
         pygame.display.set_caption("40KLearn")
         self.font = pygame.font.Font(None, 20)
         
     def run(self):
-        selectedUnit = None
+        selected_unit = None
         exit = False
-        currentTeam = self.model.getCurrentTeam()
-        while not exit and not self.model.finished():
+        current_team = self.model.get_acting_team()
+        while not exit and not self.model.is_finished():
             #Handle events
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mx,my = pygame.mouse.get_pos()
-                    if mx >= self.boardLeft and mx < self.boardLeft+self.boardLength\
-                        and my >= self.boardTop and my < self.boardTop+self.boardLength:
+                    if mx >= self.board_left and mx < self.board_left+self.board_length\
+                        and my >= self.board_top and my < self.board_top+self.board_length:
                         #Convert mouse position to index coordinates:
-                        ix,iy = (mx-self.boardLeft)//self.pixelsPerCell,(my-self.boardTop)//self.pixelsPerCell
+                        ix,iy = (mx-self.board_left)//self.pixels_per_cell,(my-self.board_top)//self.pixels_per_cell
+                        ipos = py40kl.Position(ix,iy)
                         #Compute buttons
                         left,middle,right = pygame.mouse.get_pressed()
                         assert(not (left and right))
                         if right:
-                            self.controller.onClickPosition(ix,iy,False)
+                            self.controller.on_click_position(ipos,False)
                         else:
-                            #Select a unit
-                            selectedUnit = None
-                            if (ix,iy) in self.model.getAlliedPositions() or (ix,iy) in self.model.getEnemyPositions():
-                                selectedUnit = self.model.getPositionDesc(ix,iy)
+                            self.controller.on_click_position(ipos,True)
+                                
                 elif event.type == pygame.KEYDOWN:
                     if pygame.key.get_pressed()[pygame.K_RETURN]:
-                        self.controller.onReturn()
+                        self.controller.on_return()
+                        
                 elif event.type == pygame.QUIT:
                     exit = True
                 
-            if self.model.getCurrentTeam() != currentTeam:
-                currentTeam = self.model.getCurrentTeam()
-                self.controller.onTurnChanged()
-            self.controller.onUpdate()
+            if self.model.get_acting_team() != current_team:
+                current_team = self.model.get_acting_team()
+                self.controller.on_turn_changed()
+            
             #Get data from model to update:
             
             #Cache update data
-            alliedPositions = self.model.getAlliedPositions()
-            enemyPositions = self.model.getEnemyPositions()
-            optionPositions = self.model.getOptionPositions()
-            activePosition = self.model.getActivePosition()
+            allied_positions = self.model.get_allied_positions()
+            enemy_positions = self.model.get_enemy_positions()
+            option_positions = self.model.get_active_unit_option_positions()
+            active_position = self.model.get_active_position()
+                
+            #Display info about a selected unit if applicable
+            selected_unit = None
+            if active_position is not None and\
+                active_position in allied_positions or\
+                active_position in enemy_positions:
+                selected_unit = self.model.get_position_desc(ipos)
+                
+            self.controller.on_update()
             
             #Render
-            self.display.fill(self.windowBackground)
-            self.display.fill(self.boardBackground,\
-                rect=pygame.Rect(self.boardLeft,self.boardTop,self.boardLength,self.boardLength))
+            self.display.fill(self.window_background)
+            self.display.fill(self.board_background,\
+                rect=pygame.Rect(self.board_left,self.board_top,self.board_length,self.board_length))
             #Colour each part of the board
-            for i in range(self.boardSize):
-                for j in range(self.boardSize):
-                    x,y = self.boardLeft+i*self.pixelsPerCell,self.boardTop+j*self.pixelsPerCell
-                    cell_rect = pygame.Rect(x,y,self.pixelsPerCell,self.pixelsPerCell)
+            for i in range(self.board_size):
+                for j in range(self.board_size):
+                    x,y = self.board_left + i * self.pixels_per_cell,\
+                        self.board_top + j * self.pixels_per_cell
+                    cell_rect = pygame.Rect(x,y,self.pixels_per_cell,self.pixels_per_cell)
                     colour = None
-                    if (i,j) == activePosition:
-                        colour = self.activeColour
-                    elif (i,j) in optionPositions:
-                        colour = self.optionColour
-                    elif (i,j) in alliedPositions:
-                        colour = self.alliedColour
-                    elif (i,j) in enemyPositions:
-                        colour = self.enemyColour
+                    cell_pos = py40kl.Position(i,j)
+                    if cell_pos == active_position:
+                        colour = self.active_colour
+                    elif cell_pos in option_positions:
+                        colour = self.option_colour
+                    elif cell_pos in allied_positions:
+                        colour = self.allied_colour
+                    elif cell_pos in enemy_positions:
+                        colour = self.enemy_colour
                     if colour is not None:
                         self.display.fill(colour, rect=cell_rect)
                         
-            if selectedUnit is not None:
+            if selected_unit is not None:
                 #Draw it as text:
-                r = pygame.Rect(self.selectedLeft, self.selectedTop, self.boardLength, 0.5 * (self.boardLength-self.padding))
-                drawText(self.display, str(selectedUnit), (0,0,0), r, self.font, aa=True)
+                r = pygame.Rect(self.selected_left, self.selected_top, self.board_length, 0.5 * (self.board_length-self.padding))
+                drawText(self.display, str(selected_unit), (0,0,0), r, self.font, aa=True)
                 
             #Draw active unit text:
-            ax,ay = activePosition #unpack
-            activeUnit = self.model.getPositionDesc(ax,ay)
-            r = pygame.Rect(self.activeLeft, self.activeTop, self.boardLength, 0.5 * (self.boardLength-self.padding))
+            ax,ay = active_position #unpack
+            activeUnit = self.model.get_position_desc(py40kl.Position(ax,ay))
+            r = pygame.Rect(self.active_left, self.active_top, self.board_length, 0.5 * (self.board_length-self.padding))
             drawText(self.display, str(activeUnit), (0,0,0), r, self.font, aa=True)
             
             #Draw summary text at top
-            r = pygame.Rect(self.padding, self.padding, 2 * self.boardLength + self.padding, self.padding)
-            drawText(self.display, str(self.model.getSummary()), (0,0,0), r, self.font, aa=True)
+            r = pygame.Rect(self.padding, self.padding, 2 * self.board_length + self.padding, self.padding)
+            drawText(self.display, str(self.model.get_summary()), (0,0,0), r, self.font, aa=True)
                         
             #Update
             pygame.display.update()

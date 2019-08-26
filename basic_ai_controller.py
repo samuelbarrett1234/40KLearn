@@ -16,9 +16,9 @@ class BasicAIController:
         self.exploratoryParam = 1.4
         self.N = 200
         self.tree = None
-        self.onTurnChanged() #Sets up the MCTS tree
+        self.on_turn_changed() #Sets up the MCTS tree
         
-    def onUpdate(self):        
+    def on_update(self):        
         #Simulate:
         self.tree.simulate(self.N-self.tree.get_num_samples())
         
@@ -26,59 +26,59 @@ class BasicAIController:
         actions,dist = self.tree.get_distribution()
         
         #Select and apply:
-        action = selectRandomly(actions,dist)
+        action = select_randomly(actions,dist)
         if action.get_type() == py40kl.END_PHASE:
             self.model.skip()
-            self.tree.commit(self.model.getState())
+            self.tree.commit(self.model.get_state())
             
             #Log what happened
             i,j = self.model.getCurrentUnit()
-            unit = self.model.getState().get_board().get_unit_on_square(i,j)
+            unit = self.model.get_state().get_board().get_unit_on_square(i,j)
             print("AI decided to skip with", unit.name)
         else:
             pos = action.get_target_position()
             x,y = pos.x, pos.y
             
             #Log what happened:
-            pos = self.model.getActivePosition()
+            pos = self.model.get_active_position()
             i,j = pos.x, pos.y
-            unit = self.model.getState().get_board().get_unit_on_square(i,j)
+            unit = self.model.get_state().get_board().get_unit_on_square(i,j)
             verb,subject = "",""
-            if self.model.getPhase() == py40kl.MOVEMENT_PHASE:
+            if self.model.get_phase() == py40kl.MOVEMENT_PHASE:
                 verb = "move to"
                 subject = str((x,y))
-            elif self.model.getPhase() == py40kl.SHOOTING_PHASE:
+            elif self.model.get_phase() == py40kl.SHOOTING_PHASE:
                 verb = "shoot"
-                target = self.model.getState().get_board().get_unit_on_square(x,y)
+                target = self.model.get_state().get_board().get_unit_on_square(x,y)
                 subject = target.name
-            elif self.model.getPhase() == py40kl.CHARGE_PHASE:
+            elif self.model.get_phase() == py40kl.CHARGE_PHASE:
                 verb = "charge location"
                 subject = str((x,y))
             else:
                 verb = "fight"
-                target = self.model.getState().get_board().get_unit_on_square(x,y)
+                target = self.model.get_state().get_board().get_unit_on_square(x,y)
                 subject = target.name
             
             print("AI decided for",unit.name,"to",verb,subject)
             
             #Actually apply the changes
             self.model.choose_action(action)
-            self.tree.commit(action, self.model.getState())
+            self.tree.commit(action, self.model.get_state())
     
-    def onClickPosition(self, x, y, bLeft):
+    def on_click_position(self, x, y, bLeft):
         pass #AI doesn't care about clicks
             
-    def onReturn(self):
+    def on_return(self):
         pass #AI doesn't care about clicks
         
-    def onTurnChanged(self):
+    def on_turn_changed(self):
         print("AI ON TURN CHANGED.")
         #Reconstruct MCTS tree
         #MCTS components:
-        rootState = self.model.getState()
-        treePolicy = py40kl.UCB1PolicyStrategy(self.exploratoryParam, self.model.getCurrentTeam())
+        rootState = self.model.get_state()
+        treePolicy = py40kl.UCB1PolicyStrategy(self.exploratoryParam, self.model.get_acting_team())
         finalPolicy = VisitCountStochasticPolicyStrategy(self.tau)
-        simStrategy = UniformRandomEstimatorStrategy(self.model.getCurrentTeam())
+        simStrategy = UniformRandomEstimatorStrategy(self.model.get_acting_team())
         
         #Create MCTS tree
         self.tree = MCTS(rootState,treePolicy,finalPolicy,simStrategy)

@@ -1,6 +1,6 @@
 import random
 import math
-from game_util import selectRandomly
+from game_util import select_randomly
 import py40kl
 
 
@@ -16,7 +16,7 @@ class UniformRandomEstimatorStrategy:
             action = actions[random.randint(0, len(actions)-1)]
             results, probs = py40kl.GameStateArray(), py40kl.GameStateArray()
             action.apply(state, results, probs)
-            state = selectRandomly(results, probs)
+            state = select_randomly(results, probs)
         gameVal = state.get_game_value(self.team)
         return gameVal
         

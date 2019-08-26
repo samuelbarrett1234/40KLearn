@@ -13,7 +13,7 @@ AI_ONLY = 2
 mode = PVAI
 
 
-unitRoster = loadUnitsCSV("unit_stats.csv")
+unit_roster = load_units_csv("unit_stats.csv")
 placements = [
     (4,0,15,22),
     (0,0,10,20),
@@ -30,11 +30,11 @@ placements = [
 ]
 
 
-model = Model(unitRoster, placements)
+model = Model(unit_roster, placements)
 
 if mode == AI_ONLY:
     ctrl = BasicAIController(model)
-    ctrl.onUpdate()
+    ctrl.on_update()
 
     print("Done!")
 else:

@@ -16,6 +16,8 @@ void ExportBoardState()
 		.def("has_adjacent_enemy", &BoardState::HasAdjacentEnemy)
 		.def("get_squares_in_range", &BoardState::GetSquaresInRange)
 		.def("get_distance", &BoardState::GetDistance)
+		.def("get_size", &BoardState::GetSize)
+		.def("get_scale", &BoardState::GetScale)
 		.def(self == self);
 }
 
