@@ -1,6 +1,7 @@
 import random
 import math
 from game_util import selectRandomly
+import py40kl
 
 
 
@@ -8,15 +9,15 @@ class UniformRandomEstimatorStrategy:
     def __init__(self,team):
         self.team=team
         
-    def compute_value_estimate(self, rootState):
+    def compute_value_estimate(self, state):
         #Compute value of game by uniform random simulation
-        state = rootState.createCopy()
-        while not state.finished():
-            actions = state.getCurrentOptions()
+        while not state.is_finished():
+            actions = state.get_commands()
             action = actions[random.randint(0, len(actions)-1)]
-            results,probs = state.chooseOption(action)
-            state = selectRandomly(results,probs)
-        gameVal = state.getGameValue(self.team)
+            results, probs = py40kl.GameStateArray(), py40kl.GameStateArray()
+            action.apply(state, results, probs)
+            state = selectRandomly(results, probs)
+        gameVal = state.get_game_value(self.team)
         return gameVal
         
     def compute_prior_distribution(self, state, actions):
