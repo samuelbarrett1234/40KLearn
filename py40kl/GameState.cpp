@@ -5,6 +5,10 @@ using namespace c40kl;
 
 void ExportGameState()
 {
+	class_<std::vector<GameState>>("GameStateArray")
+		.def(vector_indexing_suite<std::vector<GameState>>());
+
+
 	class_<GameState>("GameState", init<int, int, Phase, const BoardState&>())
 		.def("get_acting_team", &GameState::GetActingTeam)
 		.def("get_internal_team", &GameState::GetInternalTeam)
