@@ -70,32 +70,32 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)Output/</OutDir>
-    <IntDir>$(SolutionDir)Temp/$(ProjectName)_$(Configuration)$(Platform)/</IntDir>
+    <OutDir>$(SolutionDir)Output\</OutDir>
+    <IntDir>$(SolutionDir)Temp\$(ProjectName)_$(Configuration)$(Platform)\</IntDir>
     <TargetName>$(ProjectName)_$(Configuration)$(Platform)</TargetName>
     <TargetExt>.dll</TargetExt>
     <IncludePath>$(SolutionDir);$(BOOST_DIR);$(PYTHONPATH);$(IncludePath)</IncludePath>
     <LibraryPath>$(OutDir);$(BOOST_DIR)stage\lib\;$(PYTHONPATH);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)Output/</OutDir>
-    <IntDir>$(SolutionDir)Temp/$(ProjectName)_$(Configuration)$(Platform)/</IntDir>
+    <OutDir>$(SolutionDir)Output\</OutDir>
+    <IntDir>$(SolutionDir)Temp\$(ProjectName)_$(Configuration)$(Platform)\</IntDir>
     <TargetName>$(ProjectName)_$(Configuration)$(Platform)</TargetName>
     <TargetExt>.dll</TargetExt>
     <IncludePath>$(SolutionDir);$(BOOST_DIR);$(PYTHONPATH);$(IncludePath)</IncludePath>
     <LibraryPath>$(OutDir);$(BOOST_DIR)stage\lib\;$(PYTHONPATH);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)Output/</OutDir>
-    <IntDir>$(SolutionDir)Temp/$(ProjectName)_$(Configuration)$(Platform)/</IntDir>
+    <OutDir>$(SolutionDir)Output\</OutDir>
+    <IntDir>$(SolutionDir)Temp\$(ProjectName)_$(Configuration)$(Platform)\</IntDir>
     <TargetName>$(ProjectName)_$(Configuration)$(Platform)</TargetName>
     <TargetExt>.dll</TargetExt>
     <IncludePath>$(SolutionDir);$(BOOST_DIR);$(PYTHONPATH);$(IncludePath)</IncludePath>
     <LibraryPath>$(OutDir);$(BOOST_DIR)stage\lib\;$(PYTHONPATH);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)Output/</OutDir>
-    <IntDir>$(SolutionDir)Temp/$(ProjectName)_$(Configuration)$(Platform)/</IntDir>
+    <OutDir>$(SolutionDir)Output\</OutDir>
+    <IntDir>$(SolutionDir)Temp\$(ProjectName)_$(Configuration)$(Platform)\</IntDir>
     <TargetName>$(ProjectName)_$(Configuration)$(Platform)</TargetName>
     <TargetExt>.dll</TargetExt>
     <IncludePath>$(SolutionDir);$(BOOST_DIR);$(PYTHONPATH);$(IncludePath)</IncludePath>
@@ -111,6 +111,9 @@
     <Link>
       <AdditionalDependencies>Core40KLearn_$(Configuration)$(Platform).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy "$(OutDir)$(ProjectName)_$(Configuration)$(Platform).dll" "$(SolutionDir)..\$(ProjectName).dll"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -122,6 +125,9 @@
     <Link>
       <AdditionalDependencies>Core40KLearn_$(Configuration)$(Platform).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy "$(OutDir)$(ProjectName)_$(Configuration)$(Platform).dll" "$(SolutionDir)..\$(ProjectName).dll"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -137,6 +143,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>Core40KLearn_$(Configuration)$(Platform).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy "$(OutDir)$(ProjectName)_$(Configuration)$(Platform).dll" "$(SolutionDir)..\$(ProjectName).dll"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -152,6 +161,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>Core40KLearn_$(Configuration)$(Platform).lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy "$(OutDir)$(ProjectName)_$(Configuration)$(Platform).dll" "$(SolutionDir)..\$(ProjectName).dll"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="BoostPython.h" />
