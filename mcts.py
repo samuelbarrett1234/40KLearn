@@ -1,221 +1,21 @@
-from mcts_strategies import EstimatorStrategy, PolicyStrategy,\
-                            UniformRandomEstimatorStrategy, UCB1PolicyStrategy,\
-                            VisitCountStochasticPolicyStrategy
 from game_util import selectRandomly
-
-"""
-An action node is a node in the MCTS tree which
-contains information about the current action,
-the distribution of states it could potentially
-lead to, our prior confidence in this action, and
-it also keeps track of its estimated value by
-looking at the estimated value of its state node children.
-"""
-class ActionNode:
-    def __init__(self, parentStateNode, actionCmd, priorProbability):
-        self.parent = parentStateNode
-        self.action = actionCmd
-        self.prior = priorProbability
-        #Immediately set up child state nodes, and their probabilities:
-        states, self.probs = parentStateNode.getState().chooseOption(actionCmd)
-        self.stateNodeChildren = [StateNode(state, self, prob) for state,prob in zip(states,self.probs)]
-        #We will cache our current value estimate of this action, derived
-        # from the child states' estimates.
-        self.currentEstimate = 0
-        self.sampleCount = 0
-        
-    def __str__(self):
-        d = 2 * self.getParent().getDepth() - 1
-        ux,uy = self.getParent().getState().getCurrentUnit()
-        unit = self.getParent().getState().getBoard().getUnitOnSquare(ux,uy)
-        name = unit["name"] + " phase=" + str(self.getParent().getState().getPhase())
-        actionStr = "no-op " + name
-        if self.action.getTargetPosition() is not None:
-            actionStr = str(self.action.getTargetPosition()) + name
-        return\
-        (" " * d) + "[action] mean=" + str(self.currentEstimate)\
-        + " from " + str(self.sampleCount) + " samples"\
-        + ", prior=" + str(self.prior) + " action=" + actionStr + "\n"\
-        + "\n".join([str(s) for s in self.stateNodeChildren\
-                    if not s.isLeaf()])
-        
-    """
-    Update the estimate of this action's value. This should
-    be called whenever any of its child nodes have had their
-    value changed, say, by adding a new sample.
-    """
-    def updateEstimate(self):
-        #Compute average value, weighted by the probability
-        # distribution: self.probs
-        weights = [child.getSampleCount()*w for child,w in zip(self.stateNodeChildren, self.probs)]
-        values = [child.getValueEstimate() for child in self.stateNodeChildren]
-        weightSum = sum(weights)
-        assert(weightSum > 0.0)
-        self.currentEstimate = sum([v*nw for v,nw in zip(values,weights)]) / weightSum
-        self.sampleCount = sum([child.getSampleCount() for child in self.stateNodeChildren])
-        
-    def getValueEstimate(self):
-        return self.currentEstimate
-        
-    def getPrior(self):
-        return self.prior
-        
-    def getSampleCount(self):
-        return self.sampleCount
-        
-    def getActionCommand(self):
-        return self.action
-        
-    def getChildNodes(self):
-        return self.stateNodeChildren
-        
-    def getChildNodeDistribution(self):
-        return self.probs
-        
-    def getParent(self):
-        return self.parent
-        
-        
-        
-"""
-A state node represents a potential state in the MCTS
-tree, and has ActionNode children and parent. Contains
-all of the samples gathered by simulating from this node
-and/or nodes further down the tree. Can be terminal and/or
-a leaf node and/or a root node.
-"""
-class StateNode:
-    def __init__(self, state, actionParent=None, transitionProbability=1.0):
-        self.state = state
-        self.parent = actionParent
-        self.transitionProbability = transitionProbability
-        self.actionChildren = [] #list of action NODES
-        self.numSamples = 0 #The number of samples that meanValue consists of
-        self.weightSum = 0.0 #The sum of the weights of the samples in meanValue
-        self.meanValue = 0.0 #The weighted mean value from this state so far
-        
-    def __str__(self):
-        d = 2 * (self.getDepth() - 1)
-        return\
-        (" " * d) + "[state] mean=" + str(self.meanValue)\
-        + " from " + str(self.numSamples) + " samples\n"\
-        + "\n".join([str(a) for a in self.actionChildren\
-                    if a.sampleCount > 0])
-        
-    
-    """
-    If this node is a nonterminal leaf node in the MCTS tree,
-    calling this will expand it with all possible child actions.
-    """
-    def expand(self, actions, probs):
-        assert(self.isLeaf() and not self.isTerminal())
-        self.actionChildren = [ActionNode(self, action, p) for action,p in zip(actions,probs)]
-        
-    """
-    Determine if this state is terminal (which means no more
-    actions can be performed).
-    """
-    def isTerminal(self):
-        return self.state.finished()
-        
-    """
-    Determine if this state is a leaf state (which means that
-    its actions haven't been examined yet).
-    """
-    def isLeaf(self):
-        return (len(self.actionChildren) == 0)
-        
-    """
-    Determine if this node is the root of the MCTS tree.
-    """
-    def isRoot(self):
-        return (self.parent is None)
-        
-    def getDepth(self):
-        if self.isRoot():
-            return 1
-        else:
-            return 1 + self.getParent().getParent().getDepth()
-        
-    """
-    Add a value statistic to this node (this value should be
-    an estimate of the expected returns from this node. This
-    may be derived from a simulation directly from this state,
-    or from a future state.)
-    Here, the weight is the probability of the child state's (from
-    which the value is being derived) probability of occurring
-    given the actions taken to get there.
-    """
-    def addStatistic(self, value, weight):
-        #Incrementally update the mean
-        self.meanValue = (self.weightSum * self.meanValue + value * weight) / (self.weightSum + weight)
-        self.weightSum += weight
-        self.numSamples += 1
-        
-    """
-    Get the number of value estimate samples in this state.
-    """
-    def getSampleCount(self):
-        return self.numSamples
-        
-    """
-    Get the value estimate from this state by considering
-    samples given so far.
-    """
-    def getValueEstimate(self):
-        return self.meanValue
-        
-    """
-    Get the action node which lead to this state, or None
-    if this is the root node.
-    """
-    def getParent(self):
-        return self.parent
-        
-    """
-    Used for when the MCTS tree commits to a subtree.
-    """
-    def removeParent(self):
-        self.parent = None
-        
-    """
-    Return a list of child action nodes.
-    """
-    def getChildNodes(self):
-        return self.actionChildren
-        
-    """
-    Get the probability that this state occurs as a result
-    of performing the parent action.
-    """
-    def getTransitionProbability(self):
-        return self.transitionProbability
-        
-    def getState(self):
-        return self.state
-        
-        
-
-        
+import py40kl
 
 
 class MCTS:
     """
-    rootState : the state for MCTS to begin in.
-    treePolicy : the policy which decides the distribution of actions from a leaf node
-    finalPolicy : the policy which decides which action to take from the root node, after many simulations
-    simStrategy : the strategy which decides the value of a state by simulation or otherwise.
+    root_state : the state for MCTS to begin in.
+    tree_policy : the policy which decides the distribution of actions from a leaf node
+    final_policy : the policy which decides which action to take from the root node, after many simulations
+    sim_strategy : the strategy which decides the value of a state by simulation or otherwise.
     """
-    def __init__(self, rootState, treePolicy, finalPolicy, simStrategy):
-        self.root = StateNode(rootState)
-        self.treePolicy = treePolicy
-        self.finalPolicy = finalPolicy
-        self.simStrategy = simStrategy
-        self.team = rootState.getCurrentTeam()
-        self.maxDepth = 1
-        
-    def __str__(self):
-        return str(self.root)
+    def __init__(self, root_state, tree_policy, final_policy, sim_strategy):
+        self.root = py40kl.MCTSNode.create_root_node(root_state)
+        self.tree_policy = tree_policy
+        self.final_policy = final_policy
+        self.sim_strategy = sim_strategy
+        self.team = root_state.get_acting_team()
+        self.maxDepth = 0
         
     """
     Get the current distribution of actions, as
@@ -224,42 +24,28 @@ class MCTS:
     Returns [actions], [probabilities].
     """
     def getCurrentDistribution(self):
-        actionNodes = self.root.getChildNodes()
-        values = [node.getValueEstimate() for node in actionNodes]
-        visitCounts = [node.getSampleCount() for node in actionNodes]
-        priors = [node.getPrior() for node in actionNodes]
-        dist = self.finalPolicy.getActionDistribution(values, visitCounts, priors,\
-            self.team, self.team, self.root.getState().getPhase())
-        actions = [node.getActionCommand() for node in actionNodes]
-        return actions,dist
+        values = self.root.get_action_value_estimates()
+        visit_counts = self.root.get_action_visit_counts()
+        priors = self.root.get_action_prior_distribution()
+        dist = self.final_policy.get_action_distribution(values, visit_counts, priors)
+        return self.root.get_actions(),dist
         
     """
     Commit to a given action. This RE-ROOTS the MCTS tree
     so as not to waste any of the previous simulations which
     were used to inform the commit decision.
-    pos=(i,j) : the target position of the action you chose
     state : the state which resulted from applying that action
-    This function will be checking that (i,j) was a valid action
-    and that 'state' was a state which could actually result from
-    that action.
+            note that it must be a direct state child of the root.
     """
-    def commit(self, pos, state):
-        #First, find action:
-        actionNode = None
-        for node in self.root.getChildNodes():
-            if node.getActionCommand().getTargetPosition() == pos:
-                actionNode = node
-                break
-        assert(actionNode != None)
-        #Then, find state:
-        stateNode = None
-        for node in actionNode.getChildNodes():
-            if node.getState() == state:
-                stateNode = node
-        assert(stateNode != None)
-        #Then, remove state parent and update root pointer:
-        stateNode.removeParent()
-        self.root = stateNode
+    def commit(self, state):
+        children = [self.root.get_state_results(i) for i in range(self.root.get_num_actions())]
+        for action_results in children:
+            for state_node in action_results:
+                if state_node.get_state() == state:
+                    self.root = state_node
+                    self.root.detach()
+                    return None #Exit function
+        raise ValueError("Invalid state given to MCTS commit().")
         
     """
     Simulate a further n times to improve the current action
@@ -268,64 +54,67 @@ class MCTS:
     def simulate(self, n):
         #For each simulation...
         for i in range(n):
-            curNode = self.root
+            cur_node = self.root
             
             #Simulate until the end of our MCTS tree:
-            while not curNode.isLeaf() and not curNode.isTerminal():
+            while not cur_node.is_leaf() and not cur_node.is_terminal():
                 #Obtain information about potential actions:
-                actionNodes = curNode.getChildNodes()
-                values = [node.getValueEstimate() for node in actionNodes]
-                visitCounts = [node.getSampleCount() for node in actionNodes]
-                priors = [node.getPrior() for node in actionNodes]
+                values = cur_node.get_action_value_estimates()
+                visit_counts = cur_node.get_action_visit_counts()
+                priors = cur_node.get_action_prior_distribution()
                 
                 #Compute distribution over actions:
-                actionDist = self.treePolicy.getActionDistribution(values, visitCounts, priors,\
-                    curNode.getState().getCurrentTeam(), self.team, curNode.getState().getPhase())
+                action_dist = self.tree_policy.get_action_distribution(values, visit_counts, priors)
+                
+                actions = cur_node.get_actions()
                 #Select an action according to our tree policy:
-                actionNode = selectRandomly(actionNodes, actionDist)
+                action_idx = selectRandomly([i for i in range(len(actions))], action_dist)
+                
+                #Get resulting state distribution:
+                state_results = cur_node.get_state_results(action_idx)
+                state_dist = cur_node.get_state_result_distribution(action_idx)
+                
                 #Select a state (via the random state transition dynamics)
                 # and then update the current node
-                curNode = selectRandomly(actionNode.getChildNodes(), actionNode.getChildNodeDistribution())
+                cur_node = selectRandomly(state_results, state_dist)
                 
             #Compute value estimate of this state
-            valueEstimate = None
-            if curNode.isTerminal():
-                valueEstimate = curNode.getState().getGameValue(self.team)
-            elif curNode.isLeaf():
+            value_estimate = None
+            if cur_node.is_terminal():
+                #Note that, in this case, since the state is terminal,
+                # this is not an estimate - it is a true value!
+                value_estimate = cur_node.get_state().get_game_value(self.team)
+            elif cur_node.isLeaf():
                 #Expand the leaf node BEFORE doing a simulation
                 #This means we need to get actions and prior probabilities
-                actions = curNode.getState().getCurrentOptions()
-                priors = self.simStrategy.computePriorDistribution(curNode.getState(), actions)
-                curNode.expand(actions,priors)
-                actionNodes = curNode.getChildNodes()
+                actions = cur_node.get_actions()
+                priors = self.sim_strategy.compute_prior_distribution(cur_node.getState(), actions)
+                cur_node.expand(priors)
+                
                 #Apply an action sampled from the prior:
-                actionNode = selectRandomly(actionNodes,priors)
+                action_idx = selectRandomly([i for i in range(len(actions))],priors)
+                                
+                #Get resulting state distribution:
+                state_results = cur_node.get_state_results(action_idx)
+                state_dist = cur_node.get_state_result_distribution(action_idx)
+                
                 #Select a state (via the random state transition dynamics)
                 # and then update the current node
-                curNode = selectRandomly(actionNode.getChildNodes(), actionNode.getChildNodeDistribution())
+                cur_node = selectRandomly(state_results, state_dist)
+                
                 #Simulate to compute its value:
-                valueEstimate = self.simStrategy.computeValueEstimate(curNode.getState())
+                value_estimate = self.sim_strategy.compute_value_estimate(cur_node.get_state())
+                
                 #We will then backpropagate this valule below!
                 #Determine if we have just gone deeper into the tree:
-                depth = curNode.getDepth()
+                depth = cur_node.get_depth()
                 if depth > self.maxDepth:
                     print("MCTS tree deepened to", depth)
                     self.maxDepth = depth
                 
-            assert(valueEstimate is not None)
-            probability=1.0
+            #Add new statistic:
+            cur_node.add_value_statistic(value_estimate)
             
-            #Backpropagate results:
-            while curNode != self.root:
-                #Add the value statistic to the node:
-                curNode.addStatistic(valueEstimate,probability)
-                action = curNode.getParent()
-                probability *= curNode.getTransitionProbability()
-                action.updateEstimate()
-                curNode = action.getParent()
-                
-            #And finally, add to root:
-            self.root.addStatistic(valueEstimate,probability)
             #Done!
             print("Simulation",i,"completed.")
         
@@ -336,5 +125,5 @@ class MCTS:
     path that actually did occur).
     """
     def getNumSamples(self):
-        return self.root.getSampleCount()
+        return self.root.get_num_value_samples()
         
