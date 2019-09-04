@@ -52,19 +52,15 @@ class MCTS:
     distribution estimate.
     """
     def simulate(self, n):
+        print("Simulating",n,"steps...")
         #For each simulation...
         for i in range(n):
             cur_node = self.root
             
             #Simulate until the end of our MCTS tree:
             while not cur_node.is_leaf() and not cur_node.is_terminal():
-                #Obtain information about potential actions:
-                values = cur_node.get_action_value_estimates()
-                visit_counts = cur_node.get_action_visit_counts()
-                priors = cur_node.get_action_prior_distribution()
-                
                 #Compute distribution over actions:
-                action_dist = self.tree_policy.get_action_distribution(values, visit_counts, priors)
+                action_dist = self.tree_policy.get_action_distribution(cur_node)
                 
                 actions = cur_node.get_actions()
                 #Select an action according to our tree policy:
@@ -84,16 +80,19 @@ class MCTS:
                 #Note that, in this case, since the state is terminal,
                 # this is not an estimate - it is a true value!
                 value_estimate = cur_node.get_state().get_game_value(self.team)
-            elif cur_node.isLeaf():
+            elif cur_node.is_leaf():                
                 #Expand the leaf node BEFORE doing a simulation
                 #This means we need to get actions and prior probabilities
                 actions = cur_node.get_actions()
                 priors = self.sim_strategy.compute_prior_distribution(cur_node.get_state(), actions)
+                
+                print("Expanding...")
                 cur_node.expand(priors)
+                print("Expanded!")
                 
                 #Apply an action sampled from the prior:
                 action_idx = select_randomly([i for i in range(len(actions))],priors)
-                                
+                
                 #Get resulting state distribution:
                 state_results = cur_node.get_state_results(action_idx)
                 state_dist = cur_node.get_state_result_distribution(action_idx)
@@ -109,7 +108,6 @@ class MCTS:
                 #Determine if we have just gone deeper into the tree:
                 depth = cur_node.get_depth()
                 if depth > self.maxDepth:
-                    print("MCTS tree deepened to", depth)
                     self.maxDepth = depth
                 
             #Add new statistic:

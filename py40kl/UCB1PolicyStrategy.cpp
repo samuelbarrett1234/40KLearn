@@ -1,18 +1,20 @@
 #include "BoostPython.h"
+#include "MCTSNodeWrapper.h"
 #include <UCB1PolicyStrategy.h>
+#include <iostream>
 using namespace c40kl;
 
 
-//Need wrapper because Python doesn't like the pass by reference
+//Simple wrapper to accomodate MCTS wrapper type
 struct UCB1PolicyStrategyWrapper
 {
 	UCB1PolicyStrategyWrapper(float expParam, int team) :
 		m_Policy(expParam, team)
 	{ }
 
-	std::vector<float> GetActionDistribution(std::shared_ptr<MCTSNode> pNode) const
+	std::vector<float> GetActionDistribution(const MCTSNodeWrapper& node) const
 	{
-		return m_Policy.GetActionDistribution(*pNode);
+		return m_Policy.GetActionDistribution(*node.GetRawPtr());
 	}
 
 	UCB1PolicyStrategy m_Policy;

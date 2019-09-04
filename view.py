@@ -56,10 +56,9 @@ class GameView:
                         #Convert mouse position to index coordinates:
                         ix,iy = (mx-self.board_left)//self.pixels_per_cell,(my-self.board_top)//self.pixels_per_cell
                         ipos = py40kl.Position(ix,iy)
-                        #Compute buttons
-                        left,middle,right = pygame.mouse.get_pressed()
-                        assert(not (left and right))
-                        if right:
+                        
+                        #Check if right or left click
+                        if event.button == 3:
                             self.controller.on_click_position(ipos,False)
                         else:
                             self.controller.on_click_position(ipos,True)
@@ -119,12 +118,6 @@ class GameView:
                 #Draw it as text:
                 r = pygame.Rect(self.selected_left, self.selected_top, self.board_length, 0.5 * (self.board_length-self.padding))
                 drawText(self.display, str(selected_unit), (0,0,0), r, self.font, aa=True)
-                
-            #Draw active unit text:
-            ax,ay = active_position #unpack
-            activeUnit = self.model.get_position_desc(py40kl.Position(ax,ay))
-            r = pygame.Rect(self.active_left, self.active_top, self.board_length, 0.5 * (self.board_length-self.padding))
-            drawText(self.display, str(activeUnit), (0,0,0), r, self.font, aa=True)
             
             #Draw summary text at top
             r = pygame.Rect(self.padding, self.padding, 2 * self.board_length + self.padding, self.padding)

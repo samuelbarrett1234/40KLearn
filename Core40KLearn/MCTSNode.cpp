@@ -244,7 +244,7 @@ std::vector<float> MCTSNode::GetStateResultDistribution(size_t actionIdx) const
 }
 
 
-std::vector<MCTSNodePtr> MCTSNode::GetStateResults(size_t actionIdx) const
+const MCTSNodeArray& MCTSNode::GetStateResults(size_t actionIdx) const
 {
 	C40KL_ASSERT_PRECONDITION(!IsLeaf(),
 		"Can only get the resulting state distribution for non leaf nodes.");
@@ -275,6 +275,7 @@ size_t MCTSNode::GetDepth() const
 	}
 	return depth;
 }
+
 
 } // namespace c40kl
 

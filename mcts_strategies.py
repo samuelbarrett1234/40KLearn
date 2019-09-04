@@ -14,7 +14,7 @@ class UniformRandomEstimatorStrategy:
         while not state.is_finished():
             actions = state.get_commands()
             action = actions[random.randint(0, len(actions)-1)]
-            results, probs = py40kl.GameStateArray(), py40kl.GameStateArray()
+            results, probs = py40kl.GameStateArray(), py40kl.FloatArray()
             action.apply(state, results, probs)
             state = select_randomly(results, probs)
         gameVal = state.get_game_value(self.team)
@@ -32,8 +32,9 @@ class VisitCountStochasticPolicyStrategy:
         assert(tau > 0.0)
         self.recip_tau = 1.0 / tau
         
-    def get_action_distribution(self, action_values, action_visit_counts, priors):
-        unnormalised = [n ** self.recip_tau for n in action_visit_counts]
+    def get_action_distribution(self, cur_node):
+        visit_counts = cur_node.get_action_visit_counts()        
+        unnormalised = [n ** self.recip_tau for n in visit_counts]
         s = sum(unnormalised)
         assert(s>0.0)
         return [p/s for p in unnormalised]

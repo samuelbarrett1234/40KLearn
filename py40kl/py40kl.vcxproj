@@ -167,13 +167,17 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="BoostPython.h" />
+    <ClInclude Include="CommandWrapper.h" />
+    <ClInclude Include="MCTSNodeWrapper.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BoardState.cpp" />
     <ClCompile Include="BoostPython.cpp" />
     <ClCompile Include="Command.cpp" />
+    <ClCompile Include="CommandWrapper.cpp" />
     <ClCompile Include="GameState.cpp" />
     <ClCompile Include="MCTSNode.cpp" />
+    <ClCompile Include="MCTSNodeWrapper.cpp" />
     <ClCompile Include="UCB1PolicyStrategy.cpp" />
     <ClCompile Include="Utility.cpp" />
     <ClCompile Include="Unit.cpp" />

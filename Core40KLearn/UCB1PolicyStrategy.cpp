@@ -57,7 +57,7 @@ std::vector<float> UCB1PolicyStrategy::GetActionDistribution(const MCTSNode& nod
 	// except the action with highest UCB value,
 	// which has probability 1:
 
-	float maxVal = std::numeric_limits<float>::min();
+	float maxVal = -std::numeric_limits<float>::max();
 	size_t maxIdx = (size_t)(-1);
 
 	for (size_t i = 0; i < maxIdx; i++)

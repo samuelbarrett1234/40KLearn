@@ -189,7 +189,7 @@ public:
 	/// from the given action, specified by its index.
 	/// PRECONDITION: !IsLeaf().
 	/// </summary>
-	std::vector<MCTSNodePtr> GetStateResults(size_t actionIdx) const;
+	const MCTSNodeArray& GetStateResults(size_t actionIdx) const;
 
 
 	/// <summary>

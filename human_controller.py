@@ -1,3 +1,4 @@
+import py40kl
 
 """
 Allows a human player to control the model by
@@ -21,7 +22,7 @@ class HumanController:
             target_pos = pos
             
             for action in actions:
-                if action.get_type() == py40kl.UNIT_ORDER:
+                if action.get_type() == py40kl.CommandType.UNIT_ORDER:
                     if action.get_source_position() == source_pos and\
                         action.get_target_position() == target_pos:
                         self.model.choose_action(action)
@@ -29,14 +30,14 @@ class HumanController:
             
             #Else ignore the request because we were given an incorrect action.
             
-    def onReturn(self):
+    def on_return(self):
         #If the user presses return, apply the end phase action if available:
         actions = self.model.get_actions()
         for action in actions:
-            if action.get_type() == py40kl.END_PHASE:
+            if action.get_type() == py40kl.CommandType.END_PHASE:
                 self.model.choose_action(action)
                 return None #Finished
         
-    def onTurnChanged(self):
+    def on_turn_changed(self):
         pass #No logic needed
     
