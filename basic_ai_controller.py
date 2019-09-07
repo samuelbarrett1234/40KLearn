@@ -67,7 +67,7 @@ class BasicAIController:
         self.model.choose_action(action)
         self.tree.commit(self.model.get_state())
     
-    def on_click_position(self, x, y, bLeft):
+    def on_click_position(self, pos, bLeft):
         pass #AI doesn't care about clicks
             
     def on_return(self):
