@@ -167,6 +167,7 @@
     <ClInclude Include="EndPhaseCommand.h" />
     <ClInclude Include="GameMechanics.h" />
     <ClInclude Include="GameState.h" />
+    <ClInclude Include="SelfPlayManager.h" />
     <ClInclude Include="IGameCommand.h" />
     <ClInclude Include="IPolicyStrategy.h" />
     <ClInclude Include="MCTSNode.h" />
@@ -191,6 +192,7 @@
     <ClCompile Include="MCTSNode.cpp" />
     <ClCompile Include="MoraleCheckCommand.cpp" />
     <ClCompile Include="OverwatchCommand.cpp" />
+    <ClCompile Include="SelfPlayManager.cpp" />
     <ClCompile Include="UCB1PolicyStrategy.cpp" />
     <ClCompile Include="UniformRandomEstimator.cpp" />
     <ClCompile Include="UnitChargeCommand.cpp" />
