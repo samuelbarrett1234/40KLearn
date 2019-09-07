@@ -7,26 +7,21 @@ import py40kl
 
 class UniformRandomEstimatorStrategy:
     def __init__(self,team):
-        self.team=team
+        self.team = team
+        self.estimator = py40kl.UniformRandomEstimator()
+        #The number of simulations to perform when estimating values:
+        self.num_sims = 3
         
     def compute_value_estimate(self, state):
-        #Compute value of game by uniform random simulation
-        while not state.is_finished():
-            actions = state.get_commands()
-            action = actions[random.randint(0, len(actions)-1)]
-            results, probs = py40kl.GameStateArray(), py40kl.FloatArray()
-            action.apply(state, results, probs)
-            state = select_randomly(results, probs)
-        gameVal = state.get_game_value(self.team)
-        return gameVal
+        return self.estimator.compute_value_estimate(state, self.team, self.num_sims)
         
     def compute_prior_distribution(self, state, actions):
         #Just return uniform distribution:
         N = len(actions)
         return [1 / N for a in actions]
-              
-              
-        
+
+
+
 class VisitCountStochasticPolicyStrategy:
     def __init__(self, tau):
         assert(tau > 0.0)

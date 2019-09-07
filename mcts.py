@@ -35,6 +35,8 @@ class MCTS:
             note that it must be a direct state child of the root.
     """
     def commit(self, state):
+        #Max depth of tree will now decrease:
+        self.maxDepth -= 1
         children = [self.root.get_state_results(i) for i in range(self.root.get_num_actions())]
         for action_results in children:
             for state_node in action_results:
@@ -49,7 +51,7 @@ class MCTS:
     distribution estimate.
     """
     def simulate(self, n):
-        print("Simulating",n,"steps...")
+        print("Simulating", n, "steps...")
         #For each simulation...
         for i in range(n):
             cur_node = self.root
@@ -110,7 +112,7 @@ class MCTS:
             cur_node.add_value_statistic(value_estimate)
             
             #Done!
-            print("Simulation",i,"completed.")
+            print("Simulation", i + 1, "completed.")
         
     """
     Get the current simulation count from the current tree root.

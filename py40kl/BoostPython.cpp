@@ -10,6 +10,7 @@ BOOST_PYTHON_MODULE(py40kl)
 	ExportCommands();
 	ExportMCTS();
 	ExportUCB1PolicyStrategy();
+	ExportUniformRandomEstimator();
 }
 
 

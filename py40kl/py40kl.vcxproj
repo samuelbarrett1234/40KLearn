@@ -179,6 +179,7 @@
     <ClCompile Include="MCTSNode.cpp" />
     <ClCompile Include="MCTSNodeWrapper.cpp" />
     <ClCompile Include="UCB1PolicyStrategy.cpp" />
+    <ClCompile Include="UniformRandomEstimator.cpp" />
     <ClCompile Include="Utility.cpp" />
     <ClCompile Include="Unit.cpp" />
   </ItemGroup>

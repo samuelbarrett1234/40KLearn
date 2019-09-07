@@ -172,7 +172,9 @@
     <ClInclude Include="MCTSNode.h" />
     <ClInclude Include="MoraleCheckCommand.h" />
     <ClInclude Include="OverwatchCommand.h" />
+    <ClInclude Include="SelectRandomly.h" />
     <ClInclude Include="UCB1PolicyStrategy.h" />
+    <ClInclude Include="UniformRandomEstimator.h" />
     <ClInclude Include="Unit.h" />
     <ClInclude Include="UnitChargeCommand.h" />
     <ClInclude Include="UnitFightCommand.h" />
@@ -190,6 +192,7 @@
     <ClCompile Include="MoraleCheckCommand.cpp" />
     <ClCompile Include="OverwatchCommand.cpp" />
     <ClCompile Include="UCB1PolicyStrategy.cpp" />
+    <ClCompile Include="UniformRandomEstimator.cpp" />
     <ClCompile Include="UnitChargeCommand.cpp" />
     <ClCompile Include="UnitFightCommand.cpp" />
     <ClCompile Include="UnitMovementCommand.cpp" />

@@ -1,37 +1,8 @@
 from mcts import MCTS
-from mcts_strategies import *
+from mcts_strategies import UniformRandomEstimatorStrategy, VisitCountStochasticPolicyStrategy
 from game_util import *
 import math
 import py40kl
-
-
-#TEMP HEURISTIC
-#Use a really bad (but cheap) heuristic as to the current game value:
-class BasicEstimatorStrategy:
-    def __init__(self,team):
-        self.team=team
-        
-    def compute_value_estimate(self, state):
-        #A VERY rough heuristic!
-        board = state.get_board_state()
-        
-        allies = board.get_all_units(self.team)
-        enemies = board.get_all_units(1 - self.team)
-        
-        allies = [board.get_unit_on_square(pos) for pos in allies]
-        enemies = [board.get_unit_on_square(pos) for pos in enemies]
-        
-        allied_w = sum([unit.w for unit in allies])
-        allied_s = sum([unit.rg_s + unit.ml_s for unit in allies])
-        enemy_w = sum([unit.w for unit in enemies])
-        enemy_s = sum([unit.rg_s + unit.ml_s for unit in enemies])
-        
-        return math.tanh(allied_w * 2.0 + allied_s - enemy_w * 2.0 - enemy_s)
-        
-    def compute_prior_distribution(self, state, actions):
-        #Just return uniform distribution:
-        N = len(actions)
-        return [1 / N for a in actions]
 
 
 """
@@ -50,17 +21,19 @@ class BasicAIController:
         
     def on_update(self):        
         #Simulate:
-        self.tree.simulate(self.N-self.tree.get_num_samples())
+        self.tree.simulate(self.N - self.tree.get_num_samples())
         
         #Get results:
-        actions,dist = self.tree.get_distribution()
+        actions, dist = self.tree.get_distribution()
+        
+        print("Resulting action distribution:", str(dist))
         
         #Select and apply:
-        action = select_randomly(actions,dist)
+        action = select_randomly(actions, dist)
         if action.get_type() != py40kl.CommandType.UNIT_ORDER:            
             #Log what happened
             if len(actions) > 1:
-                print("AI decided to end turn")
+                print("AI decided to end turn/phase")
             else:
                 print("AI ended turn (no other possible actions.)")
         else:
@@ -77,21 +50,20 @@ class BasicAIController:
             verb, subject = "", ""
             if self.model.get_phase() == py40kl.Phase.MOVEMENT:
                 verb = "move to"
-                subject = str((x,y))
+                subject = str((x, y))
             elif self.model.get_phase() == py40kl.Phase.SHOOTING:
                 verb = "shoot"
                 target = self.model.get_state().get_board_state().get_unit_on_square(py40kl.Position(x, y))
                 subject = target.name
             elif self.model.get_phase() == py40kl.Phase.CHARGE:
                 verb = "charge location"
-                subject = str((x,y))
+                subject = str((x, y))
             else:
                 verb = "fight"
-                target = self.model.get_state().get_board_state().get_unit_on_square(py40kl.Position(x,y))
+                target = self.model.get_state().get_board_state().get_unit_on_square(py40kl.Position(x, y))
                 subject = target.name
             
-            print("AI decided for",unit.name,"to",verb,subject,unit.moved_this_turn, unit.fired_this_turn,
-                  unit.attempted_charge_this_turn, unit.successful_charge_this_turn, unit.fought_this_turn)
+            print("AI decided for", unit.name, "to", verb, subject)
             
         #Actually apply the changes
         self.model.choose_action(action)
@@ -104,14 +76,13 @@ class BasicAIController:
         pass #AI doesn't care about clicks
         
     def on_turn_changed(self):
-        #Reconstruct MCTS tree
+        #Reconstruct MCTS tree every turn
+        
         #MCTS components:
         rootState = self.model.get_state()
         treePolicy = py40kl.UCB1PolicyStrategy(self.exploratoryParam, self.model.get_acting_team())
         finalPolicy = VisitCountStochasticPolicyStrategy(self.tau)
-        #simStrategy = UniformRandomEstimatorStrategy(self.model.get_acting_team())
-        simStrategy = BasicEstimatorStrategy(self.model.get_acting_team())
+        simStrategy = UniformRandomEstimatorStrategy(self.model.get_acting_team())
         
         #Create MCTS tree
-        self.tree = MCTS(rootState,treePolicy,finalPolicy,simStrategy)
-    
+        self.tree = MCTS(rootState, treePolicy, finalPolicy, simStrategy)

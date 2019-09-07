@@ -84,6 +84,12 @@
     <ClInclude Include="UCB1PolicyStrategy.h">
       <Filter>Header Files\AI</Filter>
     </ClInclude>
+    <ClInclude Include="UniformRandomEstimator.h">
+      <Filter>Header Files\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="SelectRandomly.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Board.cpp">
@@ -126,6 +132,9 @@
       <Filter>Source Files\AI</Filter>
     </ClCompile>
     <ClCompile Include="UCB1PolicyStrategy.cpp">
+      <Filter>Source Files\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="UniformRandomEstimator.cpp">
       <Filter>Source Files\AI</Filter>
     </ClCompile>
   </ItemGroup>

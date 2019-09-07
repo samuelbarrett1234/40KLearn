@@ -15,5 +15,6 @@ void ExportGameState();
 void ExportCommands();
 void ExportMCTS();
 void ExportUCB1PolicyStrategy();
+void ExportUniformRandomEstimator();
 
 
