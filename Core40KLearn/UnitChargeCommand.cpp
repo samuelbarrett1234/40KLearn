@@ -139,10 +139,11 @@ void UnitChargeCommand::Apply(const GameState& startState,
 			"Move semantics should clear workingStates and workingDist");
 
 		ApplyCommand(pCmd, inStates, inDist, workingStates, workingDist);
+
+		C40KL_ASSERT_INVARIANT(workingStates.size() == workingDist.size(),
+			"Distribution needs to match.");
 	}
-
-	C40KL_ASSERT_INVARIANT(workingStates.size() == workingDist.size(), "Distribution needs to match.");
-
+	
 	const size_t n = workingStates.size();
 
 	//Apply the charge logic to each resulting overwatch state
@@ -237,8 +238,13 @@ void UnitChargeCommand::ApplyChargeCmd(const GameState& state, float probOfCurre
 	//Output the fail state:
 	if (pFail > 0)
 	{
-		outStates.push_back(state);
-		outDistribution.push_back(pFail*probOfCurrentState);
+		//Note that we need to update the unit as it has
+		// attempted charge this turn:
+		auto boardCopy = board;
+		boardCopy.SetUnitOnSquare(m_Source, unitStats, team);
+
+		outStates.emplace_back(team, team, Phase::CHARGE, boardCopy);
+		outDistribution.push_back(pFail * probOfCurrentState);
 	}
 
 	//Compute & output the pass state:
@@ -251,7 +257,7 @@ void UnitChargeCommand::ApplyChargeCmd(const GameState& state, float probOfCurre
 
 	//Deterministic action:
 	outStates.emplace_back(team, team, Phase::CHARGE, board);
-	outDistribution.push_back(pPass*probOfCurrentState);
+	outDistribution.push_back(pPass * probOfCurrentState);
 }
 
 

@@ -90,6 +90,12 @@ BOOST_AUTO_TEST_CASE(DistributionTest)
 	BOOST_TEST(!pPass->GetBoardState().IsOccupied(Position(0, 0)));
 	BOOST_TEST(!pFail->GetBoardState().IsOccupied(Position(0, 3)));
 	BOOST_TEST(pFail->GetBoardState().IsOccupied(Position(0, 0)));
+
+	//Also test that the correct flags have been set:
+	BOOST_TEST(pPass->GetBoardState().GetUnitOnSquare(Position(0, 3)).attemptedChargeThisTurn);
+	BOOST_TEST(pPass->GetBoardState().GetUnitOnSquare(Position(0, 3)).successfulChargeThisTurn);
+	BOOST_TEST(pFail->GetBoardState().GetUnitOnSquare(Position(0, 0)).attemptedChargeThisTurn);
+	BOOST_TEST(!pFail->GetBoardState().GetUnitOnSquare(Position(0, 0)).successfulChargeThisTurn);
 }
 
 
@@ -610,6 +616,28 @@ BOOST_AUTO_TEST_CASE(ModelsLostTest)
 			BOOST_TEST(unit.modelsLostThisPhase == numModels - unit.count);
 		}
 	}
+}
+
+
+BOOST_AUTO_TEST_CASE(CantChargeTwiceTest)
+{
+	//Test that we can't charge twice in the same turn
+
+	BoardState b(25, 1.0f);
+
+	auto chargedUnit = unitWithGun;
+	chargedUnit.attemptedChargeThisTurn = true;
+
+	b.SetUnitOnSquare(Position(0, 0), chargedUnit, 0);
+	b.SetUnitOnSquare(Position(0, 3), unitWithGun, 1);
+
+	GameState gs(0, 0, Phase::CHARGE, b);
+
+	auto cmds = gs.GetCommands();
+
+	stripCommandsNotFor(Position(0, 0), cmds);
+
+	BOOST_TEST(cmds.empty());
 }
 
 
