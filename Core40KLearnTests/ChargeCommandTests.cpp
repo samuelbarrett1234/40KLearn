@@ -367,7 +367,7 @@ BOOST_AUTO_TEST_CASE(MultipleOverwatchTest)
 	b.SetUnitOnSquare(Position(0, 13), u, 1);
 	b.SetUnitOnSquare(Position(1, 13), u, 1);
 	b.SetUnitOnSquare(Position(2, 13), u, 1);
-	//Set up so only possible charge position is (1,11).
+	//Set up so only possible charge position is (1,12).
 
 	GameState gs(0, 0, Phase::CHARGE, b);
 

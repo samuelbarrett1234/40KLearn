@@ -4,6 +4,7 @@
 #include "CompositeCommand.h"
 #include "OverwatchCommand.h"
 #include <sstream>
+#include <algorithm>
 
 
 namespace c40kl
@@ -47,6 +48,33 @@ void UnitChargeCommand::GetPossibleCommands(const GameState& state, GameCommandA
 	//Get all enemy units:
 	const auto enemies = board.GetAllUnits(1 - ourTeam);
 
+	//Compute all possible charge positions, for any allied unit (i.e.
+	// not taking distance into account, yet):
+	PositionArray possibleChargePositions;
+	for (const auto& enemyPos : enemies)
+	{
+		//Check all squares adjacent to the enemy position
+
+		//Compute square bottom left / top right positions:
+		Position minPos(std::max(0, enemyPos.first - 1), std::max(0, enemyPos.second - 1));
+		Position maxPos(std::min(board.GetSize() - 1, enemyPos.first + 1),
+			std::min(board.GetSize() - 1, enemyPos.second + 1));
+
+		//For each position, add it if it's not occupied:
+		for (int x = minPos.first; x <= maxPos.first; x++)
+		{
+			for (int y = minPos.second; y <= maxPos.second; y++)
+			{
+				Position curPos(x, y);
+
+				//If the position isn't occupied and hasn't already been added:
+				if (!board.IsOccupied(curPos) && std::find(possibleChargePositions.begin(),
+					possibleChargePositions.end(), curPos) == possibleChargePositions.end())
+					possibleChargePositions.push_back(curPos);
+			}
+		}
+	}
+
 	//Consider each unit for charge
 	for (const auto& unitPos : units)
 	{
@@ -62,18 +90,11 @@ void UnitChargeCommand::GetPossibleCommands(const GameState& state, GameCommandA
 			//And we need a melee weapon
 			&& HasStandardMeleeWeapon(stats))
 		{
-			//Get all of the possible positions to charge to
-			// (you can charge a max of 12 inches because you
-			// can't get higher than that on the dice).
-			possiblePositions = board.GetSquaresInRange(unitPos, 12.0f);
-
 			//For each possible position to charge into...
-			for (const auto& targetPos : possiblePositions)
+			for (const auto& targetPos : possibleChargePositions)
 			{
-				//Can only charge positions with adjacent enemies
-				// and which are not already occupied
-				if (!board.IsOccupied(targetPos)
-					&& board.HasAdjacentEnemy(targetPos, ourTeam))
+				//If the charge position is in range:
+				if (board.GetDistance(unitPos, targetPos) <= 12.0f)
 				{
 					//Construct a composite command, containing all
 					// overwatch shooting and then the final charge
@@ -94,7 +115,7 @@ void UnitChargeCommand::GetPossibleCommands(const GameState& state, GameCommandA
 							//If satisifes shooting preconditions...
 							if (HasStandardRangedWeapon(enemyStats) //If has ranged weapon...
 								&& enemyStats.rg_range >= board.GetDistance(unitPos, enemyPos) //... which is in range
-								&& !board.HasAdjacentEnemy(enemyPos, 1-ourTeam)) //And if not already tied up in combat...
+								&& !board.HasAdjacentEnemy(enemyPos, 1 - ourTeam)) //And if not already tied up in combat...
 							{
 								//Add overwatch command:
 								arr.push_back(std::make_shared<OverwatchCommand>(enemyPos, unitPos));
