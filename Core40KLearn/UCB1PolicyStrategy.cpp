@@ -1,4 +1,5 @@
 #include "UCB1PolicyStrategy.h"
+#include <iostream>
 #include <cmath>
 #include <numeric>
 
@@ -52,6 +53,15 @@ std::vector<float> UCB1PolicyStrategy::GetActionDistribution(const MCTSNode& nod
 			);
 	}
 
+	std::cout << "UCB:" << std::endl;
+	for (size_t i = 0; i < n; i++)
+	{
+		std::cout << "Action value=" << actionVals[i]
+			<< ", prior=" << priors[i]
+			<< ", visits=" << actionVisitCounts[i]
+			<< ", ucb=" << ucbValues[i] << std::endl;
+	}
+
 	//UCB1 always picks the best one, hence we
 	// return a distribution of zero everywhere
 	// except the action with highest UCB value,
@@ -60,7 +70,7 @@ std::vector<float> UCB1PolicyStrategy::GetActionDistribution(const MCTSNode& nod
 	float maxVal = -std::numeric_limits<float>::max();
 	size_t maxIdx = (size_t)(-1);
 
-	for (size_t i = 0; i < maxIdx; i++)
+	for (size_t i = 0; i < n; i++)
 	{
 		if (ucbValues[i] > maxVal)
 		{
