@@ -1,23 +1,19 @@
 #include "BoostPython.h"
 #include "MCTSNodeWrapper.h"
 #include <boost/python/list.hpp>
-#include <iostream>
 using namespace c40kl;
 
 
 //Need special override function for generic Python lists.
 void MCTSNodeExpandWithPythonList(MCTSNodeWrapper& node, list& py_list)
 {
-	std::cout << "Calling wrapper." << std::endl;
 	std::vector<float> prior;
 	prior.resize(len(py_list));
 	for (size_t i = 0; i < prior.size(); i++)
 	{
 		prior[i] = extract<float>(py_list[i]);
 	}
-	std::cout << "Calling CPP core." << std::endl;
 	node.Expand(prior);
-	std::cout << "Finished calling CPP core." << std::endl;
 }
 
 

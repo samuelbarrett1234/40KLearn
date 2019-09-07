@@ -24,10 +24,7 @@ class MCTS:
     Returns [actions], [probabilities].
     """
     def get_distribution(self):
-        values = self.root.get_action_value_estimates()
-        visit_counts = self.root.get_action_visit_counts()
-        priors = self.root.get_action_prior_distribution()
-        dist = self.final_policy.get_action_distribution(values, visit_counts, priors)
+        dist = self.final_policy.get_action_distribution(self.root)
         return self.root.get_actions(),dist
         
     """
@@ -86,9 +83,7 @@ class MCTS:
                 actions = cur_node.get_actions()
                 priors = self.sim_strategy.compute_prior_distribution(cur_node.get_state(), actions)
                 
-                print("Expanding...")
                 cur_node.expand(priors)
-                print("Expanded!")
                 
                 #Apply an action sampled from the prior:
                 action_idx = select_randomly([i for i in range(len(actions))],priors)
@@ -109,6 +104,7 @@ class MCTS:
                 depth = cur_node.get_depth()
                 if depth > self.maxDepth:
                     self.maxDepth = depth
+                    print("MCTS tree deepened to", depth)
                 
             #Add new statistic:
             cur_node.add_value_statistic(value_estimate)
