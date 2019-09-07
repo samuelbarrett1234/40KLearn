@@ -26,8 +26,6 @@ class BasicAIController:
         #Get results:
         actions, dist = self.tree.get_distribution()
         
-        print("Resulting action distribution:", str(dist))
-        
         #Select and apply:
         action = select_randomly(actions, dist)
         if action.get_type() != py40kl.CommandType.UNIT_ORDER:            

@@ -1,5 +1,4 @@
 #include "UCB1PolicyStrategy.h"
-#include <iostream>
 #include <cmath>
 #include <numeric>
 
@@ -51,15 +50,6 @@ std::vector<float> UCB1PolicyStrategy::GetActionDistribution(const MCTSNode& nod
 			+ m_ExploratoryParam * priors[i] * std::sqrtf(
 				logVisits / (1.0f + (float)actionVisitCounts[i])
 			);
-	}
-
-	std::cout << "UCB:" << std::endl;
-	for (size_t i = 0; i < n; i++)
-	{
-		std::cout << "Action value=" << actionVals[i]
-			<< ", prior=" << priors[i]
-			<< ", visits=" << actionVisitCounts[i]
-			<< ", ucb=" << ucbValues[i] << std::endl;
 	}
 
 	//UCB1 always picks the best one, hence we
