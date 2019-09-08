@@ -51,7 +51,12 @@ size_t UCB1PolicyStrategy::ActionArgMax(const MCTSNode& node) const
 	size_t totalVisits = 0;
 	for (size_t k : actionVisitCounts)
 		totalVisits += k;
-	const float logVisits = std::log((float)totalVisits);
+
+	//Note: if it's the case that we have never visited this
+	// node, then just select straight from the prior. To do
+	// this we just clip the logVisits to be >= 0, i.e. if
+	// totalVisits == 1 or 0 then logVisits is just 0.
+	const float logVisits = (totalVisits > 0) ? std::log((float)totalVisits) : 0.0f;
 
 	std::vector<float> ucbValues(n, 0.0f);
 
