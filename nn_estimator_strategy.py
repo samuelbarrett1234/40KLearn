@@ -23,13 +23,13 @@ class NeuralNetworkEstimatorStrategy:
             val *= -1.0
             
         return val
-        
+
     def compute_prior_distribution(self, state, actions):
         board_state_as_tensor, phase_as_one_hot_vector = self._convert_state(state)
         _, policies = self.model.run([board_state_as_tensor, phase_as_one_hot_vector])
         policy = policies[0] # policies is a list of length 1, because the neural network operates on lists of states.
         
-        #TODO: 'trim' the policy. This involves turning it from a 1+BOARD_SIZE*BOARD_SIZE
+        #TODO: 'trim' the policy. This involves turning it from a 1 + 2 * BOARD_SIZE * BOARD_SIZE
         # length vector into a probability distribution over actions.
         return trimmed_policy_distribution
         
