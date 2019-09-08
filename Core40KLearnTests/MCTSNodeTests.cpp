@@ -786,6 +786,54 @@ BOOST_AUTO_TEST_CASE(UnvisitedActionValueEstimateTest)
 }
 
 
+BOOST_AUTO_TEST_CASE(ChildOrderingTest)
+{
+	//Test that the MCTS node children appear in the same order
+	// as the state results from their corresponding action.
+
+	//First set up a tree with a root and children:
+
+	BoardState b(25, 1.0f);
+	b.SetUnitOnSquare(Position(0, 0), unitWithGun, 0);
+	b.SetUnitOnSquare(Position(0, 2), unitWithGun, 1);
+	b.SetUnitOnSquare(Position(1, 2), unitWithGun, 1);
+	GameState gs(0, 0, Phase::SHOOTING, b);
+
+	MCTSNodePtr pRoot = MCTSNode::CreateRootNode(gs);
+
+	//Construct uniform prior
+	const size_t numActions = pRoot->GetNumActions();
+	std::vector<float> prior;
+	prior.resize(numActions, 1.0f / (float)numActions);
+
+	//Expand the root to give it some children:
+	pRoot->Expand(prior);
+
+	auto commands = gs.GetCommands();
+
+	//Now test that we have the same number of actions,
+	// and that each action has the same number of resulting
+	// states, and that the resulting states are in the same
+	// order for action's Apply() and MCTS node children.
+	BOOST_REQUIRE(commands.size() == pRoot->GetNumActions());
+	for (size_t i = 0; i < commands.size(); i++)
+	{
+		auto nodeResults = pRoot->GetStateResults(i);
+
+		std::vector<GameState> actionResults;
+		std::vector<float> actionProbs;
+		commands[i]->Apply(gs, actionResults, actionProbs);
+
+		BOOST_REQUIRE(actionResults.size() == nodeResults.size());
+
+		for (size_t j = 0; j < actionResults.size(); j++)
+		{
+			BOOST_TEST((actionResults[j] == nodeResults[j]->GetState()));
+		}
+	}
+}
+
+
 BOOST_AUTO_TEST_SUITE_END();
 
 

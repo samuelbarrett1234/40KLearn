@@ -90,6 +90,9 @@
     <ClInclude Include="SelectRandomly.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SelfPlayManager.h">
+      <Filter>Header Files\AI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Board.cpp">
@@ -135,6 +138,9 @@
       <Filter>Source Files\AI</Filter>
     </ClCompile>
     <ClCompile Include="UniformRandomEstimator.cpp">
+      <Filter>Source Files\AI</Filter>
+    </ClCompile>
+    <ClCompile Include="SelfPlayManager.cpp">
       <Filter>Source Files\AI</Filter>
     </ClCompile>
   </ItemGroup>

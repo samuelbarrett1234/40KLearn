@@ -13,11 +13,11 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\MCTS Tests">
-      <UniqueIdentifier>{374abc4b-224b-47ce-8bda-26f5e8d30485}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Game Tests">
       <UniqueIdentifier>{924f6954-63d2-43a5-b6a1-e12abe098d3e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\AI Tests">
+      <UniqueIdentifier>{374abc4b-224b-47ce-8bda-26f5e8d30485}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -54,7 +54,16 @@
       <Filter>Source Files\Game Tests</Filter>
     </ClCompile>
     <ClCompile Include="MCTSNodeTests.cpp">
-      <Filter>Source Files\MCTS Tests</Filter>
+      <Filter>Source Files\AI Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="UCB1PolicyStrategyTests.cpp">
+      <Filter>Source Files\AI Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="UniformRandomEstimatorTests.cpp">
+      <Filter>Source Files\AI Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="SelfPlayManagerTests.cpp">
+      <Filter>Source Files\AI Tests</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

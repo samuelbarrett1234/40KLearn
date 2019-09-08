@@ -20,6 +20,17 @@ UCB1PolicyStrategy::UCB1PolicyStrategy(float exploratoryParam, int rootTeam) :
 
 std::vector<float> UCB1PolicyStrategy::GetActionDistribution(const MCTSNode& node) const
 {
+	size_t maxIdx = ActionArgMax(node);
+
+	//Now construct distribution:
+	std::vector<float> dist(node.GetNumActions(), 0.0f);
+	dist[maxIdx] = 1.0f;
+	return dist;
+}
+
+
+size_t UCB1PolicyStrategy::ActionArgMax(const MCTSNode& node) const
+{
 	C40KL_ASSERT_PRECONDITION(!node.IsLeaf(),
 		"UCB1 only works for non-leaf nodes!");
 
@@ -27,7 +38,7 @@ std::vector<float> UCB1PolicyStrategy::GetActionDistribution(const MCTSNode& nod
 	const auto priors = node.GetActionPriorDistribution();
 	const auto actionVals = node.GetActionValueEstimates();
 	const auto actionVisitCounts = node.GetActionVisitCounts();
-	
+
 	const float teamMultiplier = (curTeam == m_Team) ? 1.0f : (-1.0f);
 
 	C40KL_ASSERT_INVARIANT(priors.size() == actionVals.size()
@@ -40,7 +51,12 @@ std::vector<float> UCB1PolicyStrategy::GetActionDistribution(const MCTSNode& nod
 	size_t totalVisits = 0;
 	for (size_t k : actionVisitCounts)
 		totalVisits += k;
-	const float logVisits = std::log((float)totalVisits);
+
+	//Note: if it's the case that we have never visited this
+	// node, then just select straight from the prior. To do
+	// this we just clip the logVisits to be >= 0, i.e. if
+	// totalVisits == 1 or 0 then logVisits is just 0.
+	const float logVisits = (totalVisits > 0) ? std::log((float)totalVisits) : 0.0f;
 
 	std::vector<float> ucbValues(n, 0.0f);
 
@@ -72,10 +88,7 @@ std::vector<float> UCB1PolicyStrategy::GetActionDistribution(const MCTSNode& nod
 	C40KL_ASSERT_INVARIANT(maxIdx < n,
 		"Need valid best action for UCB1.");
 
-	//Now construct distribution:
-	std::vector<float> dist(n, 0.0f);
-	dist[maxIdx] = 1.0f;
-	return dist;
+	return maxIdx;
 }
 
 

@@ -36,7 +36,16 @@ public:
 	UCB1PolicyStrategy(float exploratoryParam, int rootTeam);
 
 
+	// Interface function
 	virtual std::vector<float> GetActionDistribution(const MCTSNode& node) const override;
+
+
+	/// <summary>
+	/// Find the index of the action from this node which maximises UCB1.
+	/// </summary>
+	/// <param name="node">The node to search from.</param>
+	/// <returns>The index of the best action to take.</returns>
+	size_t ActionArgMax(const MCTSNode& node) const;
 
 
 private:
