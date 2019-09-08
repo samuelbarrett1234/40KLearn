@@ -165,8 +165,11 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MCTSNodeTests.cpp" />
     <ClCompile Include="MovementCommandTests.cpp" />
+    <ClCompile Include="SelfPlayManagerTests.cpp" />
     <ClCompile Include="ShootingCommandTests.cpp" />
     <ClCompile Include="Test.cpp" />
+    <ClCompile Include="UCB1PolicyStrategyTests.cpp" />
+    <ClCompile Include="UniformRandomEstimatorTests.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
