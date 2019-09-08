@@ -13,10 +13,11 @@ and for generating prior policies.
 """
 class NNModel:
     def __init__(self):
-        self.input = tf.keras.Input(shape=(-1, BOARD_SIZE, BOARD_SIZE, NUM_UNIT_FEATURES))
+        self.board_input = tf.keras.Input(shape=(-1, BOARD_SIZE, BOARD_SIZE, NUM_UNIT_FEATURES))
+        self.phase_input = tf.keras.Input(shape=(-1, 4))  # the current game's phase.
         
         # main neural network body
-        x = layers.Conv2D(256, (3, 3), activation='relu', input_shape=self.input.shape[1:])(self.input)
+        x = layers.Conv2D(256, (3, 3), activation='relu', input_shape=self.board_input.shape[1:])(self.board_input)
         x = layers.BatchNormalization()(x)
         x = layers.Conv2D(256, (3, 3), activation='relu')(x)
         x = layers.BatchNormalization()(x)
@@ -31,16 +32,15 @@ class NNModel:
         x = layers.Conv2D(256, (3, 3), activation='relu')(x)
         x = layers.BatchNormalization()(x)
         x = layers.Flatten()(x)
+        x = layers.Dense(256, activation='relu')(tf.concat([x, self.phase_input]))  # provide phase input here!
         
         # construct value head of network
-        self.value_head = layers.Dense(256, activation='relu')(x)
         self.value_head = layers.BatchNormalization()(self.value_head)
         self.value_head = layers.Dense(128, activation='relu')(self.value_head)
         self.value_head = layers.Dense(1, activation='tanh')(self.value_head)
         # value head returns +1 for estimated win and -1 for estimated loss, and all values inbetween
         
         # construct policy head of network
-        self.policy_head = layers.Dense(256, activation='relu')(x)
         self.policy_head = layers.BatchNormalization()(self.policy_head)
         self.policy_head = layers.Dense(256, activation='relu')(self.policy_head)
         self.policy_head = layers.Dense(BOARD_SIZE * BOARD_SIZE + 1, activation='softmax')(self.policy_head)
