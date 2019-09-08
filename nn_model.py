@@ -33,21 +33,25 @@ class NNModel:
         x = layers.BatchNormalization()(x)
         x = layers.Flatten()(x)
         x = layers.Dense(256, activation='relu')(tf.concat([x, self.phase_input]))  # provide phase input here!
+        x = layers.BatchNormalization()(x)
+        x = layers.Dense(256, activation='relu')(x)
+        x = layers.BatchNormalization()(x)
         
         # construct value head of network
-        self.value_head = layers.BatchNormalization()(self.value_head)
         self.value_head = layers.Dense(128, activation='relu')(self.value_head)
+        self.value_head = layers.Dense(32, activation='relu')(self.value_head)
         self.value_head = layers.Dense(1, activation='tanh')(self.value_head)
         # value head returns +1 for estimated win and -1 for estimated loss, and all values inbetween
         
         # construct policy head of network
-        self.policy_head = layers.BatchNormalization()(self.policy_head)
+        self.policy_head = layers.Dense(256, activation='relu')(self.policy_head)
         self.policy_head = layers.Dense(256, activation='relu')(self.policy_head)
         self.policy_head = layers.Dense(BOARD_SIZE * BOARD_SIZE + 1, activation='softmax')(self.policy_head)
         # policy head returns target action position probabilities, and an extra one for pass
         
         # create model
-        self.model = tf.keras.Model(inputs=self.input, outputs=[self.value_head, self.policy_head])
+        self.model = tf.keras.Model(inputs=[self.board_input, self.phase_input],
+                                    outputs=[self.value_head, self.policy_head])
         
         # set up optimisers/losses
         optimiser = 'adam'
@@ -59,18 +63,14 @@ class NNModel:
                            loss=[value_head_loss, policy_head_loss])
 
     def train(self, input_array, values, policies):
-        """
-        Train the neural network model on the given input array
-        (which is a list of game states which have been converted
-        to tensors) and a list of values (corresponding to each
-        game state) and a list of policies (again, corresponding
-        to each game state).
-        """
-        # fit model
+        # input array: should be of the form <list of board representations as tensors, list of phases as vectors>
+        # values: should be a list of scalars
+        # policies: should be a list of 2D arrays of the same size as BOARD_SIZE * BOARD_SIZE + 1
         self.model.fit(input_array, [values, policies], epochs=NUM_EPOCHS)
-        # done!
 
     def run(self, input_array):
-        # predict the value and policy 
+        # input array: should be of the form <list of board representations as tensors, list of phases as vectors>
+        # values: will be a list of scalars
+        # policies: will be a list of 2D arrays of the same size as BOARD_SIZE * BOARD_SIZE + 1
         values, policies = self.model.predict(input_array)
         return values, policies
