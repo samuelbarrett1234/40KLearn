@@ -33,7 +33,7 @@ class NeuralNetworkEstimatorStrategy:
         # length vector into a probability distribution over actions.
         return trimmed_policy_distribution
         
-    def _convert_state(self, state):        
+    def _convert_state(self, state):
         #TODO: convert 'state' to a pair
         # <board-state-as-tensor, phase-as-one-hot-vector>
         return board_state_as_tensor, phase_as_one_hot_vector
