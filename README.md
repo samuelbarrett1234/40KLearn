@@ -1,12 +1,12 @@
 # 40KLearn
 An attempt to create an agent to play the 40K tabletop game
-through Reinforcement Learning.
+through Reinforcement Learning. Roughly follows the AlphaZero
+architecture, but with a much smaller and simpler neural network
+due to lack of computing power.
 
-This project aims to extend the AlphaZero architecture to a
-game with nondeterminism: 40K tabletop.
-
-The agent will be using MCTS, guided by a policy network, and
-using a value network instead of simulation.
+The RL agent will use Monte Carlo Tree Search (MCTS), and a
+convolutional neural network with a value head and a policy
+head, which guides the tree search algorithm.
 
 The 40K game will be simplified in the following way:
 - Units are fixed to moving on a coarse grid,
@@ -23,11 +23,12 @@ not the case.
 
 ## TODO
 
-- BUG: fix issue of nCr not working when there are ~40 shots (split into smaller groups and recombine distributions? Or make nCr more efficient? Warning: nCr with n=50,r=25 is way bigger than what can be stored in a 4-byte integer. Maybe if n is too large we approximate the binomial distribution?).
-- Finish unit testing the core game rules.
-- Write MCTS implementation in C++.
-- Write Python wrapper (using Boost.Python) for the game rules and MCTS searching.
-- Incorporate the core C++ module into the existing Python code.
-- Update the modifications to the game rules (units can be commanded in any order, alternating fights in fight phase).
-- Implement value and policy networks using TensorFlow.
+- Create an ExperienceDataset class, which has the job of recording a large
+  list of experiences (which are in the form <game state, value, policy>)
+  and can produce a sample of these on request.
+- Create the neural network class, which can predict values and policies given
+  game states, and also can train on a dataset of game states, game values, and
+  policies.
+- Once the neural network agent is complete, it should be incorporated into
+  the graphical user interface which is already complete.
 
