@@ -16,6 +16,10 @@ void ExportUtilities()
 		.def(vector_indexing_suite<std::vector<float>>());
 
 
+	class_<std::vector<std::vector<float>>>("Float2DArray")
+		.def(vector_indexing_suite<std::vector<std::vector<float>>>());
+
+
 	enum_<Phase>("Phase")
 		.value("MOVEMENT", Phase::MOVEMENT)
 		.value("SHOOTING", Phase::SHOOTING)

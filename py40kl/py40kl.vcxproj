@@ -178,6 +178,7 @@
     <ClCompile Include="GameState.cpp" />
     <ClCompile Include="MCTSNode.cpp" />
     <ClCompile Include="MCTSNodeWrapper.cpp" />
+    <ClCompile Include="SelfPlayManager.cpp" />
     <ClCompile Include="UCB1PolicyStrategy.cpp" />
     <ClCompile Include="UniformRandomEstimator.cpp" />
     <ClCompile Include="Utility.cpp" />
