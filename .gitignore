@@ -4,3 +4,4 @@ Core40KLearn/Output/
 Core40KLearn/.vs/
 *.dll
 *.pyd
+.vscode/
