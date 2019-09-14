@@ -17,18 +17,17 @@ The 40K game will be simplified in the following way:
 - No randomness in determining statistics (e.g. a weapon with a random number of shots),
 - No line of sight or cover
 
-In the future it may be easy to work in global abilities (e.g. an orbital
-bombardment) and psykers with exactly one psychic power, but this is currently
-not the case.
+It should be easy to incorporate global abilities (e.g. an orbital bombardment)
+and psykers with exactly one psychic power, but this is currently not the case.
 
 ## Project Structure
 
-A lot of the performance-intensive parts of the project are coded in C++ and
+The performance-intensive parts of the project are written in C++ and
 are exposed to Python via a wrapper (using Boost Python). The core game rules
 and the search tree implementation are in the Core40KLearn C++ project, which
 builds into a DLL. This project has tests in the Core40KLearnTests project.
 The core project is also wrapped, to expose it to Python, in the py40kl project.
-The game's (very basic) GUI is in model/view/controller, where the View uses
+The game's (very basic) GUI uses model/view/controller, where the View uses
 Pygame to render, and the model is just a wrapper around a core GameState object,
 and the controller is either a human player or an AI controller.
 
@@ -52,13 +51,13 @@ In the core project, the main classes are:
 
 ## Installation Instructions
 
-This project relies on the Boost C++ libraries. Ensure they are installed, and
-the root of the Boost library directory is stored in the environment variable
+This project relies on the Boost C++ libraries. Ensure they are installed and built.
+The root of the Boost library directory is stored in the environment variable
 BOOST_DIR. Ensure that the include files are in BOOST_DIR/boost, and that the
 built Boost binaries are in BOOST_DIR/stage/lib.
 
-We also require Python to be installed, with Pygame, Numpy and TensorFlow, and Boost's
-Python module needs to be built with this version of Python, in order for the
+Furthermore, Python must be installed with Pygame, Numpy and TensorFlow. Note that
+Boost Python needs to be built with this version of Python, in order for the
 Boost Python wrapper around the C++ classes to work. We need the environment
 variable PYTHONPATH to point to the root directory of Python, and its DLL subdirectory,
 its include subdirectory, and its static library subdirectory. This is all just
@@ -71,16 +70,17 @@ are automatically copied to the project's root directory after building, which i
 where they are intended to be ran from.
 
 Finally, put the Boost Python and Python DLLs in the root directory of the project,
-once built.
+once built. This allows them to be found when the game is ran. Run the file "game.py"
+to play the game against an AI player.
 
 ## TODO
 
 - Create an ExperienceDataset class, which has the job of recording a large
-  list of experiences (which are in the form <game state, value, policy>)
+  list of experiences (which are a tuple (game state, value, policy))
   and can produce a sample of these on request.
 - Create the neural network class, which can predict values and policies given
   game states, and also can train on a dataset of game states, game values, and
   policies.
 - Once the neural network agent is complete, it should be incorporated into
   the graphical user interface which is already complete.
-
+- Restructure Python code into packages, fix Linter errors throughout the code.
