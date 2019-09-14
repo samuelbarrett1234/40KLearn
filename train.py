@@ -6,6 +6,7 @@ NUM_TRAINING_EPOCHS = 10
 NUM_GAMES = 10
 GAME_START_STATE = py40kl.GameState()  # TODO: setup initial state here.
 EXPERIENCE_SAMPLE_EPOCH_SIZE = 1000
+MODEL_FILENAME = 'models/model1.h5'
 
 
 # The Experience Dataset is an important class
@@ -43,8 +44,8 @@ class ExperienceDataset:
 mgr = py40kl.SelfPlayManager(2.0 ** 0.5, 100)
 
 # Create the neural network model:
-# TODO: load from file?
-model = NNModel()
+# TODO: load existing model
+model = NNModel(filename=None)
 
 # Create the dataset:
 # TODO: load from file?
@@ -96,4 +97,4 @@ for epoch in range(NUM_TRAINING_EPOCHS):
     # Now ready to perform a training epoch on the model:
     model.train(game_states, values, policies)
 
-# TODO: save model!
+model.save(MODEL_FILENAME)  # save once training done

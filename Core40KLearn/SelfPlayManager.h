@@ -31,8 +31,12 @@ public:
 	/// and the number of simulations the AI makes at each
 	/// state.
 	/// </summary>
-	/// <param name="ucb1ExplorationParameter">The UCB1 exploration parameter, typically equal to root 2, must be > 0.</param>
-	/// <param name="numSimulations">The number of simulations the AI will do in the search tree before making a decision.</param>
+	/// <param name="ucb1ExplorationParameter">
+	/// The UCB1 exploration parameter, typically equal to root 2, must be greater than 0.
+	/// </param>
+	/// <param name="numSimulations">
+	/// The number of simulations the AI will do in the search tree before making a decision.
+	/// </param>
 	SelfPlayManager(float ucb1ExplorationParameter, size_t numSimulations);
 
 	
