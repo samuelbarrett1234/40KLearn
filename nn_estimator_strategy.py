@@ -28,7 +28,7 @@ class NeuralNetworkEstimatorStrategy:
 
         return val
 
-    def compute_prior_distribution(self, state):
+    def compute_prior_distribution(self, state, actions):
         (board_state_as_tensor,
          phase_as_one_hot_vector) = self._convert_state(state)
 
