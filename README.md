@@ -75,12 +75,11 @@ to play the game against an AI player.
 
 ## TODO
 
-- Create an ExperienceDataset class, which has the job of recording a large
-  list of experiences (which are a tuple (game state, value, policy))
-  and can produce a sample of these on request.
-- Create the neural network class, which can predict values and policies given
-  game states, and also can train on a dataset of game states, game values, and
-  policies.
-- Once the neural network agent is complete, it should be incorporated into
-  the graphical user interface which is already complete.
+- Create an efficient ExperienceDataset class, which has the job of recording a large
+  list of experiences (which are a tuple (game state, value, policy)) and can produce
+  a sample of these on request. It will obviously have to stream to and from secondary
+  storage, because it should be able to support large numbers of experiences.
+- Train neural network and incorporate into GUI.
 - Restructure Python code into packages, fix Linter errors throughout the code.
+- Redo the MCTS tree to enforce an order on which units to order. This should reduce
+  branching factor. Then, update neural network policy output.
