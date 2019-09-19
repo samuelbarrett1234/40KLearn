@@ -78,7 +78,10 @@ to play the game against an AI player.
 - Create an efficient ExperienceDataset class, which has the job of recording a large
   list of experiences (which are a tuple (game state, value, policy)) and can produce
   a sample of these on request. It will obviously have to stream to and from secondary
-  storage, because it should be able to support large numbers of experiences.
+  storage, because it should be able to support large numbers of experiences. Note that
+  when producing a new sample, it can rotate or reflect the game state at random,
+  because this should not change the game value or policy. (Of course if the game board
+  is transformed then the policy will have to be updated as well).
 - Train neural network and incorporate into GUI.
 - Restructure Python code into packages, fix Linter errors throughout the code.
 - Redo the MCTS tree to enforce an order on which units to order. This should reduce
