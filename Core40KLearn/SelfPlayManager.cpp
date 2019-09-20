@@ -1,5 +1,7 @@
 #include "SelfPlayManager.h"
 #include "SelectRandomly.h"
+#include <boost/range/combine.hpp>
+#include <boost/range/algorithm/remove_if.hpp>
 
 
 namespace c40kl
@@ -17,13 +19,24 @@ SelfPlayManager::SelfPlayManager(float ucb1ExplorationParameter, size_t numSimul
 
 void SelfPlayManager::Reset(size_t numGames, const GameState& initialState)
 {
+	C40KL_ASSERT_PRECONDITION(!initialState.IsFinished(),
+		"Cannot play finished initial state.");
+
 	m_pRoots.clear();
 	m_pRoots.resize(numGames, MCTSNodePtr());
+
+	m_GameIDs.clear();
+	m_GameIDs.resize(numGames, 0);
+
+	m_GameValues.clear();
+	m_GameValues.resize(numGames);
+
 	m_pSelectedLeaves.clear();
 	m_SelectedIndices.clear();
 
 	for (size_t i = 0; i < numGames; i++)
 	{
+		m_GameIDs[i] = i;
 		m_pRoots[i] = MCTSNode::CreateRootNode(initialState);
 	}
 }
@@ -40,28 +53,35 @@ void SelfPlayManager::Select(std::vector<GameState>& outLeafStates)
 	C40KL_ASSERT_PRECONDITION(!AllFinished(),
 		"Cannot call Select() when all games are finished.");
 
-	//Clear input vector, and reserve the amount of space we expect to use:
+	//Clear output vector, and reserve the amount of space we expect to use:
 	outLeafStates.clear();
 	outLeafStates.reserve(m_pRoots.size());
 
 	//We know exactly how big m_pSelectedLeaves needs to be, but
 	// not m_SelectedIndices, however it will usually be just as big.
-	m_pSelectedLeaves.resize(m_pRoots.size());
+	m_pSelectedLeaves.resize(m_pRoots.size(), MCTSNodePtr());
 	m_SelectedIndices.reserve(m_pRoots.size());
 
 	//TODO: parallelise this loop.
 	for (size_t i = 0; i < m_pRoots.size(); i++)
 	{
-		SelectLeafForGame(i);
+		C40KL_ASSERT_INVARIANT(!m_pRoots[i]->IsTerminal(),
+			"Roots should be nonterminal.");
 
-		//If a leaf node needed to be selected for this game...
-		if(m_pSelectedLeaves[i])
+		//If this tree hasn't had enough samples yet...
+		if (m_pRoots[i]->GetNumValueSamples() < m_NumSimulations)
 		{
-			//If leaf is nonterminal...
-			if (!m_pSelectedLeaves[i]->GetState().IsFinished())
+			SelectLeafForGame(i);
+
+			//If a leaf node needed to be selected for this game...
+			if (m_pSelectedLeaves[i])
 			{
-				outLeafStates.push_back(m_pSelectedLeaves[i]->GetState());
-				m_SelectedIndices.push_back(i);
+				//If leaf is nonterminal...
+				if (!m_pSelectedLeaves[i]->GetState().IsFinished())
+				{
+					outLeafStates.push_back(m_pSelectedLeaves[i]->GetState());
+					m_SelectedIndices.push_back(i);
+				}
 			}
 		}
 	}
@@ -95,10 +115,9 @@ void SelfPlayManager::Update(const std::vector<float>& valueEstimates,
 	for (size_t i = 0; i < m_SelectedIndices.size(); i++)
 	{
 		const size_t j = m_SelectedIndices[i];
+		const MCTSNodePtr& pLeaf = m_pSelectedLeaves[j];
 
 		const std::vector<float>& policy = policies[i];
-
-		const MCTSNodePtr& pLeaf = m_pSelectedLeaves[j];
 
 		//This should never fail, and it's not the user's fault if it fails, it's our fault.
 		C40KL_ASSERT_INVARIANT((pLeaf.get() != nullptr) && !pLeaf->GetState().IsFinished(),
@@ -111,24 +130,39 @@ void SelfPlayManager::Update(const std::vector<float>& valueEstimates,
 	//TODO: parallelise this loop!
 	for (size_t i = 0; i < m_SelectedIndices.size(); i++)
 	{
-		C40KL_ASSERT_INVARIANT(!m_pSelectedLeaves[m_SelectedIndices[i]]->GetState().IsFinished(),
-			"Selected indices must point to nonterminal nodes.");
-		ExpandBackpropagate(m_SelectedIndices[i], valueEstimates[i], policies[i]);
+		const size_t j = m_SelectedIndices[i];
+		const MCTSNodePtr& pLeaf = m_pSelectedLeaves[j];
+
+		const std::vector<float>& policy = policies[i];
+		
+		float valEst = valueEstimates[i];
+
+		//Convert valEst to be from the perspective of team 0, if applicable:
+		if (pLeaf->GetState().GetActingTeam() != 0)
+		{
+			valEst *= -1.0f;
+		}
+
+		ExpandBackpropagate(m_SelectedIndices[i], valEst, policy);
 	}
-	
+
 	//Don't forget that the selected indices DO NOT include
 	// terminal states, however we still want to backpropagate
-	// terminal values:
+	// terminal values, in cases where a node was selected:
 	for (size_t i = 0; i < m_pSelectedLeaves.size(); i++)
 	{
-		const auto state = m_pSelectedLeaves[i]->GetState();
-		if (state.IsFinished())
+		//If there was any leaf selected...
+		if (m_pSelectedLeaves[i].get() != nullptr)
 		{
-			//Note: ExpandBackpropagate automatically converts
-			// the value estimate to the perspective of team 0.
-			const float valEst = state.GetGameValue(state.GetActingTeam());
+			const auto state = m_pSelectedLeaves[i]->GetState();
+			if (state.IsFinished())
+			{
+				//Note: ExpandBackpropagate automatically converts
+				// the value estimate to the perspective of team 0.
+				const float valEst = state.GetGameValue(0);
 
-			ExpandBackpropagate(i, valEst, std::vector<float>());
+				ExpandBackpropagate(i, valEst, std::vector<float>());
+			}
 		}
 	}
 
@@ -161,8 +195,7 @@ void SelfPlayManager::Commit()
 		
 		C40KL_ASSERT_INVARIANT(actionIdx < m_pRoots[i]->GetNumActions(),
 			"Final policy must return valid action index.");
-
-
+		
 		std::vector<GameState> results;
 		std::vector<float> probs;
 
@@ -173,7 +206,7 @@ void SelfPlayManager::Commit()
 		// (Will need to change this if the loop is parallelised!)
 		const size_t resultIdx = SelectRandomly(m_RandEng, probs);
 		const GameState resultingState = results[resultIdx];
-		
+
 		//We now need to find the MCTS node corresponding to this state and commit.
 		auto actionChildNodes = m_pRoots[i]->GetStateResults(actionIdx);
 
@@ -185,7 +218,34 @@ void SelfPlayManager::Commit()
 
 		//Now we get to re-root the tree as a result of the action!
 		m_pRoots[i] = actionChildNodes[resultIdx];
+
+		//And don't forget to detach!
+		m_pRoots[i]->Detach();
+
+		//Now, if the game has finished, record its value:
+		if (m_pRoots[i]->GetState().IsFinished())
+		{
+			//Store game's value with respect to team 0:
+			m_GameValues[m_GameIDs[i]] = m_pRoots[i]->GetState().GetGameValue(0);
+		}
 	}
+
+	//Remove trees representing finished games:
+
+	C40KL_ASSERT_INVARIANT(m_pRoots.size() == m_GameIDs.size(),
+		"Tree roots and IDs must be equal length!");
+	
+	//Use Boost remove_if and combine to erase from both m_pRoots and
+	// from m_GameIDs at the same time:
+
+	auto remove_iter = boost::remove_if(
+		boost::combine(m_pRoots, m_GameIDs),
+		[](const boost::tuple<MCTSNodePtr, size_t>& node)
+			{ return node.get<0>()->GetState().IsFinished(); }
+		);
+	
+	m_pRoots.erase(boost::get<0>(remove_iter.get_iterator_tuple()), m_pRoots.end());
+	m_GameIDs.erase(boost::get<1>(remove_iter.get_iterator_tuple()), m_GameIDs.end());
 }
 
 
@@ -213,6 +273,9 @@ bool SelfPlayManager::ReadyToCommit() const
 
 bool SelfPlayManager::AllFinished() const
 {
+	//Note: we specifically want this function to return
+	// true when m_pRoots is empty.
+
 	for (size_t i = 0; i < m_pRoots.size(); i++)
 	{
 		if (!m_pRoots[i]->GetState().IsFinished())
@@ -263,8 +326,40 @@ std::vector<std::vector<float>> SelfPlayManager::GetCurrentActionDistributions()
 }
 
 
+std::vector<int> SelfPlayManager::GetTreeSizes() const
+{
+	std::vector<int> result;
+	result.resize(m_pRoots.size());
+
+	for (size_t i = 0; i < m_pRoots.size(); i++)
+	{
+		result[i] = m_pRoots[i]->GetNumValueSamples();
+	}
+
+	return result;
+}
+
+
+std::vector<size_t> SelfPlayManager::GetRunningGameIds() const
+{
+	return m_GameIDs;
+}
+
+
+std::vector<float> SelfPlayManager::GetGameValues() const
+{
+	C40KL_ASSERT_PRECONDITION(AllFinished(),
+		"Can only get game values when all games finished.");
+
+	return m_GameValues;
+}
+
+
 void SelfPlayManager::SelectLeafForGame(size_t gameIdx)
 {
+	C40KL_ASSERT_INVARIANT(gameIdx < m_pRoots.size(),
+		"Need valid game index.");
+
 	auto pNode = m_pRoots[gameIdx];
 
 	while (!pNode->IsLeaf() && !pNode->IsTerminal())
@@ -304,6 +399,9 @@ void SelfPlayManager::SelectLeafForGame(size_t gameIdx)
 
 void SelfPlayManager::ExpandBackpropagate(size_t gameIdx, float valEst, const std::vector<float>& policy)
 {
+	C40KL_ASSERT_INVARIANT(gameIdx < m_pRoots.size(),
+		"Need valid game index.");
+
 	C40KL_ASSERT_INVARIANT(m_pSelectedLeaves[gameIdx].get() != nullptr,
 		"Needs a selected leaf!");
 
@@ -321,6 +419,9 @@ void SelfPlayManager::ExpandBackpropagate(size_t gameIdx, float valEst, const st
 
 size_t SelfPlayManager::GetFinalPolicy(size_t gameIdx) const
 {
+	C40KL_ASSERT_INVARIANT(gameIdx < m_pRoots.size(),
+		"Need valid game index.");
+
 	const auto actionVisitCounts = m_pRoots[gameIdx]->GetActionVisitCounts();
 
 	C40KL_ASSERT_INVARIANT(actionVisitCounts.size() > 0,

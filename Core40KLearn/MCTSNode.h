@@ -208,6 +208,10 @@ public:
 
 
 private:
+	const GameCommandArray& GetMyActions() const;
+
+
+private:
 	//The current game state at this node:
 	const GameState m_State;
 	
@@ -236,9 +240,9 @@ private:
 	float m_ValueSum, m_WeightSum;
 
 	//This is the list of actions we can take from
-	// this node, which is set as soon as the node is
-	// initialised:
-	const GameCommandArray m_pActions;
+	// this node, which is initialised lazily:
+	mutable GameCommandArray m_pActions;
+	mutable bool m_bInitialisedActions;
 
 	//This is the list of child nodes PER ACTION:
 	// So m_pChildren[i] represents all the resulting

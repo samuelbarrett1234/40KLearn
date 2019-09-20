@@ -44,9 +44,13 @@ public:
 	/// Cancel all current games, and restart play with the given new game.
 	/// All games initially start out identical, but after a short while
 	/// in play, due to randomness, they will end up quite different.
+	/// PRECONDITION: the given initial state is not finished.
 	/// </summary>
 	/// <param name="numGames">The number of simultaneous games to be played.</param>
-	/// <param name="initialState">The state each of the simultaneous games begins in.</param>
+	/// <param name="initialState">
+	/// The state each of the simultaneous games begins in. Must be an unfinished
+	/// game (we cannot play from a finished state).
+	/// </param>
 	void Reset(size_t numGames, const GameState& initialState);
 
 
@@ -121,6 +125,7 @@ public:
 	/// <summary>
 	/// Get the current state of every game. Note that this is distinct from the game states
 	/// returned from the Select() call. This returns the state of the roots of every search tree.
+	/// Warning: only returns for the unfinished games.
 	/// </summary>
 	/// <returns>The state at the root of every search tree (i.e. what each game is currently in).</returns>
 	std::vector<GameState> GetCurrentGameStates() const;
@@ -130,10 +135,42 @@ public:
 	/// Return the current action distribution of every game. This is obtained by
 	/// picking the best action, according to the search tree results, either
 	/// deterministically or stochastically.
+	/// Warning: only returns for the unfinished games.
 	/// PRECONDITION: ReadyToCommit()
 	/// </summary>
 	/// <returns>A list of action distributions (policies) for each root node.</returns>
 	std::vector<std::vector<float>> GetCurrentActionDistributions() const;
+
+
+	/// <summary>
+	/// Get the number of samples in each search tree.
+	/// </summary>
+	/// <returns>The number of samples at the root of each search tree.</returns>
+	std::vector<int> GetTreeSizes() const;
+
+
+	/// <summary>
+	/// Determine the index of each running game (a game is defined to
+	/// be running if it has a tree rooted in this object). Once a game
+	/// is finished it is considered no longer running, and its tree is
+	/// deleted.
+	/// </summary>
+	/// <returns>
+	/// An array equal to the length of the number of currently running
+	/// games, where the value of each element represents the index that
+	/// the game initially had (before any games were finished).
+	/// </returns>
+	std::vector<size_t> GetRunningGameIds() const;
+
+
+	/// <summary>
+	/// Once all games have finished, calling this gets the game value (who
+	/// won) for every game. Important: all returned values are with respect
+	/// to team 0 (so +1 means team 0 won, -1 means team 1 won).
+	/// PRECONDITION: AllFinished().
+	/// </summary>
+	/// <returns>The end result for every game.</returns>
+	std::vector<float> GetGameValues() const;
 
 
 private:
@@ -157,8 +194,8 @@ private:
 	/// </summary>
 	/// <param name="gameIdx">The index of the game search tree to expand/backprop in.</param>
 	/// <param name="valEst">
-	/// The value estimate at the given selected leaf node. IMPORTANT: this must be with
-	/// respect to the CURRENT ACTING TEAM.
+	/// The value estimate at the given selected leaf node. IMPORTANT: this must be
+	/// with respect to team 0!
 	/// </param>
 	/// <param name="policy">The prior policy to expand the leaf node with.</param>
 	void ExpandBackpropagate(size_t gameIdx, float valEst, const std::vector<float>& policy);
@@ -182,7 +219,7 @@ private:
 
 	std::mt19937 m_RandEng;
 
-	size_t m_NumSimulations;
+	const size_t m_NumSimulations;
 	UCB1PolicyStrategy m_TreePolicy;
 
 	//IMPORTANT NOTE about tree value estimates:
@@ -195,6 +232,20 @@ private:
 		//This array has the same size as m_pRoots after a Select() call
 		// but some elements may be empty on purpose.
 		m_pSelectedLeaves;
+
+	//Not all games have representative trees in the
+	// m_pRoots array - this vector (which always has
+	// the same length as m_pRoots) tells us the index
+	// of this game. On resetting, this is just the list
+	// [0, 1, 2, ...], but as games have their trees
+	// removed, their indices are removed as well.
+	std::vector<size_t> m_GameIDs;
+
+	//As games finish, their values	WITH RESPECT TO TEAM 0
+	// are recorded here. This array is only valid once all
+	// games have finished (otherwise it will have entries
+	// not yet filled in).
+	std::vector<float> m_GameValues;
 
 	//This array is to map the returned vector in Select() and the
 	// vectors given as argument in Update() to their corresponding

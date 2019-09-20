@@ -18,8 +18,8 @@ class NeuralNetworkEstimatorStrategy:
         (board_state_as_tensor,
          phase_as_one_hot_vector) = self._convert_state(state)
 
-        values, _ = self.model.run([board_state_as_tensor,
-                                    phase_as_one_hot_vector])
+        values, _ = self.model.predict([board_state_as_tensor,
+                                        phase_as_one_hot_vector])
         val = values[0]  # values has length 1, because the NN is vectorised
 
         # Now convert if val is with respect to the other team:
@@ -32,8 +32,8 @@ class NeuralNetworkEstimatorStrategy:
         (board_state_as_tensor,
          phase_as_one_hot_vector) = self._convert_state(state)
 
-        _, policies = self.model.run([board_state_as_tensor,
-                                      phase_as_one_hot_vector])
+        _, policies = self.model.predict(board_state_as_tensor,
+                                         phase_as_one_hot_vector)
 
         policy = policies[0]  # list has length 1, because the NN is vectorised
 

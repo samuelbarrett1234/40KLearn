@@ -38,6 +38,19 @@ void SelfPlayManager_PyUpdate(SelfPlayManager& mgr, object values, object polici
 }
 
 
+std::vector<int> SelfPlayManager_GetRunningGameIds(const SelfPlayManager& mgr)
+{
+	std::vector<int> output;
+	auto result = mgr.GetRunningGameIds();
+	output.reserve(result.size());
+
+	for (auto i : result)
+		output.push_back((int)i);
+
+	return output;
+}
+
+
 void ExportSelfPlayManager()
 {
 	class_<SelfPlayManager>("SelfPlayManager", init<float, size_t>())
@@ -50,7 +63,10 @@ void ExportSelfPlayManager()
 		.def("ready_to_commit", &SelfPlayManager::ReadyToCommit)
 		.def("all_finished", &SelfPlayManager::AllFinished)
 		.def("get_current_game_states", &SelfPlayManager::GetCurrentGameStates)
-		.def("get_current_action_distributions", &SelfPlayManager::GetCurrentActionDistributions);
+		.def("get_current_action_distributions", &SelfPlayManager::GetCurrentActionDistributions)
+		.def("get_game_values", &SelfPlayManager::GetGameValues)
+		.def("get_tree_sizes", &SelfPlayManager::GetTreeSizes)
+		.def("get_running_game_ids", &SelfPlayManager_GetRunningGameIds);
 }
 
 

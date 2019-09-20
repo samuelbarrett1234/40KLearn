@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <random>
+#include <cstdlib>
 
 
 namespace c40kl

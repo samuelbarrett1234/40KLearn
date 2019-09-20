@@ -23,8 +23,7 @@ MCTSNode::MCTSNode(GameState state, MCTSNode* pParent, float weightFromParent) :
 	m_NumEstimates(0),
 	m_ValueSum(0),
 	m_WeightSum(0),
-	//Only get actions for nonterminal state:
-	m_pActions(state.IsFinished() ? GameCommandArray() : state.GetCommands()),
+	m_bInitialisedActions(false),
 	m_WeightFromParent(weightFromParent)
 {
 }
@@ -50,21 +49,21 @@ bool MCTSNode::IsRoot() const
 
 void MCTSNode::Expand(const std::vector<float>& priorActionDistribution)
 {
-	C40KL_ASSERT_PRECONDITION(priorActionDistribution.size() == m_pActions.size(),
+	C40KL_ASSERT_PRECONDITION(priorActionDistribution.size() == GetMyActions().size(),
 		"Prior distribution needs to match actions.");
 	C40KL_ASSERT_PRECONDITION(IsLeaf() && !IsTerminal(),
 		"Cannot expand non-leaf or terminal nodes.");
-	C40KL_ASSERT_INVARIANT(!m_pActions.empty(),
+	C40KL_ASSERT_INVARIANT(!GetMyActions().empty(),
 		"Unfinished game states should always have available actions.");
 
 	m_bExpanded = true;
 	m_ActionPrior = priorActionDistribution;
 
-	m_pChildren.reserve(m_pActions.size());
-	m_Weights.reserve(m_pActions.size());
+	m_pChildren.reserve(GetMyActions().size());
+	m_Weights.reserve(GetMyActions().size());
 
 	//Now create child nodes:
-	for (auto pCmd : m_pActions)
+	for (auto pCmd : GetMyActions())
 	{
 		//Get distribution resulting from the command
 		std::vector<GameState> results;
@@ -150,13 +149,13 @@ void MCTSNode::Detach()
 
 size_t MCTSNode::GetNumActions() const
 {
-	return m_pActions.size();
+	return GetMyActions().size();
 }
 
 
 GameCommandArray MCTSNode::GetActions() const
 {
-	return m_pActions;
+	return GetMyActions();
 }
 
 
@@ -172,8 +171,8 @@ std::vector<int> MCTSNode::GetActionVisitCounts() const
 {
 	C40KL_ASSERT_PRECONDITION(!IsLeaf(), "Cannot get action visit counts of leaf node.");
 
-	std::vector<int> visitCounts(m_pActions.size(), 0);
-	for (size_t i = 0; i < m_pActions.size(); i++)
+	std::vector<int> visitCounts(GetMyActions().size(), 0);
+	for (size_t i = 0; i < GetMyActions().size(); i++)
 	{
 		for (const auto& pChild : m_pChildren[i])
 		{
@@ -188,12 +187,12 @@ std::vector<float> MCTSNode::GetActionValueEstimates() const
 {
 	C40KL_ASSERT_PRECONDITION(!IsLeaf(), "Cannot get action visit counts of leaf node.");
 
-	std::vector<float> values(m_pActions.size(), 0.0f), weights(m_pActions.size(), 0.0f);
+	std::vector<float> values(GetMyActions().size(), 0.0f), weights(GetMyActions().size(), 0.0f);
 
 	//Aggregate values and weights over all samples
 	// from resulting states *only including states
 	// which have at least one estimate*.
-	for (size_t i = 0; i < m_pActions.size(); i++)
+	for (size_t i = 0; i < GetMyActions().size(); i++)
 	{
 		for (size_t j = 0; j < m_pChildren[i].size(); j++)
 		{
@@ -208,8 +207,8 @@ std::vector<float> MCTSNode::GetActionValueEstimates() const
 	//Now average the results we computed above. Note that
 	// if an action has been unvisited, its weight will be zero,
 	// hence we leave its estimated value as zero.
-	std::vector<float> averages(m_pActions.size(), 0.0f);
-	for (size_t i = 0; i < m_pActions.size(); i++)
+	std::vector<float> averages(GetMyActions().size(), 0.0f);
+	for (size_t i = 0; i < GetMyActions().size(); i++)
 	{
 		if (weights[i] > 0)
 		{
@@ -274,6 +273,22 @@ size_t MCTSNode::GetDepth() const
 		pCurNode = pCurNode->m_pParent;
 	}
 	return depth;
+}
+
+
+const GameCommandArray& MCTSNode::GetMyActions() const
+{
+	if (!m_bInitialisedActions)
+	{
+		m_bInitialisedActions = true;
+
+		//Can only get actions for nonterminal state
+		if (!m_State.IsFinished())
+		{
+			m_pActions = m_State.GetCommands();
+		}
+	}
+	return m_pActions;
 }
 
 

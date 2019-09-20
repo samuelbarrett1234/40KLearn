@@ -1,6 +1,7 @@
 #include "UCB1PolicyStrategy.h"
 #include <cmath>
 #include <numeric>
+#include <algorithm>
 
 
 namespace c40kl
@@ -73,22 +74,12 @@ size_t UCB1PolicyStrategy::ActionArgMax(const MCTSNode& node) const
 	// except the action with highest UCB value,
 	// which has probability 1:
 
-	float maxVal = -std::numeric_limits<float>::max();
-	size_t maxIdx = (size_t)(-1);
+	auto iter = std::max_element(ucbValues.begin(), ucbValues.end());
 
-	for (size_t i = 0; i < n; i++)
-	{
-		if (ucbValues[i] > maxVal)
-		{
-			maxVal = ucbValues[i];
-			maxIdx = i;
-		}
-	}
-
-	C40KL_ASSERT_INVARIANT(maxIdx < n,
+	C40KL_ASSERT_INVARIANT(iter != ucbValues.end(),
 		"Need valid best action for UCB1.");
 
-	return maxIdx;
+	return std::distance(ucbValues.begin(), iter);
 }
 
 

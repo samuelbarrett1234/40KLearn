@@ -1,61 +1,53 @@
 import py40kl
 from nn_model import NNModel
+from basic_experience_dataset import BasicExperienceDataset
+from converter import (convert_states_to_arrays, array_to_policy,
+                       phase_to_vector, policy_to_array)
+from model import Model, BOARD_SIZE
+from game_util import load_units_csv
 
 
-NUM_TRAINING_EPOCHS = 10
-NUM_GAMES = 10
-GAME_START_STATE = py40kl.GameState()  # TODO: setup initial state here.
+# TEMP: construct game start state by using the model's
+# loading logic to construct an initial game state.
+unit_roster = load_units_csv("unit_stats.csv")
+placements = [
+    (0, 0, 10, 20),
+    (7, 1, 20, 10),
+]
+tempmodel = Model(unit_roster, placements)
+
+
+NUM_TRAINING_EPOCHS = 100
+NUM_GAMES = 50
+GAME_START_STATE = tempmodel.get_state()
 EXPERIENCE_SAMPLE_EPOCH_SIZE = 1000
+NUM_MCTS_SIMULATIONS = 100
+UCB1_EXPLORATION = 2.0 ** 0.5
+DATASET_CAPACITY = 2000
 MODEL_FILENAME = 'models/model1.h5'
 
 
-# The Experience Dataset is an important class
-# for recording experiences and then creating
-# training datasets from them.
-class ExperienceDataset:
-    def sample(self, n):  # returns game_states (as numeric), values, policies
-        pass
-
-    def set_buffer(self, n):
-        pass
-
-    def commit(self, values):
-        """
-        Write all of the values in the buffer to our dataset. Furthermore,
-        we are provided with the game's end state (the value) for each of
-        the games we've been recording. This game value is with respect to
-        team 0, so we will need to multiply it by -1 for about half of our
-        recordings.
-        So if we are recording 10 games, we will have many experiences for
-        each of those 10 games, but len(values) == 10.
-        """
-        pass
-
-    def add_to_buffer(self, game_states, policies):
-        """
-        Add a list of game states to our running buffer, and the corresponding
-        policies to learn. 'Policies' should be in numerical form, and should
-        be a 'desirable' policy - the network will train with this as a target.
-        """
-        pass
-
-
 # Create the self-play manager:
-mgr = py40kl.SelfPlayManager(2.0 ** 0.5, 100)
+mgr = py40kl.SelfPlayManager(UCB1_EXPLORATION, NUM_MCTS_SIMULATIONS)
 
 # Create the neural network model:
 # TODO: load existing model
-model = NNModel(filename=None)
+model = NNModel(num_epochs=NUM_TRAINING_EPOCHS, board_size=BOARD_SIZE,
+                filename=None)
 
 # Create the dataset:
-# TODO: load from file?
-dataset = ExperienceDataset()
+# TODO: switch to a file-streamed version of this
+dataset = BasicExperienceDataset(capacity=DATASET_CAPACITY)
 
 
 for epoch in range(NUM_TRAINING_EPOCHS):
+    print("*** Starting self-play epoch", epoch + 1)
+
     # Reserve space for next batch of experiences:
     mgr.reset(NUM_GAMES, GAME_START_STATE)
     dataset.set_buffer(NUM_GAMES)
+
+    print("*** Playing", NUM_GAMES, "games through self-play...")
 
     # Generate the next batch of experiences:
     while not mgr.all_finished():
@@ -65,36 +57,79 @@ for epoch in range(NUM_TRAINING_EPOCHS):
             states = py40kl.GameStateArray()
             mgr.select(states)
 
-            # Run the network on these states to get value/policy estimates:
-            values, policies = model.predict(states)
+            # If we selected any states which need evaluating...
+            if len(states) > 0:
+                # Get game states and phases in array form
+                game_states_arr, phases_arr = convert_states_to_arrays(states)
 
-            # Update games with this info:
-            mgr.update(values, policies)
+                # Run the network on these states to get
+                # value/policy estimates:
+                values, policies_as_numeric = model.predict(game_states_arr,
+                                                            phases_arr)
+
+                # Obtain the actual policies from the numeric (array) output
+                # from the neural network:
+                policies = [array_to_policy(pol_arr, state)
+                            for pol_arr, state
+                            in zip(policies_as_numeric, states)]
+
+                # Discourage passing during training
+                # TODO: need a better solution than this?
+                for policy in policies:
+                    policy[-1] /= 10000.0
+                    s = sum(policy)
+                    policy = [p / s for p in policy]
+
+                # convert to a CPP-usable form
+                val_array = py40kl.FloatArray()
+                for x in values:
+                    val_array.append(float(x))
+
+                # Update games with this info:
+                mgr.update(val_array, policies)
+            else:
+                # Empty update:
+                mgr.update([], [])
 
         # Get current game info:
         game_states = mgr.get_current_game_states()
-        game_states_numeric = py40kl.convert_gs_to_numeric(game_states)
+        game_states_numeric, _ = convert_states_to_arrays(game_states)
         policies = mgr.get_current_action_distributions()
+        game_ids = mgr.get_running_game_ids()  # not all games might be running
+        teams = [state.get_acting_team() for state in game_states]
+
+        print("Number of unfinished games:", len(game_states))
+
+        # Compute phase vector for each game state:
+        phases = [phase_to_vector(state.get_phase()) for state in game_states]
+
+        # Convert policies into the trainable format:
+        policies = [policy_to_array(pol, gs) for pol, gs in zip(policies,
+                                                                game_states)]
 
         # Save to experience dataset buffer:
-        dataset.add_to_buffer(game_states_numeric, policies)
+        dataset.add_to_buffer(game_states_numeric, teams, phases,
+                              policies, ids=game_ids)
 
         # Now ready to make a decision in-game:
         mgr.commit()
 
+    print("*** Finished playing!")
+
     # Get the game values, with respect to team 0:
-    game_states = mgr.get_current_game_states()
-    game_values = [state.get_game_value(0) for state in game_states]
+    game_values = mgr.get_game_values()
 
     # Now we've built up a buffer of new experiences, commit them
     # to the database and train:
     dataset.commit(game_values)
 
     # Obtain sample:
-    (game_states, values,
+    (game_states, phases, values,
      policies) = dataset.sample(EXPERIENCE_SAMPLE_EPOCH_SIZE)
 
+    print("*** Dataset constructed. Training model...")
+
     # Now ready to perform a training epoch on the model:
-    model.train(game_states, values, policies)
+    model.train(game_states, phases, values, policies)
 
 model.save(MODEL_FILENAME)  # save once training done

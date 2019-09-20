@@ -1,6 +1,5 @@
 import py40kl
 import numpy as np
-from scipy.special import logit, expit
 
 
 NUM_FEATURES = 19  # 19 features, see below
@@ -46,12 +45,14 @@ def board_to_array(board, team):
     vectors (this returning a 3D array).
     """
     # Create empty board:
-    board = [[[0.0 for k in range(NUM_FEATURES * 2)]
-              for j in range(board.get_size())]
-             for i in range(board.get_size())]
+    array_out = [[[0.0 for k in range(NUM_FEATURES * 2)]
+                  for j in range(board.get_size())]
+                 for i in range(board.get_size())]
+
+    all_units = list(board.get_all_units(0)) + list(board.get_all_units(1))
 
     zeroes = [0.0] * NUM_FEATURES
-    for unit_pos in board.get_all_units():
+    for unit_pos in all_units:
         # Get raw unit stats:
         unit_stats = board.get_unit_on_square(unit_pos)
         # Turn unit object into feature vector:
@@ -59,9 +60,10 @@ def board_to_array(board, team):
         # For allied units, we put the unit feature vector first, and
         # for enemy units we put the zeros first and the unit feature vector
         # after.
-        board[unit_pos.x][unit_pos.y] = unit_feature_vec + zeroes\
+        array_out[unit_pos.x][unit_pos.y] = unit_feature_vec + zeroes\
             if team == board.get_team_on_square(unit_pos)\
             else zeroes + unit_feature_vec
+    return array_out
 
 
 def phase_to_vector(phase):
@@ -117,10 +119,8 @@ def policy_to_array(policy, game_state):
             policy_array[target_idx] += prob
         else:
             policy_array[-1] = prob
-    # Now convert array to logit probabilities (converting to and from np)
-    policy_array = np.array(policy_array)
-    policy_array = logit(policy_array)
-    return list(policy_array)
+
+    return policy_array
 
 
 def array_to_policy(policy_array, game_state):
@@ -142,17 +142,17 @@ def array_to_policy(policy_array, game_state):
             source_idx = source.x + source.y * sz
             target_idx = target.x + target.y * sz
 
-            # Convert from logit (log odds) to probabilities
-            p_source = expit(policy_array[source_idx])
-            p_target = expit(policy_array[target_idx])
+            # Get probabilities
+            p_source = policy_array[source_idx]
+            p_target = policy_array[target_idx]
 
             # Multiply the probabilities to 'and' them:
             policy[i] = p_source * p_target
         else:
-            # Convert from logit (log odds) to probabilities
-            policy[i] = expit(policy_array[-1])
+            # End phase is at the end of policy_array
+            policy[i] = policy_array[-1]
 
     # Normalise:
     policy = np.array(policy)
     policy /= np.sum(policy)
-    return list(policy)
+    return [float(x) for x in policy]
