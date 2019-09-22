@@ -5,8 +5,8 @@ from pyai.experience_dataset import ExperienceDataset
 from pyai.converter import (convert_states_to_arrays, array_to_policy,
                             phase_to_vector, policy_to_array,
                             NUM_FEATURES)
-from pyapp.model import Model, BOARD_SIZE
-from pyapp.game_util import load_units_csv
+from pyapp.model import BOARD_SIZE
+from pyapp.game_util import load_units_csv, new_game_state
 
 
 # TEMP: construct game start state by using the model's
@@ -18,9 +18,7 @@ placements = [
     (7, 1, 5, 5),
     (7, 1, 5, 10),
 ]
-tempmodel = Model(unit_roster, placements)
-GAME_START_STATE = tempmodel.get_state()
-del tempmodel
+GAME_START_STATE = new_game_state(unit_roster, placements, BOARD_SIZE)
 
 
 NUM_SELF_PLAY_EPOCHS = 2

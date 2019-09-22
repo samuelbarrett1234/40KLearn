@@ -79,14 +79,14 @@ def select_randomly(results, probs):
     assert(False and "Should never reach here")
 
 
-def new_game_state(unitRoster, placements, board_size):
+def new_game_state(unit_roster, placements, board_size):
     """
     Create a new game with the given unit roster (array of
     units) and placements (a list of tuples (unit_idx, team, x, y)).
     """
-    b = py40kl.BoardState(board_size, board_size)
+    b = py40kl.BoardState(board_size, 1.0)
     for unitIdx, team, x, y in placements:
-        unit = unitRoster[unitIdx]
+        unit = unit_roster[unitIdx]
         pos = py40kl.Position(x, y)
         newunit = py40kl.Unit()
 
@@ -97,7 +97,7 @@ def new_game_state(unitRoster, placements, board_size):
         newunit.bs = unit["bs"]
         newunit.t = unit["t"]
         newunit.w = unit["w"]
-        newunit.total_w = unit["w"]*unit["count"]
+        newunit.total_w = unit["w"] * unit["count"]
         newunit.a = unit["a"]
         newunit.ld = unit["ld"]
         newunit.sv = unit["sv"]

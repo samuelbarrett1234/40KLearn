@@ -390,6 +390,22 @@ void SelfPlayManager::SelectLeafForGame(size_t gameIdx)
 
 		C40KL_ASSERT_INVARIANT(pNode->GetState() == results[resultingIdx],
 			"Action results and MCTS node results must be in the same order.");
+
+		//If we have found a leaf node with no choice to be made (which
+		// happens when there is exactly one command you can make) then
+		// we may as well expand it here and continue:
+		if (pNode->IsLeaf() && pNode->GetNumActions() == 1)
+		{
+			C40KL_ASSERT_INVARIANT(!pNode->IsTerminal(),
+				"Nodes with one action shouldn't be terminal.");
+
+			//Only one possible prior:
+			pNode->Expand({ 1.0f });
+
+			//Note that, since this node is nonterminal, expansion
+			// has now made it not a leaf! Thus we will definitely
+			// perform another iteration.
+		}
 	}
 
 	//We have selected a leaf node!
