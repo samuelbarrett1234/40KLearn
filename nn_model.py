@@ -35,6 +35,14 @@ class NNModel:
         x = BatchNormalization()(x)
         x = Conv2D(256, (3, 3), activation='relu')(x)
         x = BatchNormalization()(x)
+        x = Conv2D(256, (3, 3), activation='relu')(x)
+        x = BatchNormalization()(x)
+        x = Conv2D(256, (3, 3), activation='relu')(x)
+        x = BatchNormalization()(x)
+        x = Conv2D(256, (3, 3), activation='relu')(x)
+        x = BatchNormalization()(x)
+        x = Conv2D(256, (3, 3), activation='relu')(x)
+        x = BatchNormalization()(x)
         x = Flatten()(x)  # flatten CNN output
         x = concatenate([x, self.phase_input])  # add phase input
         x = Dense(256, activation='relu')(x)
@@ -43,6 +51,8 @@ class NNModel:
 
         # construct value head of network
         self.value_head = Dense(256, activation='relu')(x)
+        self.value_head = BatchNormalization()(self.value_head)
+        self.value_head = Dense(256, activation='relu')(self.value_head)
         self.value_head = Dense(32, activation='relu')(self.value_head)
         self.value_head = Dense(1, activation='tanh')(self.value_head)
         # value head returns +1 for estimated win and -1 for estimated
@@ -51,6 +61,9 @@ class NNModel:
         # construct policy head of network
         self.policy_head = Dense(256,
                                  activation='relu')(x)
+        self.policy_head = BatchNormalization()(self.policy_head)
+        self.policy_head = Dense(256,
+                                 activation='relu')(self.policy_head)
         self.policy_head = Dense(256,
                                  activation='relu')(self.policy_head)
         self.policy_head = Dense(2 * self.board_size * self.board_size + 1,
@@ -79,7 +92,7 @@ class NNModel:
         self.model.compile(optimizer=optimiser,
                            loss=[value_head_loss, policy_head_loss])
 
-        # Load from filename if given:
+        # Load weights from filename if given:
         if filename is not None:
             self.model.load_weights(filename)
 
