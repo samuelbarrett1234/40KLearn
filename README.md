@@ -81,8 +81,10 @@ are automatically copied to the project's root directory after building, which i
 where they are intended to be ran from.
 
 Finally, put the Boost Python and Python DLLs in the root directory of the project,
-once built. This allows them to be found when the game is ran. Run the file "game.py"
-to play the game against an AI player.
+once built. This allows them to be found when the game is ran.
+
+Run "Scripts/game.py" to play the game against an AI player, and run "Scripts/train.py"
+to train the neural network for a period of time.
 
 ## TODO
 
@@ -92,7 +94,6 @@ to play the game against an AI player.
   transformation to the policy, also.)
 - Train neural network and incorporate into GUI. Remove the 'end phase bias' after a
   period of training, and then continue training for a bit.
-- Restructure Python code into packages, fix Linter errors throughout the code.
-- Redo the MCTS tree to enforce an order on which units to order. This should reduce
-  branching factor. Then, update neural network policy output.
+- Maybe: refactor the MCTS tree to enforce an order on which units to order. This
+  should reduce branching factor. Then, update neural network policy output.
 - Parallelise the self-play manager.

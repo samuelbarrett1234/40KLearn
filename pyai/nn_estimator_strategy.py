@@ -1,5 +1,6 @@
-from nn_model import NNModel
-from converter import convert_states_to_arrays, array_to_policy
+from pyai.nn_model import NNModel
+from pyai.converter import convert_states_to_arrays, array_to_policy
+import py40kl
 
 
 class NeuralNetworkEstimatorStrategy:
@@ -36,6 +37,15 @@ class NeuralNetworkEstimatorStrategy:
                                          phase_as_one_hot_vector)
 
         policy = policies[0]  # list has length 1, because the NN is vectorised
+
+        # If there are options other than passing, and the current
+        # phase is the shooting phase or fight phase, then do not
+        # allow a pass (set its probability to zero and normalise).
+        if len(policy) > 1 and (state.get_phase() == py40kl.Phase.SHOOTING
+                                or state.get_phase() == py40kl.Phase.FIGHT):
+            policy[-1] = 0.0
+            s = sum(policy)
+            policy = [p / s for p in policy]
 
         return array_to_policy(policy, state)
 

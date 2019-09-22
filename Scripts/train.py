@@ -1,3 +1,4 @@
+import os
 import py40kl
 from pyai.nn_model import NNModel
 from pyai.experience_dataset import ExperienceDataset
@@ -12,8 +13,10 @@ from pyapp.game_util import load_units_csv
 # loading logic to construct an initial game state.
 unit_roster = load_units_csv("unit_stats.csv")
 placements = [
-    (0, 0, 10, 20),
-    (7, 1, 20, 10),
+    (0, 0, 15, 5),
+    (0, 0, 15, 10),
+    (7, 1, 5, 5),
+    (7, 1, 5, 10),
 ]
 tempmodel = Model(unit_roster, placements)
 GAME_START_STATE = tempmodel.get_state()
@@ -34,9 +37,9 @@ DATASET_FILENAME = 'Data/data*'
 mgr = py40kl.SelfPlayManager(UCB1_EXPLORATION, NUM_MCTS_SIMULATIONS)
 
 # Create the neural network model:
-# TODO: load existing model
 model = NNModel(num_epochs=NUM_TRAINING_EPOCHS, board_size=BOARD_SIZE,
-                filename=None)
+                filename=(MODEL_FILENAME if os.path.exists(MODEL_FILENAME)
+                          else None))
 
 # Create the dataset:
 dataset = ExperienceDataset(filename=DATASET_FILENAME,
@@ -80,12 +83,16 @@ if __name__ == "__main__":
                                 for pol_arr, state
                                 in zip(policies_as_numeric, states)]
 
-                    # Discourage passing during training
-                    # TODO: need a better solution than this?
-                    for policy in policies:
-                        policy[-1] /= 10000.0
-                        s = sum(policy)
-                        policy = [p / s for p in policy]
+                    # If there are options other than passing, and the current
+                    # phase is the shooting phase or fight phase, then do not
+                    # allow a pass (set its probability to zero and normalise).
+                    for state, policy in zip(states, policies):
+                        if len(policy) > 1\
+                           and (state.get_phase() == py40kl.Phase.SHOOTING
+                                or state.get_phase() == py40kl.Phase.FIGHT):
+                            policy[-1] = 0.0
+                            s = sum(policy)
+                            policy = [p / s for p in policy]
 
                     # convert to a CPP-usable form
                     val_array = py40kl.FloatArray()

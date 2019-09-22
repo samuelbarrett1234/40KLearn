@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras import Model, Input
 from tensorflow.keras.layers import (Conv2D, BatchNormalization, Dense,
-                                     Flatten, concatenate, Lambda)
+                                     Flatten, concatenate)
 from pyai.converter import NUM_FEATURES
 
 
@@ -51,7 +51,6 @@ class NNModel:
 
         # construct value head of network
         self.value_head = Dense(256, activation='relu')(x)
-        self.value_head = BatchNormalization()(self.value_head)
         self.value_head = Dense(256, activation='relu')(self.value_head)
         self.value_head = Dense(32, activation='relu')(self.value_head)
         self.value_head = Dense(1, activation='tanh')(self.value_head)
@@ -61,15 +60,12 @@ class NNModel:
         # construct policy head of network
         self.policy_head = Dense(256,
                                  activation='relu')(x)
-        self.policy_head = BatchNormalization()(self.policy_head)
         self.policy_head = Dense(256,
                                  activation='relu')(self.policy_head)
         self.policy_head = Dense(256,
                                  activation='relu')(self.policy_head)
         self.policy_head = Dense(2 * self.board_size * self.board_size + 1,
-                                 activation='sigmoid')(self.policy_head)
-        s = tf.reduce_sum(self.policy_head)  # normalise
-        self.policy_head = Lambda(lambda y: y / s)(self.policy_head)
+                                 activation='softmax')(self.policy_head)
 
         # Explanation of the policy head output:
         # the first board_size * board_size elements represent the

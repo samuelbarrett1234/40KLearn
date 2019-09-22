@@ -1,6 +1,6 @@
-from mcts import MCTS
-from mcts_strategies import (UniformRandomEstimatorStrategy,
-                             VisitCountStochasticPolicyStrategy)
+from pyai.mcts import MCTS
+from pyai.mcts_strategies import (UniformRandomEstimatorStrategy,
+                                  VisitCountStochasticPolicyStrategy)
 from pyapp.game_util import select_randomly
 import py40kl
 
@@ -15,7 +15,7 @@ class BasicAIController:
     def __init__(self, model):
         self.model = model
         self.tau = 0.2
-        self.exploratoryParam = 1.4
+        self.exploratoryParam = 2.0 ** 0.5
         self.N = 25
         self.tree = None
         self.on_turn_changed()  # Sets up the MCTS tree
