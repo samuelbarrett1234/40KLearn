@@ -48,6 +48,13 @@ BOOST_AUTO_TEST_CASE(BasicUsageTest)
 	BOOST_TEST((selectedStates.front() == gs
 		&& selectedStates.back() == gs));
 
+	//Check that correct states were returned:
+	for (const auto& state : selectedStates)
+	{
+		BOOST_TEST((state.GetBoardState() == b));
+		BOOST_TEST(state.GetCommands().size() == 2);
+	}
+
 	//Test all flags are correct:
 	BOOST_TEST(!mgr.AllFinished());
 	BOOST_TEST(mgr.IsWaiting());
