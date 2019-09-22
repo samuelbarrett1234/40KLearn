@@ -8,7 +8,9 @@ The RL agent will use Monte Carlo Tree Search (MCTS), and a
 convolutional neural network with a value head and a policy
 head, which guides the tree search algorithm.
 
-The 40K game will be simplified in the following way:
+The Warhammer 40K rules are available freely online, however the
+game has been simplified for the purposes of this project in the
+following way:
 - Units are fixed to moving on a coarse grid,
 - All units in a squad must have exactly the same unit stats,
 - No Psykers,
@@ -56,8 +58,14 @@ The root of the Boost library directory is stored in the environment variable
 BOOST_DIR. Ensure that the include files are in BOOST_DIR/boost, and that the
 built Boost binaries are in BOOST_DIR/stage/lib.
 
-Furthermore, Python must be installed with Pygame, Numpy and TensorFlow. Note that
-Boost Python needs to be built with this version of Python, in order for the
+Python dependencies:
+- NumPy,
+- TensorFlow,
+- Pandas,
+- PyGame,
+- Dask
+
+Note that Boost Python needs to be built with this version of Python, in order for the
 Boost Python wrapper around the C++ classes to work. We need the environment
 variable PYTHONPATH to point to the root directory of Python, and its DLL subdirectory,
 its include subdirectory, and its static library subdirectory. This is all just
@@ -75,14 +83,13 @@ to play the game against an AI player.
 
 ## TODO
 
-- Create an efficient ExperienceDataset class, which has the job of recording a large
-  list of experiences (which are a tuple (game state, value, policy)) and can produce
-  a sample of these on request. It will obviously have to stream to and from secondary
-  storage, because it should be able to support large numbers of experiences. Note that
-  when producing a new sample, it can rotate or reflect the game state at random,
-  because this should not change the game value or policy. (Of course if the game board
-  is transformed then the policy will have to be updated as well).
-- Train neural network and incorporate into GUI.
+- Extend the experience dataset to perform random transformations of the board such
+  as rotation, reflection (there are 8 symmetries.) This is useful because it doesn't
+  change the board's value, and shouldn't change the policy (after applying the
+  transformation to the policy, also.)
+- Train neural network and incorporate into GUI. Remove the 'end phase bias' after a
+  period of training, and then continue training for a bit.
 - Restructure Python code into packages, fix Linter errors throughout the code.
 - Redo the MCTS tree to enforce an order on which units to order. This should reduce
   branching factor. Then, update neural network policy output.
+- Parallelise the self-play manager.
