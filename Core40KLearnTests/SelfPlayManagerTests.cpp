@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(BasicUsageTest)
 }
 
 
-BOOST_AUTO_TEST_CASE(TestSelfPlayManagerAllFinished)
+BOOST_AUTO_TEST_CASE(TestSelfPlayManagerThrowsWhenResetWithFinishedState)
 {
 	//A finished game state:
 	BoardState b(25, 1.0f);
@@ -101,9 +101,7 @@ BOOST_AUTO_TEST_CASE(TestSelfPlayManagerAllFinished)
 
 	SelfPlayManager mgr(1.4f, 1);
 
-	mgr.Reset(5, gs);
-
-	BOOST_TEST(mgr.AllFinished());
+	BOOST_CHECK_THROW(mgr.Reset(5, gs), std::runtime_error);
 }
 
 

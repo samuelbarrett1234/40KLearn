@@ -51,6 +51,9 @@ In the core project, the main classes are:
   doing the action", and the target position is "what is the action being done to." Their
   use is dependent on the type of action.
 
+The Python code is split into three directories: pyapp, pyai, and Scripts. pyapp contains
+application code, pyai contains AI-related code, and Scripts contains any runnable files.
+
 ## Installation Instructions
 
 This project relies on the Boost C++ libraries. Ensure they are installed and built.

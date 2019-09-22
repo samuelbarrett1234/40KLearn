@@ -1,7 +1,7 @@
-from mcts import MCTS
-from mcts_strategies import VisitCountStochasticPolicyStrategy
-from nn_estimator_strategy import NeuralNetworkEstimatorStrategy
-from game_util import select_randomly
+from pyai.mcts import MCTS
+from pyai.mcts_strategies import VisitCountStochasticPolicyStrategy
+from pyai.nn_estimator_strategy import NeuralNetworkEstimatorStrategy
+from pyapp.game_util import select_randomly
 import py40kl
 
 

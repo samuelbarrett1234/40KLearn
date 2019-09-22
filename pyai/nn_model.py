@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow.keras import Model, Input
 from tensorflow.keras.layers import (Conv2D, BatchNormalization, Dense,
                                      Flatten, concatenate, Lambda)
-from converter import NUM_FEATURES
+from pyai.converter import NUM_FEATURES
 
 
 tf.logging.set_verbosity(tf.logging.WARN)  # don't print info logs
