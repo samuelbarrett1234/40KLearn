@@ -18,70 +18,70 @@ class NNModel:
         self.board_size = board_size
         self.num_epochs = num_epochs
 
+        self.board_input = Input(shape=(self.board_size,
+                                        self.board_size, 2 * NUM_FEATURES))
+
+        # the current game's phase.
+        self.phase_input = Input(shape=(4,))
+
+        # main neural network body
+        x = Conv2D(256, (3, 3), activation='relu',
+                   input_shape=self.board_input.shape[1:]
+                   )(self.board_input)
+        x = BatchNormalization()(x)
+        x = Conv2D(256, (3, 3), activation='relu')(x)
+        x = BatchNormalization()(x)
+        x = Conv2D(256, (3, 3), activation='relu')(x)
+        x = BatchNormalization()(x)
+        x = Conv2D(256, (3, 3), activation='relu')(x)
+        x = BatchNormalization()(x)
+        x = Flatten()(x)  # flatten CNN output
+        x = concatenate([x, self.phase_input])  # add phase input
+        x = Dense(256, activation='relu')(x)
+        x = BatchNormalization()(x)
+        x = Dense(256, activation='relu')(x)
+
+        # construct value head of network
+        self.value_head = Dense(256, activation='relu')(x)
+        self.value_head = Dense(32, activation='relu')(self.value_head)
+        self.value_head = Dense(1, activation='tanh')(self.value_head)
+        # value head returns +1 for estimated win and -1 for estimated
+        # loss, and all values inbetween
+
+        # construct policy head of network
+        self.policy_head = Dense(256,
+                                 activation='relu')(x)
+        self.policy_head = Dense(256,
+                                 activation='relu')(self.policy_head)
+        self.policy_head = Dense(2 * self.board_size * self.board_size + 1,
+                                 activation='sigmoid')(self.policy_head)
+        s = tf.reduce_sum(self.policy_head)  # normalise
+        self.policy_head = Lambda(lambda y: y / s)(self.policy_head)
+
+        # Explanation of the policy head output:
+        # the first board_size * board_size elements represent the
+        # probabilities of picking each position as the SOURCE position
+        # for the next action. The next board_size * board_size elements
+        # represent the probabilities of picking a particular element
+        # as the TARGET position for the next action. The final element of
+        # the array represents the probability of ending phase (a 'pass').
+
+        # create model
+        self.model = Model(inputs=[self.board_input, self.phase_input],
+                           outputs=[self.value_head, self.policy_head])
+
+        # set up optimisers/losses
+        optimiser = 'adam'
+        value_head_loss = 'mse'
+        policy_head_loss = 'categorical_crossentropy'
+
+        # compile model
+        self.model.compile(optimizer=optimiser,
+                           loss=[value_head_loss, policy_head_loss])
+
         # Load from filename if given:
         if filename is not None:
-            self.model = tf.keras.load_model(filename)
-        else:
-            self.board_input = Input(shape=(self.board_size,
-                                            self.board_size, 2 * NUM_FEATURES))
-
-            # the current game's phase.
-            self.phase_input = Input(shape=(4,))
-
-            # main neural network body
-            x = Conv2D(256, (3, 3), activation='relu',
-                       input_shape=self.board_input.shape[1:]
-                       )(self.board_input)
-            x = BatchNormalization()(x)
-            x = Conv2D(256, (3, 3), activation='relu')(x)
-            x = BatchNormalization()(x)
-            x = Conv2D(256, (3, 3), activation='relu')(x)
-            x = BatchNormalization()(x)
-            x = Conv2D(256, (3, 3), activation='relu')(x)
-            x = BatchNormalization()(x)
-            x = Flatten()(x)  # flatten CNN output
-            x = concatenate([x, self.phase_input])  # add phase input
-            x = Dense(256, activation='relu')(x)
-            x = BatchNormalization()(x)
-            x = Dense(256, activation='relu')(x)
-
-            # construct value head of network
-            self.value_head = Dense(256, activation='relu')(x)
-            self.value_head = Dense(32, activation='relu')(self.value_head)
-            self.value_head = Dense(1, activation='tanh')(self.value_head)
-            # value head returns +1 for estimated win and -1 for estimated
-            # loss, and all values inbetween
-
-            # construct policy head of network
-            self.policy_head = Dense(256,
-                                     activation='relu')(x)
-            self.policy_head = Dense(256,
-                                     activation='relu')(self.policy_head)
-            self.policy_head = Dense(2 * self.board_size * self.board_size + 1,
-                                     activation='sigmoid')(self.policy_head)
-            s = tf.reduce_sum(self.policy_head)  # normalise
-            self.policy_head = Lambda(lambda x: x / s)(self.policy_head)
-
-            # Explanation of the policy head output:
-            # the first board_size * board_size elements represent the
-            # probabilities of picking each position as the SOURCE position
-            # for the next action. The next board_size * board_size elements
-            # represent the probabilities of picking a particular element
-            # as the TARGET position for the next action. The final element of
-            # the array represents the probability of ending phase (a 'pass').
-
-            # create model
-            self.model = Model(inputs=[self.board_input, self.phase_input],
-                               outputs=[self.value_head, self.policy_head])
-
-            # set up optimisers/losses
-            optimiser = 'adam'
-            value_head_loss = 'mse'
-            policy_head_loss = 'categorical_crossentropy'
-
-            # compile model
-            self.model.compile(optimizer=optimiser,
-                               loss=[value_head_loss, policy_head_loss])
+            self.model.load_weights(filename)
 
     def train(self, input_game_states, input_phases, values, policies):
         # input game states and phases: should be in array form
@@ -113,4 +113,4 @@ class NNModel:
         return values, policies
 
     def save(self, filename):
-        self.model.save(filename)
+        self.model.save_weights(filename)

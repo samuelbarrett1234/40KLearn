@@ -1,8 +1,9 @@
 import py40kl
 from nn_model import NNModel
-from basic_experience_dataset import BasicExperienceDataset
+from experience_dataset import ExperienceDataset
 from converter import (convert_states_to_arrays, array_to_policy,
-                       phase_to_vector, policy_to_array)
+                       phase_to_vector, policy_to_array,
+                       NUM_FEATURES)
 from model import Model, BOARD_SIZE
 from game_util import load_units_csv
 
@@ -15,16 +16,18 @@ placements = [
     (7, 1, 20, 10),
 ]
 tempmodel = Model(unit_roster, placements)
-
-
-NUM_TRAINING_EPOCHS = 100
-NUM_GAMES = 50
 GAME_START_STATE = tempmodel.get_state()
+del tempmodel
+
+
+NUM_SELF_PLAY_EPOCHS = 2
+NUM_TRAINING_EPOCHS = 10
+NUM_GAMES = 10
 EXPERIENCE_SAMPLE_EPOCH_SIZE = 1000
-NUM_MCTS_SIMULATIONS = 100
+NUM_MCTS_SIMULATIONS = 25
 UCB1_EXPLORATION = 2.0 ** 0.5
-DATASET_CAPACITY = 2000
-MODEL_FILENAME = 'models/model1.h5'
+MODEL_FILENAME = 'Models/model1.h5'
+DATASET_FILENAME = 'Data/data*'
 
 
 # Create the self-play manager:
@@ -36,11 +39,12 @@ model = NNModel(num_epochs=NUM_TRAINING_EPOCHS, board_size=BOARD_SIZE,
                 filename=None)
 
 # Create the dataset:
-# TODO: switch to a file-streamed version of this
-dataset = BasicExperienceDataset(capacity=DATASET_CAPACITY)
+dataset = ExperienceDataset(filename=DATASET_FILENAME,
+                            board_size=BOARD_SIZE,
+                            num_board_features=NUM_FEATURES)
 
 
-for epoch in range(NUM_TRAINING_EPOCHS):
+for epoch in range(NUM_SELF_PLAY_EPOCHS):
     print("*** Starting self-play epoch", epoch + 1)
 
     # Reserve space for next batch of experiences:
@@ -132,4 +136,8 @@ for epoch in range(NUM_TRAINING_EPOCHS):
     # Now ready to perform a training epoch on the model:
     model.train(game_states, phases, values, policies)
 
+print("*** Finished training, saving model...")
+
 model.save(MODEL_FILENAME)  # save once training done
+
+print("*** DONE!")
