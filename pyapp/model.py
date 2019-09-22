@@ -15,7 +15,8 @@ class Model:
     and handles everything in terms of board-cell-coordinates.
     """
     def __init__(self, unit_roster, placements):
-        self.game = new_game_state(unit_roster, placements, BOARD_SIZE)
+        self.game = new_game_state(unit_roster, placements, BOARD_SIZE,
+                                   board_scale=BOARD_SCALE)
         self.current_actions = self.game.get_commands()\
             if not self.game.is_finished() else []
         self.active_position = None

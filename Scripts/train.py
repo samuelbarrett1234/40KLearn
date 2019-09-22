@@ -9,14 +9,14 @@ from pyapp.model import BOARD_SIZE
 from pyapp.game_util import load_units_csv, new_game_state
 
 
-# TEMP: construct game start state by using the model's
-# loading logic to construct an initial game state.
 unit_roster = load_units_csv("unit_stats.csv")
 placements = [
     (0, 0, 15, 5),
-    (0, 0, 15, 10),
+    (1, 0, 15, 10),
+    (2, 0, 15, 15),
     (7, 1, 5, 5),
-    (7, 1, 5, 10),
+    (8, 1, 5, 10),
+    (9, 1, 5, 15),
 ]
 GAME_START_STATE = new_game_state(unit_roster, placements, BOARD_SIZE)
 
