@@ -12,11 +12,12 @@ class NeuralNetworkAIController:
     neural network to provide the prior estimates for the tree search.
     """
 
-    def __init__(self, model):
+    def __init__(self, model, nn_filename):
         self.model = model
+        self.filename = nn_filename
         self.tau = 0.2
         self.exploratoryParam = 2.0 ** 0.5
-        self.N = 25
+        self.N = 100  # number of searches before making a decision
         self.tree = None
         self.on_turn_changed()  # Sets up the MCTS tree
 
@@ -65,6 +66,9 @@ class NeuralNetworkAIController:
 
             print("AI decided for", unit.name, "to", verb, subject)
 
+        print("Current AI value estimate: ",
+              self.tree.get_value_estimate())
+
         # Actually apply the changes
         self.model.choose_action(action)
         self.tree.commit(self.model.get_state())
@@ -80,11 +84,15 @@ class NeuralNetworkAIController:
 
         team = self.model.get_acting_team()
 
+        board_size = self.model.get_state().get_board_state().get_size()
+
         # MCTS components:
         rootState = self.model.get_state()
         treePolicy = py40kl.UCB1PolicyStrategy(self.exploratoryParam, team)
         finalPolicy = VisitCountStochasticPolicyStrategy(self.tau)
-        estStrategy = NeuralNetworkEstimatorStrategy(team)
+        estStrategy = NeuralNetworkEstimatorStrategy(team,
+                                                     board_size=board_size,
+                                                     filename=self.filename)
 
         # Create MCTS tree
         self.tree = MCTS(rootState, treePolicy, finalPolicy, estStrategy)

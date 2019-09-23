@@ -29,43 +29,46 @@ class NNModel:
                    input_shape=self.board_input.shape[1:]
                    )(self.board_input)
         x = BatchNormalization()(x)
-        x = Conv2D(256, (3, 3), activation='relu')(x)
+        x = Conv2D(128, (3, 3), activation='relu')(x)
         x = BatchNormalization()(x)
-        x = Conv2D(256, (3, 3), activation='relu')(x)
+        x = Conv2D(128, (3, 3), activation='relu')(x)
         x = BatchNormalization()(x)
-        x = Conv2D(256, (3, 3), activation='relu')(x)
+        x = Conv2D(128, (3, 3), activation='relu')(x)
         x = BatchNormalization()(x)
-        x = Conv2D(256, (3, 3), activation='relu')(x)
+        x = Conv2D(128, (3, 3), activation='relu')(x)
         x = BatchNormalization()(x)
-        x = Conv2D(256, (3, 3), activation='relu')(x)
+        x = Conv2D(128, (3, 3), activation='relu')(x)
         x = BatchNormalization()(x)
-        x = Conv2D(256, (3, 3), activation='relu')(x)
+        x = Conv2D(128, (3, 3), activation='relu')(x)
         x = BatchNormalization()(x)
-        x = Conv2D(256, (3, 3), activation='relu')(x)
+        x = Conv2D(128, (3, 3), activation='relu')(x)
+        x = BatchNormalization()(x)
+        x = Conv2D(128, (3, 3), activation='relu')(x)
+        x = BatchNormalization()(x)
+        x = Conv2D(128, (3, 3), activation='relu')(x)
+        x = BatchNormalization()(x)
+        x = Conv2D(128, (3, 3), activation='relu')(x)
         x = BatchNormalization()(x)
         x = Flatten()(x)  # flatten CNN output
         x = concatenate([x, self.phase_input])  # add phase input
-        x = Dense(256, activation='relu')(x)
+        x = Dense(2048, activation='relu')(x)
         x = BatchNormalization()(x)
-        x = Dense(256, activation='relu')(x)
+        x = Dense(2048, activation='relu')(x)
 
         # construct value head of network
-        self.value_head = Dense(256, activation='relu')(x)
+        self.value_head = Dense(1024, activation='relu')(x)
         self.value_head = Dense(256, activation='relu')(self.value_head)
-        self.value_head = Dense(32, activation='relu')(self.value_head)
-        self.value_head = Dense(1, activation='tanh')(self.value_head)
+        self.value_head = Dense(1, activation='tanh',
+                                name='value_head')(self.value_head)
         # value head returns +1 for estimated win and -1 for estimated
         # loss, and all values inbetween
 
         # construct policy head of network
-        self.policy_head = Dense(256,
+        self.policy_head = Dense(2048,
                                  activation='relu')(x)
-        self.policy_head = Dense(256,
-                                 activation='relu')(self.policy_head)
-        self.policy_head = Dense(256,
-                                 activation='relu')(self.policy_head)
         self.policy_head = Dense(2 * self.board_size * self.board_size + 1,
-                                 activation='softmax')(self.policy_head)
+                                 activation='softmax',
+                                 name='policy_head')(self.policy_head)
 
         # Explanation of the policy head output:
         # the first board_size * board_size elements represent the

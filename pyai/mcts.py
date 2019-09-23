@@ -31,6 +31,19 @@ class MCTS:
         return self.root.get_actions(), dist
 
     """
+    Get the search tree's estimate for whether or
+    not the tree's player is going to win or not.
+    Returns the value with respect to the team given
+    in the constructor, not the current acting team!
+    This is because the value samples added to the
+    tree are with respect to 'team', not to the acting
+    player.
+    """
+    def get_value_estimate(self):
+        v = self.root.get_value_estimate()
+        return v
+
+    """
     Commit to a given action. This RE-ROOTS the MCTS tree
     so as not to waste any of the previous simulations which
     were used to inform the commit decision.

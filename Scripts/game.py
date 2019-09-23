@@ -1,9 +1,10 @@
 from pyapp.view import GameView
 from pyapp.human_controller import HumanController
 from pyapp.two_player_controller import TwoPlayerController
-from pyai.basic_ai_controller import BasicAIController
+from pyai.nn_ai_controller import NeuralNetworkAIController
 from pyapp.model import Model
 from pyapp.game_util import load_units_csv
+from train import MODEL_FILENAME
 
 
 # Player versus player or AI
@@ -38,7 +39,8 @@ if __name__ == "__main__":
     if MODE == PVP:
         team1 = HumanController(model)
     elif MODE == PVAI:
-        team1 = BasicAIController(model)
+        team1 = NeuralNetworkAIController(model,
+                                          MODEL_FILENAME)
     ctrl = TwoPlayerController(model, team0, team1)
     view = GameView(model, ctrl)
     view.run()

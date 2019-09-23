@@ -92,8 +92,6 @@ to train the neural network for a period of time.
   as rotation, reflection (there are 8 symmetries.) This is useful because it doesn't
   change the board's value, and shouldn't change the policy (after applying the
   transformation to the policy, also.)
-- Train neural network and incorporate into GUI. Remove the 'end phase bias' after a
-  period of training, and then continue training for a bit.
 - Maybe: refactor the MCTS tree to enforce an order on which units to order. This
   should reduce branching factor. Then, update neural network policy output.
 - Parallelise the self-play manager.

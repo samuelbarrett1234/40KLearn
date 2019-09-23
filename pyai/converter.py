@@ -150,9 +150,17 @@ def array_to_policy(policy_array, game_state):
             policy[i] = p_source * p_target
         else:
             # End phase is at the end of policy_array
-            policy[i] = policy_array[-1]
+            # NOTE: slight hack: we square the probability here
+            # because otherwise it will tend to be slightly higher
+            # and yet we don't want it to happen more often.
+            policy[i] = policy_array[-1] ** 2.0
 
     # Normalise:
     policy = np.array(policy)
-    policy /= np.sum(policy)
-    return [float(x) for x in policy]
+    s = np.sum(policy)
+    if s == 0.0:
+        # Panic and return this
+        return [1.0] + [0.0] * (len(policy) - 1)
+    else:
+        policy /= np.sum(policy)
+        return [float(x) for x in policy]

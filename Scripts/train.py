@@ -21,10 +21,10 @@ placements = [
 GAME_START_STATE = new_game_state(unit_roster, placements, BOARD_SIZE)
 
 
-NUM_SELF_PLAY_EPOCHS = 2
+NUM_SELF_PLAY_EPOCHS = 5
 NUM_TRAINING_EPOCHS = 10
 NUM_GAMES = 10
-EXPERIENCE_SAMPLE_EPOCH_SIZE = 1000
+EXPERIENCE_SAMPLE_EPOCH_SIZE = 100
 NUM_MCTS_SIMULATIONS = 100
 UCB1_EXPLORATION = 2.0 ** 0.5
 MODEL_FILENAME = 'Models/model1.h5'
@@ -84,11 +84,14 @@ if __name__ == "__main__":
                     # If there are options other than passing, and the current
                     # phase is the shooting phase or fight phase, then do not
                     # allow a pass (set its probability to zero and normalise).
+                    # In other cases, at least discourage a pass.
                     for state, policy in zip(states, policies):
-                        if len(policy) > 1\
-                           and (state.get_phase() == py40kl.Phase.SHOOTING
-                                or state.get_phase() == py40kl.Phase.FIGHT):
-                            policy[-1] = 0.0
+                        if len(policy) > 1:
+                            if state.get_phase() == py40kl.Phase.SHOOTING\
+                               or state.get_phase() == py40kl.Phase.FIGHT:
+                                policy[-1] = 0.0
+                            else:
+                                policy[-1] *= 1.0e-3
                             s = sum(policy)
                             if s == 0.0:
                                 policy[-1] = 1.0  # restore to where we were
