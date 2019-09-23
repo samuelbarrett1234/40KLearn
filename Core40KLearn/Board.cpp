@@ -1,6 +1,7 @@
 #include "Board.h"
 #include <algorithm>
 #include <cmath>
+#include <sstream>
 
 
 namespace c40kl
@@ -22,6 +23,7 @@ bool BoardState::IsOccupied(Position pos) const
 		"Coordinates must be valid.");
 
 	auto iter = std::find(m_Positions.begin(), m_Positions.end(), pos);
+
 	return (iter != m_Positions.end());
 }
 
@@ -37,6 +39,7 @@ void BoardState::SetUnitOnSquare(Position pos, Unit unit, int team)
 	if (iter == m_Positions.end())
 	{
 		//Previously unoccupied position
+
 		m_Units.push_back(unit);
 		m_Positions.push_back(pos);
 		m_Teams.push_back(team);
@@ -44,7 +47,9 @@ void BoardState::SetUnitOnSquare(Position pos, Unit unit, int team)
 	else
 	{
 		//Override existing info
-		size_t i = std::distance(m_Positions.begin(), iter);
+
+		const size_t i = std::distance(m_Positions.begin(), iter);
+
 		m_Teams[i] = team;
 		m_Units[i] = unit;
 	}
@@ -60,7 +65,7 @@ const Unit& BoardState::GetUnitOnSquare(Position pos) const
 	
 	C40KL_ASSERT_INVARIANT(iter != m_Positions.end(), "Must be able to find position.");
 
-	size_t i = std::distance(m_Positions.begin(), iter);
+	const size_t i = std::distance(m_Positions.begin(), iter);
 
 	return m_Units[i];
 }
@@ -75,7 +80,7 @@ int BoardState::GetTeamOnSquare(Position pos) const
 
 	C40KL_ASSERT_INVARIANT(iter != m_Positions.end(), "Must be able to find position.");
 
-	size_t i = std::distance(m_Positions.begin(), iter);
+	const size_t i = std::distance(m_Positions.begin(), iter);
 
 	return m_Teams[i];
 }
@@ -89,6 +94,9 @@ PositionArray BoardState::GetAllUnits(int team) const
 
 	PositionArray arr;
 
+	//Reserve for worst case to prevent lots of allocations
+	arr.reserve(m_Positions.size());
+
 	for (size_t i = 0; i < m_Positions.size(); i++)
 	{
 		if (m_Teams[i] == team)
@@ -101,38 +109,64 @@ PositionArray BoardState::GetAllUnits(int team) const
 }
 
 
+UnitArray BoardState::GetAllUnitStats(int team) const
+{
+	C40KL_ASSERT_PRECONDITION(team == 0 || team == 1, "Team must be 0 or 1.");
+	C40KL_ASSERT_INVARIANT(m_Units.size() == m_Teams.size(),
+		"Position/team/unit arrays must be same size.");
+
+	UnitArray arr;
+
+	//Reserve for worst case to prevent lots of allocations
+	arr.reserve(m_Units.size());
+
+	for (size_t i = 0; i < m_Units.size(); i++)
+	{
+		if (m_Teams[i] == team)
+		{
+			arr.push_back(m_Units[i]);
+		}
+	}
+
+	return arr;
+}
+
+
 void BoardState::ClearSquare(Position pos)
 {
-	//Automatically checks x,y are valid
+	//Automatically checks pos is valid
 	C40KL_ASSERT_PRECONDITION(IsOccupied(pos), "Must be an occupied square.");
 
 	auto iter = std::find(m_Positions.begin(), m_Positions.end(), pos);
 
 	C40KL_ASSERT_INVARIANT(iter != m_Positions.end(), "Must be able to find position.");
 
-	size_t i = std::distance(m_Positions.begin(), iter);
+	const size_t i = std::distance(m_Positions.begin(), iter);
 
-	//Erase:
-	m_Positions.erase(m_Positions.begin() + i);
-	m_Teams.erase(m_Teams.begin() + i);
-	m_Units.erase(m_Units.begin() + i);
+	//Erase using 'swap and pop':
+
+	std::swap(m_Positions[i], m_Positions.back());
+	m_Positions.pop_back();
+
+	std::swap(m_Teams[i], m_Teams.back());
+	m_Teams.pop_back();
+
+	std::swap(m_Units[i], m_Units.back());
+	m_Units.pop_back();
 }
 
 
 bool BoardState::HasAdjacentEnemy(Position pos, int team) const
 {
 	C40KL_ASSERT_PRECONDITION(team == 0 || team == 1, "Invalid team value.");
-	for (int i = pos.first - 1; i <= pos.first + 1; i++)
+	for (size_t i = 0; i < m_Positions.size(); i++)
 	{
-		for (int j = pos.second - 1; j <= pos.second + 1; j++)
+		if (m_Teams[i] != team &&
+			std::abs(m_Positions[i].first - pos.first) <= 1
+			&& std::abs(m_Positions[i].second - pos.second) <= 1
+			&& m_Positions[i] != pos)
 		{
-			if (i >= 0 && i < m_Size && j >= 0 && j < m_Size)
-			{
-				if (IsOccupied(Position(i,j)) && GetTeamOnSquare(Position(i,j)) != team)
-				{
-					return true;
-				}
-			}
+			return true;
 		}
 	}
 	return false;
@@ -162,11 +196,13 @@ PositionArray BoardState::GetSquaresInRange(Position centre, float radius) const
 	{
 		for (int j = top; j <= bottom; j++)
 		{
-			C40KL_ASSERT_INVARIANT(i >= 0 && j >= 0 && i < m_Size && j < m_Size, "Coordinates should be valid.");
+			C40KL_ASSERT_INVARIANT(i >= 0 && j >= 0 && i < m_Size && j < m_Size,
+				"Coordinates should be valid.");
+
 			const int dx = centre.first - i, dy = centre.second - j;
-			if (dx*dx + dy * dy <= intRadSq)
+			if (dx * dx + dy * dy <= intRadSq)
 			{
-				result.push_back(Position(i, j));
+				result.emplace_back(i, j);
 			}
 		}
 	}
@@ -179,7 +215,48 @@ float BoardState::GetDistance(Position a, Position b) const
 {
 	const auto dx = a.first - b.first;
 	const auto dy = a.second - b.second;
-	return m_Scale * std::sqrtf(static_cast<float>(dx*dx+dy*dy));
+	return m_Scale * std::sqrtf(static_cast<float>(dx * dx + dy * dy));
+}
+
+
+std::pair<size_t, size_t> BoardState::GetUnitCounts() const
+{
+	std::pair<size_t, size_t> result = std::make_pair(0U, 0U);
+
+	for (auto team : m_Teams)
+	{
+		switch (team)
+		{
+		case 0:
+			result.first++;
+			break;
+		case 1:
+			result.second++;
+			break;
+		}
+	}
+
+	return result;
+}
+
+
+std::string BoardState::ToString() const
+{
+	std::stringstream m;
+
+	m << "Board State ( size = " << m_Size
+		<< ", scale = " << m_Scale << ", units = [  ";
+
+	for (size_t i = 0; i < m_Positions.size(); i++)
+	{
+		m << '"' << m_Units[i].name << '"'
+			<< " at (" << m_Positions[i].first << ','
+			<< m_Positions[i].second << ")  ";
+	}
+
+	m << "] )";
+
+	return m.str();
 }
 
 

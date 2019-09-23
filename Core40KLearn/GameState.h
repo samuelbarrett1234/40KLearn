@@ -39,8 +39,6 @@ public:
 	/// <param name="board">The state of the board when the game begins.</param>
 	GameState(int internalTeam, int actingTeam, Phase phase, const BoardState& board);
 
-	//TODO: binary file I/O
-
 	/// <summary>
 	/// Get the team which is currently making decisions.
 	/// Precondition: !IsFinished()
@@ -106,11 +104,15 @@ public:
 	}
 
 
+	std::string ToString() const;
+
+
 	inline bool operator == (const GameState& other) const
 	{
 		return (m_InternalTeam == other.m_InternalTeam && m_Phase == other.m_Phase
 			&& m_Board == other.m_Board && m_ActingTeam == other.m_ActingTeam);
 	}
+
 
 private:
 	int m_InternalTeam, //The internal team is "whose turn it is"

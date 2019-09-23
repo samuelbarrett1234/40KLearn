@@ -33,15 +33,23 @@ void EndPhaseCommand::GetPossibleCommands(const GameState& state, GameCommandArr
 
 	GameCommandArray arr;
 
-	PositionArray allUnits = state.GetBoardState().GetAllUnits(0);
+	//Get all units and their stats (need to do it team-by-team)
+	auto allUnits = state.GetBoardState().GetAllUnits(0);
+	auto allUnitStats = state.GetBoardState().GetAllUnitStats(0);
 	{
-		PositionArray restOfUnits = state.GetBoardState().GetAllUnits(1);
+		auto restOfUnits = state.GetBoardState().GetAllUnits(1);
 		allUnits.insert(allUnits.end(), restOfUnits.begin(), restOfUnits.end());
-	}	
+		auto restOfUnitStats = state.GetBoardState().GetAllUnitStats(1);
+		allUnitStats.insert(allUnitStats.end(), restOfUnitStats.begin(), restOfUnitStats.end());
+	}
 
-	for (const auto& unitPos : allUnits)
+	C40KL_ASSERT_INVARIANT(allUnits.size() == allUnitStats.size(),
+		"Unit positions and unit stats arrays must tie up.");
+
+	for (size_t i = 0; i < allUnits.size(); i++)
 	{
-		const auto& stats = state.GetBoardState().GetUnitOnSquare(unitPos);
+		const auto& unitPos = allUnits[i];
+		const auto& stats = allUnitStats[i];
 
 		if (stats.modelsLostThisPhase > 0)
 		{

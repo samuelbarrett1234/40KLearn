@@ -14,20 +14,23 @@ void UnitMovementCommand::GetPossibleCommands(const GameState& state, GameComman
 		return;
 
 	PositionArray possiblePositions;
-	Unit stats;
 
 	//Cache these:
 	const auto ourTeam = state.GetActingTeam();
 	const auto& board = state.GetBoardState();
 
 	//Get all units for this team:
-	const auto units = board.GetAllUnits(ourTeam);
+	const auto unitPositions = board.GetAllUnits(ourTeam);
+	const auto unitStats = board.GetAllUnitStats(ourTeam);
+
+	C40KL_ASSERT_INVARIANT(unitPositions.size() == unitStats.size(),
+		"Unit positions and unit stats arrays must tie up.");
 
 	//Consider each unit for movement
-	for (const auto& unitPos : units)
+	for (size_t i = 0; i < unitPositions.size(); i++)
 	{
-		//Get the unit's stats
-		stats = board.GetUnitOnSquare(unitPos);
+		const auto& unitPos = unitPositions[i];
+		const auto& stats = unitStats[i];
 
 		//Can't move twice per turn!
 		if (!stats.movedThisTurn)

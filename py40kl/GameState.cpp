@@ -29,7 +29,8 @@ void ExportGameState()
 		.def("get_game_value", &GameState::GetGameValue)
 		.def("get_board_state", &GameState::GetBoardState,
 			return_value_policy<copy_const_reference>())
-		.def(self == self);
+		.def(self == self)
+		.def("__str__", &GameState::ToString);
 }
 
 

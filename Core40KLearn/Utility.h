@@ -8,6 +8,8 @@
 
 
 //We are using the same compiler version for all projects
+// so disable the warning about using STL variables in
+// exported classes.
 #pragma warning(disable:4251)
 
 

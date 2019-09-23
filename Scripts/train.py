@@ -25,7 +25,7 @@ NUM_SELF_PLAY_EPOCHS = 2
 NUM_TRAINING_EPOCHS = 10
 NUM_GAMES = 10
 EXPERIENCE_SAMPLE_EPOCH_SIZE = 1000
-NUM_MCTS_SIMULATIONS = 25
+NUM_MCTS_SIMULATIONS = 100
 UCB1_EXPLORATION = 2.0 ** 0.5
 MODEL_FILENAME = 'Models/model1.h5'
 DATASET_FILENAME = 'Data/data*'
@@ -91,7 +91,7 @@ if __name__ == "__main__":
                             policy[-1] = 0.0
                             s = sum(policy)
                             if s == 0.0:
-                                policy[-1] = 1.0  # restore back to where we were
+                                policy[-1] = 1.0  # restore to where we were
                             else:
                                 policy = [p / s for p in policy]
 

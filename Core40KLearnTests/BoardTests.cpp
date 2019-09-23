@@ -66,6 +66,12 @@ BOOST_AUTO_TEST_CASE(GetAllUnitsTest)
 
 	BOOST_TEST((Position(1, 1) == team1Units[0]
 		|| Position(1, 1) == team1Units[1]));
+
+	auto team0UnitStats = s.GetAllUnitStats(0);
+	auto team1UnitStats = s.GetAllUnitStats(1);
+
+	BOOST_TEST(team0UnitStats.size() == team0Units.size());
+	BOOST_TEST(team1UnitStats.size() == team1Units.size());
 }
 
 

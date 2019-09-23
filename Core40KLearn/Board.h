@@ -3,6 +3,7 @@
 
 #include "Utility.h"
 #include "Unit.h"
+#include <map>
 
 
 namespace c40kl
@@ -24,6 +25,7 @@ public:
 	/// <param name="scale">The length of a cell.</param>
 	BoardState(int boardSize, float scale);
 
+
 	/// <summary>
 	/// Check if a unit lies on the given grid cell.
 	/// Precondition: x and y are coordinates in a valid range.
@@ -31,6 +33,7 @@ public:
 	/// <param name="pos">The position to check at</param>
 	/// <returns>True if there is a unit (on either team) on this square, false if not.</returns>
 	bool IsOccupied(Position pos) const;
+
 
 	/// <summary>
 	/// Place a unit on the given square, overriding any
@@ -41,6 +44,7 @@ public:
 	/// <param name="team">The team of the unit (must be 0 or 1).</param>
 	void SetUnitOnSquare(Position pos, Unit unit, int team);
 
+
 	/// <summary>
 	/// Return the statistics of the unit on the given square.
 	/// Precondition: IsOccupied(x,y).
@@ -49,6 +53,7 @@ public:
 	/// <returns>A reference to the unit statistics (feel free to copy).</returns>
 	const Unit& GetUnitOnSquare(Position pos) const;
 
+
 	/// <summary>
 	/// Return the team of the unit on the given square.
 	/// Precondition: IsOccupied(x,y).
@@ -56,6 +61,7 @@ public:
 	/// <param name="pos">The position to get the team at</param>
 	/// <returns>0 or 1, depending on the team.</returns>
 	int GetTeamOnSquare(Position pos) const;
+
 
 	/// <summary>
 	/// Return an array containing all of the units belonging
@@ -66,6 +72,16 @@ public:
 	/// by querying the positions.</returns>
 	PositionArray GetAllUnits(int team) const;
 
+
+	/// <summary>
+	/// Return an array containing all of the units belonging
+	/// to a particular team.
+	/// </summary>
+	/// <param name="team">0 or 1; the team of the units you want to get.</param>
+	/// <returns>A new array of unit stats. Corresponds to position array.</returns>
+	UnitArray GetAllUnitStats(int team) const;
+
+
 	/// <summary>
 	/// Remove the unit from the given square.
 	/// Precondition: IsOccupied(x,y).
@@ -73,6 +89,7 @@ public:
 	/// </summary>
 	/// <param name="pos">The position to clear</param>
 	void ClearSquare(Position pos);
+
 
 	/// <summary>
 	/// Check if any of the squares adjacent to (but not including) (x,y)
@@ -82,6 +99,7 @@ public:
 	/// <param name="team">0 or 1; the team you want to check against.</param>
 	/// <returns>True if and only if the above condition holds.</returns>
 	bool HasAdjacentEnemy(Position pos, int team) const;
+
 
 	/// <summary>
 	/// Return all squares which are (i) valid positions
@@ -95,6 +113,7 @@ public:
 	/// <returns>An array of all positions satisfying (i) and (ii).</return>
 	PositionArray GetSquaresInRange(Position centre, float radius) const;
 
+
 	/// <summary>
 	/// Get the "real world" distance between these two points.
 	/// </summary>
@@ -104,6 +123,16 @@ public:
 	float GetDistance(Position a, Position b) const;
 
 
+	/// <summary>
+	/// Count the number of units for each team.
+	/// </summary>
+	/// <returns>Returns a pair (num units for team 0, num units for team 1).</returns>
+	std::pair<size_t, size_t> GetUnitCounts() const;
+
+
+	std::string ToString() const;
+
+
 	inline bool operator == (const BoardState& other) const
 	{
 		return (m_Size == other.m_Size && m_Scale == other.m_Scale
@@ -111,15 +140,18 @@ public:
 			&& m_Teams == other.m_Teams);
 	}
 
+
 	inline int GetSize() const
 	{
 		return m_Size;
 	}
 
+
 	inline float GetScale() const
 	{
 		return m_Scale;
 	}
+
 
 private:
 	int m_Size;

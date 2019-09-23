@@ -18,7 +18,8 @@ void ExportBoardState()
 		.def("get_distance", &BoardState::GetDistance)
 		.def("get_size", &BoardState::GetSize)
 		.def("get_scale", &BoardState::GetScale)
-		.def(self == self);
+		.def(self == self)
+		.def("__str__", &BoardState::ToString);
 }
 
 

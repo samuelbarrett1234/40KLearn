@@ -43,15 +43,23 @@ void UnitChargeCommand::GetPossibleCommands(const GameState& state, GameCommandA
 	const auto& board = state.GetBoardState();
 
 	//Get all units for this team:
-	const auto units = board.GetAllUnits(ourTeam);
+	const auto alliedUnitPositions = board.GetAllUnits(ourTeam);
+	const auto alliedUnitStats = board.GetAllUnitStats(ourTeam);
+
+	C40KL_ASSERT_INVARIANT(alliedUnitPositions.size() == alliedUnitStats.size(),
+		"Unit positions and unit stats arrays must tie up.");
 
 	//Get all enemy units:
-	const auto enemies = board.GetAllUnits(1 - ourTeam);
+	const auto enemyUnitPositions = board.GetAllUnits(1 - ourTeam);
+	const auto enemyUnitStats = board.GetAllUnitStats(1 - ourTeam);
+
+	C40KL_ASSERT_INVARIANT(enemyUnitPositions.size() == enemyUnitStats.size(),
+		"Unit positions and unit stats arrays must tie up.");
 
 	//Compute all possible charge positions, for any allied unit (i.e.
 	// not taking distance into account, yet):
 	PositionArray possibleChargePositions;
-	for (const auto& enemyPos : enemies)
+	for (const auto& enemyPos : enemyUnitPositions)
 	{
 		//Check all squares adjacent to the enemy position
 
@@ -76,10 +84,11 @@ void UnitChargeCommand::GetPossibleCommands(const GameState& state, GameCommandA
 	}
 
 	//Consider each unit for charge
-	for (const auto& unitPos : units)
+	for (size_t i = 0; i < alliedUnitPositions.size(); i++)
 	{
 		//Get the unit's stats
-		stats = board.GetUnitOnSquare(unitPos);
+		const auto& unitPos = alliedUnitPositions[i];
+		const auto& stats = alliedUnitStats[i];
 
 		//Can't charge twice per turn!
 		if (!stats.attemptedChargeThisTurn
@@ -104,14 +113,16 @@ void UnitChargeCommand::GetPossibleCommands(const GameState& state, GameCommandA
 
 					//Loop through enemies and if they are adjacent to the charge position,
 					// i.e. being charged, and then add an overwatch shoot command:
-					for (const auto& enemyPos : enemies)
+					for (size_t j = 0; j < enemyUnitPositions.size(); j++)
 					{
+						//Get the unit's stats
+						const auto& enemyPos = enemyUnitPositions[j];
+						const auto& enemyStats = enemyUnitStats[j];
+
 						//If adjacent...
 						if (std::abs(enemyPos.first - targetPos.first) <= 1
 							&& std::abs(enemyPos.second - targetPos.second) <= 1)
 						{
-							const auto& enemyStats = board.GetUnitOnSquare(enemyPos);
-
 							//If satisifes shooting preconditions...
 							if (HasStandardRangedWeapon(enemyStats) //If has ranged weapon...
 								&& enemyStats.rg_range >= board.GetDistance(unitPos, enemyPos) //... which is in range

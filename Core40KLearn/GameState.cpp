@@ -5,13 +5,14 @@
 #include "UnitFightCommand.h"
 #include "EndPhaseCommand.h"
 #include <functional>
+#include <sstream>
 
 
 namespace c40kl
 {
 
 
-std::function<void(const GameState&, GameCommandArray&)> commandCreators[] =
+static std::function<void(const GameState&, GameCommandArray&)> commandCreators[] =
 {
 	&UnitMovementCommand::GetPossibleCommands,
 	&UnitShootCommand::GetPossibleCommands,
@@ -85,7 +86,8 @@ GameCommandArray GameState::GetCommands() const
 
 bool GameState::IsFinished() const
 {
-	return (m_Board.GetAllUnits(0).empty() || m_Board.GetAllUnits(1).empty());
+	const auto counts = m_Board.GetUnitCounts();
+	return (counts.first == 0 || counts.second == 0);
 }
 
 
@@ -93,8 +95,9 @@ int GameState::GetGameValue(int team) const
 {
 	C40KL_ASSERT_PRECONDITION(IsFinished(), "Can't produce winner value for unfinished game.");
 
-	const bool bAlliesFinished = m_Board.GetAllUnits(team).empty();
-	const bool bEnemiesFinished = m_Board.GetAllUnits(1-team).empty(); //1-team is the enemy team
+	const auto counts = m_Board.GetUnitCounts();
+	const bool bAlliesFinished = (team == 0) ? (counts.first == 0) : (counts.second == 0);
+	const bool bEnemiesFinished = (team == 1) ? (counts.first == 0) : (counts.second == 0);
 
 	C40KL_ASSERT_INVARIANT(bAlliesFinished || bEnemiesFinished, "At least one team must have no units!");
 
@@ -104,6 +107,20 @@ int GameState::GetGameValue(int team) const
 		return -1; //Loss
 	else
 		return 1; //Win
+}
+
+
+std::string GameState::ToString() const
+{
+	std::stringstream m;
+
+	m << "Game State ( internal team = " << m_InternalTeam
+		<< ", acting team = " << m_ActingTeam
+		<< ", phase = " << (int)m_Phase
+		<< ", board = " << m_Board.ToString()
+		<< " )";
+
+	return m.str();
 }
 
 
