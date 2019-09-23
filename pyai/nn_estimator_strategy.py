@@ -45,7 +45,10 @@ class NeuralNetworkEstimatorStrategy:
                                 or state.get_phase() == py40kl.Phase.FIGHT):
             policy[-1] = 0.0
             s = sum(policy)
-            policy = [p / s for p in policy]
+            if s == 0.0:
+                policy[-1] = 1.0  # restore back to where we were
+            else:
+                policy = [p / s for p in policy]
 
         return array_to_policy(policy, state)
 
