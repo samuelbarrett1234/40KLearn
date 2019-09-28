@@ -295,13 +295,20 @@ void GetFightableUnits(const BoardState& board, int team, PositionArray& outPosi
 {
 	//Get all units for this team:
 	const auto units = board.GetAllUnits(team);
+	const auto unitStats = board.GetAllUnitStats(team);
 	const auto targets = board.GetAllUnits(1 - team);
 
+	C40KL_ASSERT_INVARIANT(units.size() == unitStats.size(),
+		"Unit positions and unit stats must tie up.");
+
+	//Reserve once to prevent multiple allocations in the loop:
+	outPositions.reserve(units.size());
+
 	//Consider each (allied) unit for fighting
-	for (const auto& unitPos : units)
+	for (size_t i = 0; i < units.size(); i++)
 	{
-		//Get the unit's stats
-		auto stats = board.GetUnitOnSquare(unitPos);
+		const auto& unitPos = units[i];
+		const auto& stats = unitStats[i];
 
 		//We can't fight if we don't have a melee weapon
 		if (HasStandardMeleeWeapon(stats) && !stats.foughtThisTurn)
