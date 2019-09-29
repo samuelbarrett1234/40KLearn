@@ -94,4 +94,12 @@ to train the neural network for a period of time.
   transformation to the policy, also.)
 - Maybe: refactor the MCTS tree to enforce an order on which units to order. This
   should reduce branching factor. Then, update neural network policy output.
-- Parallelise the self-play manager.
+- Randomly generate initial game state for each self-play epoch.
+- Stretch goal: supporting many concurrent games, each with their own large search
+  trees. This would require two steps: (i) allow search trees to be stored in a database
+  or file, so their sizes aren't bound by the limits of the system's RAM, and (ii) allow
+  the search tree results to be streamed across networks of devices, so that different
+  devices can run different search trees (for different games), which will then send their
+  results across a network to a central machine. This central machine will run the neural
+  network, and distribute the results of the neural network to the machines running the
+  tree search.

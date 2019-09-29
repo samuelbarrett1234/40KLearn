@@ -5,6 +5,7 @@
 #include "MCTSNode.h"
 #include "UCB1PolicyStrategy.h"
 #include <random>
+#include <boost/noncopyable.hpp>
 
 
 namespace c40kl
@@ -21,7 +22,8 @@ namespace c40kl
 /// Commit() function may require Select()/Update() to be called
 /// several times before it is ready.
 /// </summary>
-class C40KL_API SelfPlayManager
+class C40KL_API SelfPlayManager :
+	public boost::noncopyable
 {
 public:
 	/// <summary>
@@ -37,7 +39,11 @@ public:
 	/// <param name="numSimulations">
 	/// The number of simulations the AI will do in the search tree before making a decision.
 	/// </param>
-	SelfPlayManager(float ucb1ExplorationParameter, size_t numSimulations);
+	/// <param name="numThreads">The number of threads to execute on. Must be >= 1.</param>
+	SelfPlayManager(float ucb1ExplorationParameter, size_t numSimulations, size_t numThreads);
+
+
+	~SelfPlayManager();
 
 	
 	/// <summary>
@@ -219,7 +225,7 @@ private:
 
 	std::mt19937 m_RandEng;
 
-	const size_t m_NumSimulations;
+	const size_t m_NumSimulations, m_NumThreads;
 	UCB1PolicyStrategy m_TreePolicy;
 
 	//IMPORTANT NOTE about tree value estimates:

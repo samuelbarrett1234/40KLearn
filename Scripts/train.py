@@ -21,18 +21,20 @@ placements = [
 GAME_START_STATE = new_game_state(unit_roster, placements, BOARD_SIZE)
 
 
-NUM_SELF_PLAY_EPOCHS = 5
+NUM_SELF_PLAY_EPOCHS = 1
 NUM_TRAINING_EPOCHS = 10
 NUM_GAMES = 10
-EXPERIENCE_SAMPLE_EPOCH_SIZE = 100
+EXPERIENCE_SAMPLE_EPOCH_SIZE = 1000
 NUM_MCTS_SIMULATIONS = 100
-UCB1_EXPLORATION = 2.0 ** 0.5
+UCB1_EXPLORATION = 2.0 * 2.0 ** 0.5
 MODEL_FILENAME = 'Models/model1.h5'
 DATASET_FILENAME = 'Data/data*'
+NUM_SELF_PLAY_THREADS = 3
 
 
 # Create the self-play manager:
-mgr = py40kl.SelfPlayManager(UCB1_EXPLORATION, NUM_MCTS_SIMULATIONS)
+mgr = py40kl.SelfPlayManager(UCB1_EXPLORATION, NUM_MCTS_SIMULATIONS,
+                             NUM_SELF_PLAY_THREADS)
 
 # Create the neural network model:
 model = NNModel(num_epochs=NUM_TRAINING_EPOCHS, board_size=BOARD_SIZE,

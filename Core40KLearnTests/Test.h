@@ -13,11 +13,11 @@
 
 #ifdef C40KL_CHECK_PRE_POST_CONDITIONS
 
-#define C40KL_CHECK_PRE_POST_EXCEPTION(expr) BOOST_CHECK_THROW(expr, std::runtime_error)
+#define C40KL_CHECK_PRE_POST_EXCEPTION(expr, ex) BOOST_CHECK_THROW(expr, ex)
 
 #else
 
-#define C40KL_CHECK_PRE_POST_EXCEPTION(expr) ((void)0)
+#define C40KL_CHECK_PRE_POST_EXCEPTION(expr, ex) ((void)0)
 
 #endif
 

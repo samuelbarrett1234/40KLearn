@@ -11,6 +11,7 @@
 // so disable the warning about using STL variables in
 // exported classes.
 #pragma warning(disable:4251)
+#pragma warning(disable:4275)
 
 
 #ifdef CORE_40KLEARN_EXPORTS

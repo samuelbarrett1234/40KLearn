@@ -49,9 +49,8 @@ size_t UCB1PolicyStrategy::ActionArgMax(const MCTSNode& node) const
 	const size_t n = priors.size();
 
 	//Determine the total number of visits:
-	size_t totalVisits = 0;
-	for (size_t k : actionVisitCounts)
-		totalVisits += k;
+	const size_t totalVisits = std::accumulate(actionVisitCounts.begin(),
+		actionVisitCounts.end(), 0U);
 
 	//Note: if it's the case that we have never visited this
 	// node, then just select straight from the prior. To do

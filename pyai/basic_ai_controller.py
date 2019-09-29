@@ -50,14 +50,14 @@ class BasicAIController:
             verb, subject = "", ""
             if self.model.get_phase() == py40kl.Phase.MOVEMENT:
                 verb = "move to"
-                subject = str(target_pos.x, target_pos.y)
+                subject = str((target_pos.x, target_pos.y))
             elif self.model.get_phase() == py40kl.Phase.SHOOTING:
                 verb = "shoot"
                 target = board.get_unit_on_square(target_pos)
                 subject = target.name
             elif self.model.get_phase() == py40kl.Phase.CHARGE:
                 verb = "charge location"
-                subject = str(target_pos.x, target_pos.y)
+                subject = str((target_pos.x, target_pos.y))
             else:
                 verb = "fight"
                 target = board.get_unit_on_square(target_pos)

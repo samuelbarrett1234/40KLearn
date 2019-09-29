@@ -16,6 +16,13 @@ MCTSNodePtr MCTSNode::CreateRootNode(const GameState& state)
 }
 
 
+MCTSNodePtr MCTSNode::CreateChildNode(const GameState& state, MCTSNode* pParent, float weightFromParent)
+{
+	//See remark in CreateRootNode.
+	return MCTSNodePtr(new MCTSNode(state, pParent, weightFromParent));
+}
+
+
 MCTSNode::MCTSNode(const GameState& state, MCTSNode* pParent, float weightFromParent) :
 	m_State(state),
 	m_pParent(pParent),
@@ -80,8 +87,7 @@ void MCTSNode::Expand(const std::vector<float>& priorActionDistribution)
 		children.reserve(results.size());
 		for (size_t i = 0; i < results.size(); i++)
 		{
-			//I can't use make_shared here; see the comment in CreateRootNode().
-			children.emplace_back(new MCTSNode(results[i], this, probs[i]));
+			children.emplace_back(CreateChildNode(results[i], this, probs[i]));
 		}
 
 		//Now save the info

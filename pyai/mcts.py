@@ -92,18 +92,27 @@ class MCTS:
                 # and then update the current node
                 cur_node = select_randomly(state_results, state_dist)
 
-            # Compute value estimate of this state
-            value_estimate = None
+            # Add value statistic and expand if nonterminal node:
             if cur_node.is_terminal():
                 # Note that, in this case, since the state is terminal,
                 # this is not an estimate - it is a true value!
                 value_estimate = cur_node.get_state().get_game_value(self.team)
+
+                # Add new statistic:
+                cur_node.add_value_statistic(value_estimate)
+
             elif cur_node.is_leaf():
-                # Expand the leaf node BEFORE doing a simulation
                 # This means we need to get actions and prior probabilities
                 actions = cur_node.get_actions()
+
                 priors = self.sim_strategy.compute_prior_distribution(
                     cur_node.get_state(), actions)
+
+                value_estimate = self.sim_strategy.compute_value_estimate(
+                    cur_node.get_state())
+
+                # Add new statistic:
+                cur_node.add_value_statistic(value_estimate)
 
                 cur_node.expand(priors)
 
@@ -119,22 +128,12 @@ class MCTS:
                 # and then update the current node
                 cur_node = select_randomly(state_results, state_dist)
 
-                # Simulate to compute its value:
-                value_estimate = self.sim_strategy.compute_value_estimate(
-                    cur_node.get_state())
-
                 # We will then backpropagate this valule below!
                 # Determine if we have just gone deeper into the tree:
                 depth = cur_node.get_depth()
                 if depth > self.maxDepth:
                     self.maxDepth = depth
                     print("MCTS tree deepened to", depth)
-
-            # Add new statistic:
-            cur_node.add_value_statistic(value_estimate)
-
-            # Done!
-            print("Simulation", i + 1, "completed.")
 
     """
     Get the current simulation count from the current tree root.

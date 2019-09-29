@@ -1,19 +1,29 @@
 #include "SelfPlayManager.h"
 #include "SelectRandomly.h"
+#include <algorithm>
 #include <boost/range/combine.hpp>
 #include <boost/range/algorithm/remove_if.hpp>
+#include <boost/asio/post.hpp>
+#include <boost/asio/thread_pool.hpp>
+#include <atomic>
 
 
 namespace c40kl
 {
 
 
-SelfPlayManager::SelfPlayManager(float ucb1ExplorationParameter, size_t numSimulations) :
+SelfPlayManager::SelfPlayManager(float ucb1ExplorationParameter, size_t numSimulations, size_t numThreads) :
 	m_TreePolicy(ucb1ExplorationParameter, 0), //Always evaluate with respect to team 0
-	m_NumSimulations(numSimulations)
+	m_NumSimulations(numSimulations),
+	m_NumThreads(std::max(numThreads, (size_t)1))
 {
 	C40KL_ASSERT_PRECONDITION(ucb1ExplorationParameter > 0,
 		"UCB1 exploration parameter must be > 0.");
+}
+
+
+SelfPlayManager::~SelfPlayManager()
+{
 }
 
 
@@ -62,7 +72,8 @@ void SelfPlayManager::Select(std::vector<GameState>& outLeafStates)
 	m_pSelectedLeaves.resize(m_pRoots.size(), MCTSNodePtr());
 	m_SelectedIndices.reserve(m_pRoots.size());
 
-	//TODO: parallelise this loop.
+	boost::asio::thread_pool jobService(m_NumThreads);
+
 	for (size_t i = 0; i < m_pRoots.size(); i++)
 	{
 		C40KL_ASSERT_INVARIANT(!m_pRoots[i]->IsTerminal(),
@@ -71,17 +82,22 @@ void SelfPlayManager::Select(std::vector<GameState>& outLeafStates)
 		//If this tree hasn't had enough samples yet...
 		if (m_pRoots[i]->GetNumValueSamples() < m_NumSimulations)
 		{
-			SelectLeafForGame(i);
+			boost::asio::post(jobService, [i, this]() { SelectLeafForGame(i); });
+		}
+	}
 
-			//If a leaf node needed to be selected for this game...
-			if (m_pSelectedLeaves[i])
+	jobService.join();
+
+	for (size_t i = 0; i < m_pRoots.size(); i++)
+	{
+		//If a leaf node needed to be selected for this game...
+		if (m_pSelectedLeaves[i])
+		{
+			//If leaf is nonterminal...
+			if (!m_pSelectedLeaves[i]->GetState().IsFinished())
 			{
-				//If leaf is nonterminal...
-				if (!m_pSelectedLeaves[i]->GetState().IsFinished())
-				{
-					outLeafStates.push_back(m_pSelectedLeaves[i]->GetState());
-					m_SelectedIndices.push_back(i);
-				}
+				outLeafStates.push_back(m_pSelectedLeaves[i]->GetState());
+				m_SelectedIndices.push_back(i);
 			}
 		}
 	}
@@ -127,23 +143,28 @@ void SelfPlayManager::Update(const std::vector<float>& valueEstimates,
 			"Policy size needs to match number of actions in leaf.");
 	}
 
-	//TODO: parallelise this loop!
+	boost::asio::thread_pool jobService(m_NumThreads);
+
 	for (size_t i = 0; i < m_SelectedIndices.size(); i++)
 	{
-		const size_t j = m_SelectedIndices[i];
-		const MCTSNodePtr& pLeaf = m_pSelectedLeaves[j];
-
-		const std::vector<float>& policy = policies[i];
-		
-		float valEst = valueEstimates[i];
-
-		//Convert valEst to be from the perspective of team 0, if applicable:
-		if (pLeaf->GetState().GetActingTeam() != 0)
+		auto job = [i, this, &policies, &valueEstimates]()
 		{
-			valEst *= -1.0f;
-		}
+			const size_t j = m_SelectedIndices[i];
+			const MCTSNodePtr& pLeaf = m_pSelectedLeaves[j];
 
-		ExpandBackpropagate(m_SelectedIndices[i], valEst, policy);
+			const std::vector<float>& policy = policies[i];
+
+			float valEst = valueEstimates[i];
+
+			//Convert valEst to be from the perspective of team 0, if applicable:
+			if (pLeaf->GetState().GetActingTeam() != 0)
+			{
+				valEst *= -1.0f;
+			}
+
+			ExpandBackpropagate(m_SelectedIndices[i], valEst, policy);
+		};
+		boost::asio::post(jobService, job);
 	}
 
 	//Don't forget that the selected indices DO NOT include
@@ -151,20 +172,27 @@ void SelfPlayManager::Update(const std::vector<float>& valueEstimates,
 	// terminal values, in cases where a node was selected:
 	for (size_t i = 0; i < m_pSelectedLeaves.size(); i++)
 	{
-		//If there was any leaf selected...
-		if (m_pSelectedLeaves[i].get() != nullptr)
+		auto job = [i, this]()
 		{
-			const auto state = m_pSelectedLeaves[i]->GetState();
-			if (state.IsFinished())
+			//If there was any terminal node selected...
+			if (m_pSelectedLeaves[i].get() != nullptr)
 			{
-				//Note: ExpandBackpropagate automatically converts
-				// the value estimate to the perspective of team 0.
-				const float valEst = state.GetGameValue(0);
+				const auto state = m_pSelectedLeaves[i]->GetState();
+				if (state.IsFinished())
+				{
+					//Note: ExpandBackpropagate automatically converts
+					// the value estimate to the perspective of team 0.
+					const float valEst = state.GetGameValue(0);
 
-				ExpandBackpropagate(i, valEst, std::vector<float>());
+					ExpandBackpropagate(i, valEst, std::vector<float>());
+				}
 			}
-		}
+		};
+		boost::asio::post(jobService, job);
 	}
+
+	//Wait until jobs complete:
+	jobService.join();
 
 	//Clear everything as we are no longer in a waiting state:
 	m_SelectedIndices.clear();

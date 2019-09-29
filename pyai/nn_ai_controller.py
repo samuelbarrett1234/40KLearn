@@ -15,9 +15,9 @@ class NeuralNetworkAIController:
     def __init__(self, model, nn_filename):
         self.model = model
         self.filename = nn_filename
-        self.tau = 0.2
-        self.exploratoryParam = 2.0 ** 0.5
-        self.N = 100  # number of searches before making a decision
+        self.tau = 0.5
+        self.exploratoryParam = 2.0 * 2.0 ** 0.5
+        self.N = 800  # number of searches before making a decision
         self.tree = None
         self.on_turn_changed()  # Sets up the MCTS tree
 
@@ -51,23 +51,20 @@ class NeuralNetworkAIController:
             verb, subject = "", ""
             if self.model.get_phase() == py40kl.Phase.MOVEMENT:
                 verb = "move to"
-                subject = str(target_pos.x, target_pos.y)
+                subject = str((target_pos.x, target_pos.y))
             elif self.model.get_phase() == py40kl.Phase.SHOOTING:
                 verb = "shoot"
                 target = board.get_unit_on_square(target_pos)
                 subject = target.name
             elif self.model.get_phase() == py40kl.Phase.CHARGE:
                 verb = "charge location"
-                subject = str(target_pos.x, target_pos.y)
+                subject = str((target_pos.x, target_pos.y))
             else:
                 verb = "fight"
                 target = board.get_unit_on_square(target_pos)
                 subject = target.name
 
             print("AI decided for", unit.name, "to", verb, subject)
-
-        print("Current AI value estimate: ",
-              self.tree.get_value_estimate())
 
         # Actually apply the changes
         self.model.choose_action(action)

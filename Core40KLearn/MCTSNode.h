@@ -34,6 +34,13 @@ public:
 
 private:
 	/// <summary>
+	/// Create a new MCTS node, passing the given data to its
+	/// constructor (see constructor for argument explanation).
+	/// </summary>
+	static MCTSNodePtr CreateChildNode(const GameState& state, MCTSNode* pParent, float weightFromParent);
+
+
+	/// <summary>
 	/// Create a new MCTS node from the given state.
 	/// If you want this to be a root node, then pass nullptr
 	/// for the parent. If you do not pass nullptr, you must

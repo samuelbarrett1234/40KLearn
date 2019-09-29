@@ -43,8 +43,8 @@ class NeuralNetworkEstimatorStrategy:
         # If there are options other than passing, and the current
         # phase is the shooting phase or fight phase, then do not
         # allow a pass (set its probability to zero and normalise).
-        if len(policy) > 1 and (state.get_phase() == py40kl.Phase.SHOOTING
-                                or state.get_phase() == py40kl.Phase.FIGHT):
+        if len(actions) > 1 and (state.get_phase() == py40kl.Phase.SHOOTING
+                                 or state.get_phase() == py40kl.Phase.FIGHT):
             policy[-1] = 0.0
             s = sum(policy)
             if s == 0.0:

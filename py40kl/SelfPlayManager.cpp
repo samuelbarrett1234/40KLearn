@@ -53,7 +53,7 @@ std::vector<int> SelfPlayManager_GetRunningGameIds(const SelfPlayManager& mgr)
 
 void ExportSelfPlayManager()
 {
-	class_<SelfPlayManager>("SelfPlayManager", init<float, size_t>())
+	class_<SelfPlayManager, boost::noncopyable>("SelfPlayManager", init<float, size_t, size_t>())
 		.def("reset", &SelfPlayManager::Reset)
 		.def("select", &SelfPlayManager::Select)
 		.def("update", &SelfPlayManager::Update)
