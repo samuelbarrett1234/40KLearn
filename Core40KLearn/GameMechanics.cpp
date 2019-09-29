@@ -39,6 +39,9 @@ void ApplyCommand(GameCommandPtr pCmd,
 			//Apply to get states and probabilities of result of command
 			pCmd->Apply(inStates[i], results, probs);
 
+			C40KL_ASSERT_INVARIANT(results.size() == probs.size(),
+				"Need to return valid state distribution.");
+
 			//The law of total probability
 			const float p = inProbabilities[i];
 			for (size_t j = 0; j < probs.size(); j++)
@@ -46,34 +49,73 @@ void ApplyCommand(GameCommandPtr pCmd,
 				probs[j] *= p;
 			}
 
-			//Add each state in turn:
-			for (size_t j = 0; j < results.size(); j++)
-			{
-				bool bAddedYet = false;
+			//Now, output all results, ensuring uniqueness!
 
-				//Ensure that we never add duplicate states:
-				for (size_t k = 0; k < outStates.size(); k++)
+			//Note that we can assume that the states in 'results' are unique,
+			// so there is no point checking for duplicates against them (so
+			// basically we only need to check duplicates for the states already
+			// in the outStates array before we start).
+			const size_t startOutStatesSize = outStates.size();
+
+			outStates.insert(outStates.end(), results.begin(), results.end());
+			outProbabilities.insert(outProbabilities.end(), probs.begin(), probs.end());
+
+			C40KL_ASSERT_INVARIANT(outStates.size() == outProbabilities.size(),
+				"Output distribution sizes need to tie up.");
+			
+			//Now erase any element whose index is greater than or equal to
+			// startOutStatesSize if it is equal to a state with index less
+			// than startOutStatesSize
+
+			size_t numDuplicates = 0;
+			for (size_t j = 0; j < startOutStatesSize; j++)
+			{
+				for (size_t k = startOutStatesSize; k < outStates.size() - numDuplicates; k++)
 				{
-					//Don't add duplicate states!
-					if (outStates[k] == results[j])
+					if (outStates[j] == outStates[k])
 					{
-						outProbabilities[k] += probs[j];
-						bAddedYet = true;
-						break;
+						// 'Transer' the probability of the duplicate state
+						// to the first copy. This is an important step which
+						// ensures that the probabilities add up to one after
+						// the duplicates are erased.
+						outProbabilities[j] += outProbabilities[k];
+
+						//Swap the duplicates with the end
+						// element so we can erase them all
+						// in one go (swap and pop):
+						numDuplicates++;
+
+						//Move the state at index k to the back (at swapIndex)
+						// so we can remove all duplicates in one go
+						const size_t swapIndex = outStates.size() - numDuplicates;
+
+						C40KL_ASSERT_INVARIANT(k <= swapIndex
+							&& k < outStates.size()
+							&& swapIndex < outStates.size()
+							&& k >= startOutStatesSize
+							&& numDuplicates <= outStates.size() - startOutStatesSize,
+							"Duplicate removing swap-and-pop invariant was false.");
+
+						if (swapIndex != k)
+						{
+							std::swap(outStates[k], outStates[swapIndex]);
+							std::swap(outProbabilities[k],
+								outProbabilities[swapIndex]);
+						}
 					}
 				}
-
-				//Else we have a new state!
-				if (!bAddedYet)
-				{
-					outStates.push_back(results[j]);
-					outProbabilities.push_back(probs[j]);
-				}
 			}
+
+			C40KL_ASSERT_INVARIANT(outStates.size() == outProbabilities.size(),
+				"States and probabilities must tie up.");
+
+			const size_t duplicateOffset = outStates.size() - numDuplicates;
+			outStates.erase(outStates.begin() + duplicateOffset, outStates.end());
+			outProbabilities.erase(outProbabilities.begin() + duplicateOffset, outProbabilities.end());
 		}
 		else
 		{
-			//If state is finished then ignore the command
+			//If state is finished then don't apply the command
 
 			bool bAddedYet = false;
 
@@ -92,11 +134,15 @@ void ApplyCommand(GameCommandPtr pCmd,
 			//Else we have a new state!
 			if (!bAddedYet)
 			{
-				outStates.push_back(inStates[i]);
+				outStates.emplace_back(inStates[i]);
 				outProbabilities.push_back(inProbabilities[i]);
 			}
 		}
 	}
+
+	//Check this right at the end
+	C40KL_ASSERT_INVARIANT(outStates.size() == outProbabilities.size(),
+		"States and probabilities must tie up.");
 }
 
 
@@ -169,11 +215,9 @@ void ResolveRawShootingDamage(const Unit& shooter, const Unit& target, float dis
 		hitSkill = 6;
 
 	//Get damage
-	int dmg = shooter.rg_dmg;
-
 	//Don't forget that damage doesn't spill over
 	// per model, hence clip the damage as so:
-	dmg = std::min(dmg, target.w);
+	const int dmg = std::min(shooter.rg_dmg, target.w);
 
 	int numShots = shooter.rg_shots * shooter.count;
 
@@ -182,9 +226,12 @@ void ResolveRawShootingDamage(const Unit& shooter, const Unit& target, float dis
 		numShots *= 2;
 
 	//Penetration probability:
-	float pPen = GetPenetrationProbability(hitSkill, shooter.rg_s,
+	const float pPen = GetPenetrationProbability(hitSkill, shooter.rg_s,
 		shooter.rg_ap, target.t, target.sv, target.inv);
 
+	//Successful attack distribution
+	const auto dist = boost::math::binomial_distribution<float>((float)numShots, pPen);
+	
 	//Each different number of shots represents
 	// a different resulting target state
 	for (int i = 0; i <= numShots; i++)
@@ -208,7 +255,7 @@ void ResolveRawShootingDamage(const Unit& shooter, const Unit& target, float dis
 
 		//Compute the probability of achieving this number
 		// of penetrating shots
-		const float probOfResult = BinomialProbability(numShots, i, pPen);
+		const float probOfResult = boost::math::pdf(dist, i);
 
 		//Note: we need to make sure that the targets
 		// we return are distinct. The only way this
@@ -235,17 +282,18 @@ void ResolveRawMeleeDamage(const Unit& fighter, const Unit& target,
 	C40KL_ASSERT_PRECONDITION(HasStandardMeleeWeapon(fighter), "Fighter needs a melee weapon.");
 
 	//Get damage
-	int dmg = fighter.ml_dmg;
-
 	//Don't forget that damage doesn't spill over
 	// per model, hence clip the damage as so:
-	dmg = std::min(dmg, target.w);
+	const int dmg = std::min(fighter.ml_dmg, target.w);
 
-	int numHits = fighter.a * fighter.count;
+	const int numHits = fighter.a * fighter.count;
 
 	//Penetration probability:
-	float pPen = GetPenetrationProbability(fighter.ws, fighter.ml_s,
+	const float pPen = GetPenetrationProbability(fighter.ws, fighter.ml_s,
 		fighter.ml_ap, target.t, target.sv, target.inv);
+
+	//Successful attack distribution
+	const auto dist = boost::math::binomial_distribution<float>((float)numHits, pPen);
 
 	//Each different number of shots represents
 	// a different resulting target state
@@ -270,7 +318,7 @@ void ResolveRawMeleeDamage(const Unit& fighter, const Unit& target,
 
 		//Compute the probability of achieving this number
 		// of penetrating shots
-		const float probOfResult = BinomialProbability(numHits, i, pPen);
+		const float probOfResult = boost::math::pdf(dist, i);
 
 		//Note: we need to make sure that the targets
 		// we return are distinct. The only way this

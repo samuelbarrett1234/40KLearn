@@ -748,7 +748,7 @@ BOOST_AUTO_TEST_CASE(NoAbleUnitsInvalidStateTest)
 
 	//This is an invalid state because it says the active team is team 0
 	// but that team has no possible fighting units!
-	BOOST_CHECK_THROW(GameState(0, 0, Phase::FIGHT, b), std::runtime_error);
+	C40KL_CHECK_PRE_POST_EXCEPTION(GameState(0, 0, Phase::FIGHT, b), std::runtime_error);
 }
 
 

@@ -184,6 +184,9 @@ void UnitChargeCommand::Apply(const GameState& startState,
 		ApplyChargeCmd(workingStates[i], workingDist[i],
 			outStates, outDistribution);
 	}
+
+	C40KL_ASSERT_INVARIANT(outStates.size() == outDistribution.size(),
+		"Distribution needs to match.");
 }
 
 
@@ -218,7 +221,7 @@ void UnitChargeCommand::ApplyChargeCmd(const GameState& state, float probOfCurre
 	{
 		//Keep state as-is:
 		outStates.push_back(state);
-		outDistribution.push_back(1.0f*probOfCurrentState);
+		outDistribution.push_back(1.0f * probOfCurrentState);
 		return;
 	}
 
@@ -287,7 +290,6 @@ void UnitChargeCommand::ApplyChargeCmd(const GameState& state, float probOfCurre
 	board.ClearSquare(m_Source);
 	board.SetUnitOnSquare(m_Target, unitStats, team);
 
-	//Deterministic action:
 	outStates.emplace_back(team, team, Phase::CHARGE, board);
 	outDistribution.push_back(pPass * probOfCurrentState);
 }

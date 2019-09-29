@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(TestSelfPlayManagerThrowsWhenResetWithFinishedState)
 
 	SelfPlayManager mgr(1.4f, 1);
 
-	BOOST_CHECK_THROW(mgr.Reset(5, gs), std::runtime_error);
+	C40KL_CHECK_PRE_POST_EXCEPTION(mgr.Reset(5, gs), std::runtime_error);
 }
 
 

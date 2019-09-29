@@ -374,11 +374,17 @@ void SelfPlayManager::SelectLeafForGame(size_t gameIdx)
 		std::vector<float> probs;
 		actions[actionIdx]->Apply(pNode->GetState(), results, probs);
 
+		C40KL_ASSERT_INVARIANT(results.size() == probs.size(),
+			"Need to return valid distribution.");
+
 		//WARNING: if parallelising, we need to remove the
 		// dependency on m_RandEng here!
 
 		//Select a random result:
 		const size_t resultingIdx = SelectRandomly(m_RandEng, probs);
+
+		C40KL_ASSERT_INVARIANT(resultingIdx < results.size(),
+			"SelectRandomly must return valid index.");
 
 		//Now choose the resulting MCTSNodePtr:
 		auto children = pNode->GetStateResults(actionIdx);

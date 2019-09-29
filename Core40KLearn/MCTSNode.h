@@ -29,7 +29,7 @@ public:
 	/// Create a new MCTS tree root node from the given
 	/// state, and return it.
 	/// </summary>
-	static MCTSNodePtr CreateRootNode(GameState state);
+	static MCTSNodePtr CreateRootNode(const GameState& state);
 
 
 private:
@@ -43,7 +43,7 @@ private:
 	/// NOTE: this is a private constructor because users
 	/// of the MCTS tree will only ever be allocating root nodes.
 	/// </summary>
-	MCTSNode(GameState state, MCTSNode* pParent, float weightFromParent);
+	MCTSNode(const GameState& state, MCTSNode* pParent, float weightFromParent);
 
 
 public:

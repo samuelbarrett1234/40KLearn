@@ -5,7 +5,7 @@ namespace c40kl
 {
 
 
-MCTSNodePtr MCTSNode::CreateRootNode(GameState state)
+MCTSNodePtr MCTSNode::CreateRootNode(const GameState& state)
 {
 	//I would like to use make_shared here, but I'm going to
 	// prioritise making the constructor private - unfortunately
@@ -16,7 +16,7 @@ MCTSNodePtr MCTSNode::CreateRootNode(GameState state)
 }
 
 
-MCTSNode::MCTSNode(GameState state, MCTSNode* pParent, float weightFromParent) :
+MCTSNode::MCTSNode(const GameState& state, MCTSNode* pParent, float weightFromParent) :
 	m_State(state),
 	m_pParent(pParent),
 	m_bExpanded(false),
@@ -49,7 +49,9 @@ bool MCTSNode::IsRoot() const
 
 void MCTSNode::Expand(const std::vector<float>& priorActionDistribution)
 {
-	C40KL_ASSERT_PRECONDITION(priorActionDistribution.size() == GetMyActions().size(),
+	const auto& actions = GetMyActions();
+
+	C40KL_ASSERT_PRECONDITION(priorActionDistribution.size() == actions.size(),
 		"Prior distribution needs to match actions.");
 	C40KL_ASSERT_PRECONDITION(IsLeaf() && !IsTerminal(),
 		"Cannot expand non-leaf or terminal nodes.");
@@ -59,11 +61,11 @@ void MCTSNode::Expand(const std::vector<float>& priorActionDistribution)
 	m_bExpanded = true;
 	m_ActionPrior = priorActionDistribution;
 
-	m_pChildren.reserve(GetMyActions().size());
-	m_Weights.reserve(GetMyActions().size());
+	m_pChildren.reserve(actions.size());
+	m_Weights.reserve(actions.size());
 
 	//Now create child nodes:
-	for (auto pCmd : GetMyActions())
+	for (const auto& pCmd : actions)
 	{
 		//Get distribution resulting from the command
 		std::vector<GameState> results;
@@ -194,12 +196,15 @@ std::vector<float> MCTSNode::GetActionValueEstimates() const
 	// which have at least one estimate*.
 	for (size_t i = 0; i < GetMyActions().size(); i++)
 	{
+		const auto& childrenFromAction = m_pChildren[i];
+		const auto& weightsFromAction = m_Weights[i];
+
 		for (size_t j = 0; j < m_pChildren[i].size(); j++)
 		{
-			if (m_pChildren[i][j]->GetNumValueSamples() > 0)
+			if (childrenFromAction[j]->GetNumValueSamples() > 0)
 			{
-				values[i] += m_pChildren[i][j]->GetValueEstimate() * m_Weights[i][j] * (float)m_pChildren[i][j]->GetNumValueSamples();
-				weights[i] += m_Weights[i][j] * (float)m_pChildren[i][j]->GetNumValueSamples();
+				values[i] += m_pChildren[i][j]->GetValueEstimate() * weightsFromAction[j] * (float)childrenFromAction[j]->GetNumValueSamples();
+				weights[i] += weightsFromAction[j] * (float)childrenFromAction[j]->GetNumValueSamples();
 			}
 		}
 	}

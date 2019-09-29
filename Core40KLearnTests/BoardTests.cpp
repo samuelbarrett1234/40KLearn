@@ -12,8 +12,8 @@ BOOST_AUTO_TEST_CASE(UnitPlacementTest)
 	Position pos(2, 3);
 
 	BOOST_TEST(!board.IsOccupied(pos));
-	BOOST_CHECK_THROW(board.GetTeamOnSquare(pos), std::runtime_error);
-	BOOST_CHECK_THROW(board.GetUnitOnSquare(pos), std::runtime_error);
+	C40KL_CHECK_PRE_POST_EXCEPTION(board.GetTeamOnSquare(pos), std::runtime_error);
+	C40KL_CHECK_PRE_POST_EXCEPTION(board.GetUnitOnSquare(pos), std::runtime_error);
 	
 	Unit u;
 
@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(UnitPlacementTest)
 	BOOST_TEST(board.GetTeamOnSquare(pos) == 0);
 	BOOST_TEST((board.GetUnitOnSquare(pos) == u));
 
-	BOOST_CHECK_THROW(board.SetUnitOnSquare(pos, u, 2), std::runtime_error);
+	C40KL_CHECK_PRE_POST_EXCEPTION(board.SetUnitOnSquare(pos, u, 2), std::runtime_error);
 
 	board.ClearSquare(pos);
 
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(HasAdjacentEnemyTest)
 	Unit u;
 	Position pos(0, 0);
 
-	BOOST_CHECK_THROW(s.HasAdjacentEnemy(pos, 2), std::runtime_error);
+	C40KL_CHECK_PRE_POST_EXCEPTION(s.HasAdjacentEnemy(pos, 2), std::runtime_error);
 
 	BOOST_TEST(!s.HasAdjacentEnemy(pos, 0));
 	BOOST_TEST(!s.HasAdjacentEnemy(pos, 1));

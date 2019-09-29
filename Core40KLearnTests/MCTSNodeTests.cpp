@@ -458,7 +458,7 @@ BOOST_AUTO_TEST_CASE(TerminalExpansionThrowTest)
 	std::vector<float> prior;
 	prior.resize(numActions, 1.0f / (float)numActions);
 
-	BOOST_CHECK_THROW(pRoot->Expand(prior), std::runtime_error);
+	C40KL_CHECK_PRE_POST_EXCEPTION(pRoot->Expand(prior), std::runtime_error);
 }
 
 
@@ -486,7 +486,7 @@ BOOST_AUTO_TEST_CASE(NonLeafExpansionThrowTest)
 	BOOST_TEST(!pRoot->IsLeaf());
 
 	//Calling expand for a second time should throw:
-	BOOST_CHECK_THROW(pRoot->Expand(prior), std::runtime_error);
+	C40KL_CHECK_PRE_POST_EXCEPTION(pRoot->Expand(prior), std::runtime_error);
 }
 
 
@@ -650,12 +650,12 @@ BOOST_AUTO_TEST_CASE(LeafThrowTest)
 
 	//All of these functions make no sense for a leaf
 	// node, hence should all throw exceptions:
-	BOOST_CHECK_THROW(pRoot->GetActionPriorDistribution(), std::runtime_error);
-	BOOST_CHECK_THROW(pRoot->GetActionVisitCounts(), std::runtime_error);
-	BOOST_CHECK_THROW(pRoot->GetActionValueEstimates(), std::runtime_error);
-	BOOST_CHECK_THROW(pRoot->GetStateResultDistribution(0), std::runtime_error);
-	BOOST_CHECK_THROW(pRoot->GetNumResultingStates(0), std::runtime_error);
-	BOOST_CHECK_THROW(pRoot->GetStateResults(0), std::runtime_error);
+	C40KL_CHECK_PRE_POST_EXCEPTION(pRoot->GetActionPriorDistribution(), std::runtime_error);
+	C40KL_CHECK_PRE_POST_EXCEPTION(pRoot->GetActionVisitCounts(), std::runtime_error);
+	C40KL_CHECK_PRE_POST_EXCEPTION(pRoot->GetActionValueEstimates(), std::runtime_error);
+	C40KL_CHECK_PRE_POST_EXCEPTION(pRoot->GetStateResultDistribution(0), std::runtime_error);
+	C40KL_CHECK_PRE_POST_EXCEPTION(pRoot->GetNumResultingStates(0), std::runtime_error);
+	C40KL_CHECK_PRE_POST_EXCEPTION(pRoot->GetStateResults(0), std::runtime_error);
 
 	//However, these are fine:
 	pRoot->GetNumActions();
@@ -700,7 +700,7 @@ BOOST_AUTO_TEST_CASE(WrongSizedPriorThrowTest)
 	BOOST_TEST(!pRoot->IsTerminal());
 
 	//Check that we cannot obtain the prior as a leaf node:
-	BOOST_CHECK_THROW(pRoot->GetActionPriorDistribution(), std::runtime_error);
+	C40KL_CHECK_PRE_POST_EXCEPTION(pRoot->GetActionPriorDistribution(), std::runtime_error);
 
 	//This should be true
 	BOOST_REQUIRE(pRoot->GetNumActions() > 1);
@@ -712,7 +712,7 @@ BOOST_AUTO_TEST_CASE(WrongSizedPriorThrowTest)
 	prior.resize(numActions, 1.0f / (float)numActions);
 
 	//We have a prior which is one size too small, so should throw:
-	BOOST_CHECK_THROW(pRoot->Expand(prior), std::runtime_error);
+	C40KL_CHECK_PRE_POST_EXCEPTION(pRoot->Expand(prior), std::runtime_error);
 
 	//Should've failed:
 	BOOST_REQUIRE(pRoot->IsLeaf());
@@ -726,7 +726,7 @@ BOOST_AUTO_TEST_CASE(WrongSizedPriorThrowTest)
 	prior.resize(numActions, 1.0f / (float)numActions);
 
 	//We have a prior which is one size too big, so should throw:
-	BOOST_CHECK_THROW(pRoot->Expand(prior), std::runtime_error);
+	C40KL_CHECK_PRE_POST_EXCEPTION(pRoot->Expand(prior), std::runtime_error);
 }
 
 

@@ -23,15 +23,26 @@
 #ifdef _DEBUG
 
 #define C40KL_ASSERT_INVARIANT(expr, msg) assert(expr && msg)
+
+//Only check pre/post in debug mode because it is slow!
+#define C40KL_CHECK_PRE_POST_CONDITIONS
+
+#else
+
+#define C40KL_ASSERT_INVARIANT(expr, msg) ((void)0)
+
+#endif
+
+
+#ifdef C40KL_CHECK_PRE_POST_CONDITIONS
+
 #define C40KL_ASSERT_POSTCONDITION(expr, msg) if(!(expr)) throw std::runtime_error(msg)
 #define C40KL_ASSERT_PRECONDITION(expr, msg) if(!(expr)) throw std::runtime_error(msg)
 
 #else
 
-#define C40KL_ASSERT_INVARIANT(expr, msg) ((void)0)
-#define C40KL_ASSERT_POSTCONDITION(expr, msg) if(!(expr)) throw std::runtime_error(msg)
-#define C40KL_ASSERT_PRECONDITION(expr, msg) if(!(expr)) throw std::runtime_error(msg)
-
+#define C40KL_ASSERT_POSTCONDITION(expr, msg) ((void)0)
+#define C40KL_ASSERT_PRECONDITION(expr, msg) ((void)0)
 
 #endif
 
