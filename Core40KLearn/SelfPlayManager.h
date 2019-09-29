@@ -36,11 +36,16 @@ public:
 	/// <param name="ucb1ExplorationParameter">
 	/// The UCB1 exploration parameter, typically equal to root 2, must be greater than 0.
 	/// </param>
+	/// <param name="temperature">
+	/// A value greater than or equal to zero. This affects how random the policy outputs are;
+	/// if equal to zero, equivalent to an argmax. As it gets higher, the output gets closer
+	/// to a uniform distribution.
+	/// </param>
 	/// <param name="numSimulations">
 	/// The number of simulations the AI will do in the search tree before making a decision.
 	/// </param>
 	/// <param name="numThreads">The number of threads to execute on. Must be >= 1.</param>
-	SelfPlayManager(float ucb1ExplorationParameter, size_t numSimulations, size_t numThreads);
+	SelfPlayManager(float ucb1ExplorationParameter, float temperature, size_t numSimulations, size_t numThreads);
 
 
 	~SelfPlayManager();
@@ -149,6 +154,17 @@ public:
 
 
 	/// <summary>
+	/// Get the action visit counts of every root node, to help determine how the
+	/// agent is searching.
+	/// </summary>
+	/// <returns>
+	/// An array A such that A[i][j] is the number of times the jth action
+	/// has been visited in game i.
+	/// </returns>
+	std::vector<std::vector<int>> GetActionVisitCounts() const;
+
+
+	/// <summary>
 	/// Get the number of samples in each search tree.
 	/// </summary>
 	/// <returns>The number of samples at the root of each search tree.</returns>
@@ -214,8 +230,8 @@ private:
 	/// of visits.
 	/// </summary>
 	/// <param name="gameIdx">The game search tree to examine.</param>
-	/// <returns>The index of the action to take in this game.</returns>
-	size_t GetFinalPolicy(size_t gameIdx) const;
+	/// <returns>The final policy for this game (distribution over actions).</returns>
+	std::vector<float> GetFinalPolicy(size_t gameIdx) const;
 
 
 private:
@@ -226,6 +242,7 @@ private:
 	std::mt19937 m_RandEng;
 
 	const size_t m_NumSimulations, m_NumThreads;
+	const float m_Temperature;
 	UCB1PolicyStrategy m_TreePolicy;
 
 	//IMPORTANT NOTE about tree value estimates:

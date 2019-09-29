@@ -6,10 +6,14 @@ using namespace c40kl;
 void ExportUtilities()
 {
     //TODO: export a function converting Python lists of floats
-    // to vector, to allow the expand() function to work!
+    // to vector for convenience
     
 	class_<std::vector<int>>("IntArray")
 		.def(vector_indexing_suite<std::vector<int>>());
+
+
+	class_<std::vector<std::vector<int>>>("Int2DArray")
+		.def(vector_indexing_suite<std::vector<std::vector<int>>>());
 
 
 	class_<std::vector<float>>("FloatArray")

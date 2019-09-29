@@ -1,24 +1,29 @@
 #include "SelfPlayManager.h"
 #include "SelectRandomly.h"
 #include <algorithm>
+#include <numeric>
 #include <boost/range/combine.hpp>
 #include <boost/range/algorithm/remove_if.hpp>
 #include <boost/asio/post.hpp>
 #include <boost/asio/thread_pool.hpp>
-#include <atomic>
+#include <boost/bind.hpp>
 
 
 namespace c40kl
 {
 
 
-SelfPlayManager::SelfPlayManager(float ucb1ExplorationParameter, size_t numSimulations, size_t numThreads) :
+SelfPlayManager::SelfPlayManager(float ucb1ExplorationParameter, float temperature,
+	size_t numSimulations, size_t numThreads) :
 	m_TreePolicy(ucb1ExplorationParameter, 0), //Always evaluate with respect to team 0
 	m_NumSimulations(numSimulations),
-	m_NumThreads(std::max(numThreads, (size_t)1))
+	m_NumThreads(std::max(numThreads, (size_t)1)),
+	m_Temperature(temperature)
 {
 	C40KL_ASSERT_PRECONDITION(ucb1ExplorationParameter > 0,
 		"UCB1 exploration parameter must be > 0.");
+	C40KL_ASSERT_PRECONDITION(temperature >= 0,
+		"Temperature must be >= 0.");
 }
 
 
@@ -219,10 +224,11 @@ void SelfPlayManager::Commit()
 		//Use tree search data available at the ith root to select an action.
 		//WARNING: if the final policy is stochastic, and this loop is parallelised,
 		// then this won't work as the threads will all be sharing the random engine!
-		const size_t actionIdx = GetFinalPolicy(i);
+		const auto finalPolicyDistribution = GetFinalPolicy(i);
+		const size_t actionIdx = SelectRandomly(m_RandEng, finalPolicyDistribution);
 		
 		C40KL_ASSERT_INVARIANT(actionIdx < m_pRoots[i]->GetNumActions(),
-			"Final policy must return valid action index.");
+			"SelectRandomly must return valid action index.");
 		
 		std::vector<GameState> results;
 		std::vector<float> probs;
@@ -342,15 +348,24 @@ std::vector<std::vector<float>> SelfPlayManager::GetCurrentActionDistributions()
 
 	for (size_t i = 0; i < m_pRoots.size(); i++)
 	{
-		actionDists[i].resize(m_pRoots[i]->GetNumActions(), 0.0f);
-		
-		//For now, we are doing a deterministic final policy:
-		const size_t selectedIdx = GetFinalPolicy(i);
-
-		actionDists[i][selectedIdx] = 1.0f;
+		actionDists[i] = GetFinalPolicy(i);
 	}
 
 	return actionDists;
+}
+
+
+std::vector<std::vector<int>> SelfPlayManager::GetActionVisitCounts() const
+{
+	std::vector<std::vector<int>> actionVisitCounts;
+	actionVisitCounts.resize(m_pRoots.size());
+
+	for (size_t i = 0; i < m_pRoots.size(); i++)
+	{
+		actionVisitCounts[i] = m_pRoots[i]->GetActionVisitCounts();
+	}
+
+	return actionVisitCounts;
 }
 
 
@@ -467,7 +482,7 @@ void SelfPlayManager::ExpandBackpropagate(size_t gameIdx, float valEst, const st
 }
 
 
-size_t SelfPlayManager::GetFinalPolicy(size_t gameIdx) const
+std::vector<float> SelfPlayManager::GetFinalPolicy(size_t gameIdx) const
 {
 	C40KL_ASSERT_INVARIANT(gameIdx < m_pRoots.size(),
 		"Need valid game index.");
@@ -477,19 +492,42 @@ size_t SelfPlayManager::GetFinalPolicy(size_t gameIdx) const
 	C40KL_ASSERT_INVARIANT(actionVisitCounts.size() > 0,
 		"Need actions in nonterminal state.");
 
-	//Return argmax of action visit counts:
-
-	size_t bestAction = 0;
-	size_t bestVisits = actionVisitCounts.front();
-	for (size_t i = 1; i < actionVisitCounts.size(); i++)
+	if (m_Temperature == 0.0f)
 	{
-		if (bestVisits < actionVisitCounts[i])
-		{
-			bestAction = i;
-			bestVisits = actionVisitCounts[i];
-		}
+		//If temperature is zero then just do an argmax:
+
+		const size_t bestAction = std::distance(actionVisitCounts.begin(),
+			std::max_element(actionVisitCounts.begin(), actionVisitCounts.end()));
+
+		C40KL_ASSERT_INVARIANT(bestAction < actionVisitCounts.size(),
+			"Need to find valid best action.");
+
+		std::vector<float> outPolicy;
+		outPolicy.resize(actionVisitCounts.size(), 0.0f);
+		outPolicy[bestAction] = 1.0f;
+		return outPolicy;
 	}
-	return bestAction;
+	else
+	{
+		std::vector<float> outPolicy;
+		outPolicy.resize(actionVisitCounts.size());
+		
+		std::transform(actionVisitCounts.begin(),
+			actionVisitCounts.end(),
+			outPolicy.begin(),
+			boost::bind(std::powf, _1, 1.0f / m_Temperature));
+
+		const float sum = std::accumulate(outPolicy.begin(),
+			outPolicy.end(), 0.0f);
+
+		C40KL_ASSERT_INVARIANT(sum > 0.0f,
+			"Need nonzero policy sum.");
+
+		for (auto& x : outPolicy)
+			x /= sum;
+
+		return outPolicy;
+	}
 }
 
 
