@@ -278,7 +278,8 @@ void UnitChargeCommand::ApplyChargeCmd(const GameState& state, float probOfCurre
 		auto boardCopy = board;
 		boardCopy.SetUnitOnSquare(m_Source, unitStats, team);
 
-		outStates.emplace_back(team, team, Phase::CHARGE, boardCopy);
+		outStates.emplace_back(team, team, Phase::CHARGE, boardCopy,
+			state.HasTurnLimit() ? state.GetTurnLimit() : (-1), state.GetTurnNumber());
 		outDistribution.push_back(pFail * probOfCurrentState);
 	}
 
@@ -290,7 +291,8 @@ void UnitChargeCommand::ApplyChargeCmd(const GameState& state, float probOfCurre
 	board.ClearSquare(m_Source);
 	board.SetUnitOnSquare(m_Target, unitStats, team);
 
-	outStates.emplace_back(team, team, Phase::CHARGE, board);
+	outStates.emplace_back(team, team, Phase::CHARGE, board,
+		state.HasTurnLimit() ? state.GetTurnLimit() : (-1), state.GetTurnNumber());
 	outDistribution.push_back(pPass * probOfCurrentState);
 }
 

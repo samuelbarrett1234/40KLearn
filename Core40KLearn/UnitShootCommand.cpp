@@ -139,7 +139,8 @@ void UnitShootCommand::Apply(const GameState& state,
 			newBoard.ClearSquare(m_Target);
 		}
 
-		outStates.emplace_back(team, team, Phase::SHOOTING, newBoard);
+		outStates.emplace_back(team, team, Phase::SHOOTING, newBoard,
+			state.HasTurnLimit() ? state.GetTurnLimit() : (-1), state.GetTurnNumber());
 		outDistribution.push_back(targetProbs[i]);
 	}
 	

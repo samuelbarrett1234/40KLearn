@@ -81,7 +81,8 @@ void MoraleCheckCommand::Apply(const GameState& state,
 			}
 			else
 			{
-				outStates.emplace_back(state.GetInternalTeam(), state.GetActingTeam(), state.GetPhase(), newboard);
+				outStates.emplace_back(state.GetInternalTeam(), state.GetActingTeam(), state.GetPhase(), newboard,
+					state.HasTurnLimit() ? state.GetTurnLimit() : (-1), state.GetTurnNumber());
 				outDistribution.push_back(1.0f / 6.0f);
 			}
 		}

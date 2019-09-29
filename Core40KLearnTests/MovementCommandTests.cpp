@@ -161,6 +161,41 @@ BOOST_AUTO_TEST_CASE(NotMovingIntoCombatOrEnemiesTest)
 }
 
 
+BOOST_AUTO_TEST_CASE(TestMoveCommandPreservesTurnNumber)
+{
+	//Test that the shooting command preserves the turn
+	// limit and current turn number value.
+
+	Unit u;
+	u.movement = 1;
+
+	BoardState b(25, 1.0f);
+	b.SetUnitOnSquare(Position(0, 0), u, 0);
+	b.SetUnitOnSquare(Position(0, 2), u, 1);
+
+	const int turnLimit = 4, turnNumber = 2;
+
+	GameState gs(0, 0, Phase::MOVEMENT, b, turnLimit, turnNumber);
+
+	auto cmds = gs.GetCommands();
+
+	for (auto pCmd : cmds)
+	{
+		//Apply command
+		std::vector<GameState> results;
+		std::vector<float> probs;
+		pCmd->Apply(gs, results, probs);
+
+		for (const auto& state : results)
+		{
+			BOOST_TEST(state.HasTurnLimit());
+			BOOST_TEST(state.GetTurnLimit() == turnLimit);
+			BOOST_TEST(state.GetTurnNumber() == turnNumber);
+		}
+	}
+}
+
+
 BOOST_AUTO_TEST_SUITE_END();
 
 

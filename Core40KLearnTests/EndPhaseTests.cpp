@@ -343,6 +343,103 @@ BOOST_DATA_TEST_CASE(MoraleCheckDistributionTest, boost::unit_test::data::xrange
 }
 
 
+BOOST_AUTO_TEST_CASE(TestEndPhaseIncrementsTurnNumberAppropriately)
+{
+	//Test that the turn number is incremented only at the
+	// end of team 1's turn, not the end of team 0's turn,
+	// and test that, when the turn limit is reached, the
+	// game state marks itself as finished.
+
+	BoardState b(25, 1.0f);
+	b.SetUnitOnSquare(Position(0, 0), exampleUnit, 0);
+	b.SetUnitOnSquare(Position(0, 2), exampleUnit, 1);
+	GameState gs1(0, 0, Phase::FIGHT, b, 3, 2); //End of team 0's turn
+	GameState gs2(1, 1, Phase::FIGHT, b, 3, 2); //End of team 1's turn
+
+	//Test basic getters:
+	BOOST_TEST(gs1.HasTurnLimit());
+	BOOST_TEST(gs1.GetTurnLimit() == 3);
+	BOOST_TEST(gs1.GetTurnNumber() == 2);
+	BOOST_TEST(gs2.HasTurnLimit());
+	BOOST_TEST(gs2.GetTurnLimit() == 3);
+	BOOST_TEST(gs2.GetTurnNumber() == 2);
+
+	//gs1 should not reach limit but gs2 should, after ending phase:
+
+	auto gs1Commands = gs1.GetCommands();
+	auto gs2Commands = gs2.GetCommands();
+	BOOST_REQUIRE(gs1Commands.size() == 1);
+	BOOST_REQUIRE(gs2Commands.size() == 1);
+
+	//Apply commands:
+	std::vector<GameState> results;
+	std::vector<float> probs;
+
+	gs1Commands.front()->Apply(gs1, results, probs);
+	gs1 = results.front();
+	results.clear();
+	probs.clear();
+	gs2Commands.front()->Apply(gs2, results, probs);
+	gs2 = results.front();
+
+	//Check:
+	BOOST_TEST(!gs1.IsFinished());
+	BOOST_TEST(gs1.HasTurnLimit());
+	BOOST_TEST(gs1.GetTurnLimit() == 3);
+	BOOST_TEST(gs1.GetTurnNumber() == 2);
+	BOOST_TEST(gs2.IsFinished()); //difference
+	BOOST_TEST(gs2.HasTurnLimit());
+	BOOST_TEST(gs2.GetTurnLimit() == 3);
+	BOOST_TEST(gs2.GetTurnNumber() == 3); //difference
+	BOOST_TEST(gs2.GetGameValue(0) == 0);
+	BOOST_TEST(gs2.GetGameValue(1) == 0);
+}
+
+
+BOOST_AUTO_TEST_CASE(TestMoraleCheckPreservesTurnNumber)
+{
+	//Test that the morale check command preserves the turn
+	// limit and current turn number value.
+
+	Unit unit = exampleUnit;
+	unit.modelsLostThisPhase = 2;
+
+	BoardState b(25, 1.0f);
+	b.SetUnitOnSquare(Position(0, 0), unit, 0);
+	b.SetUnitOnSquare(Position(0, 2), unit, 1);
+
+	const int turnLimit = 4, turnNumber = 2;
+
+	//Set up other states for each phase:
+	GameState gs[4] = {
+		GameState(0, 0, Phase::MOVEMENT, b, turnLimit, turnNumber),
+		GameState(0, 0, Phase::SHOOTING, b, turnLimit, turnNumber),
+		GameState(0, 0, Phase::CHARGE, b, turnLimit, turnNumber),
+		GameState(0, 0, Phase::FIGHT, b, turnLimit, turnNumber),
+	};
+
+	for (int i = 0; i < 4; i++)
+	{
+		auto cmds = gs[i].GetCommands();
+
+		for (auto pCmd : cmds)
+		{
+			//Apply command
+			std::vector<GameState> results;
+			std::vector<float> probs;
+			pCmd->Apply(gs[i], results, probs);
+
+			for (const auto& state : results)
+			{
+				BOOST_TEST(state.HasTurnLimit());
+				BOOST_TEST(state.GetTurnLimit() == turnLimit);
+				BOOST_TEST(state.GetTurnNumber() == turnNumber);
+			}
+		}
+	}
+}
+
+
 BOOST_AUTO_TEST_SUITE_END();
 
 

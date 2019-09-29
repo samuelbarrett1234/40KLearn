@@ -1,5 +1,6 @@
 import os
 import py40kl
+import numpy as np
 from pyai.nn_model import NNModel
 from pyai.experience_dataset import ExperienceDataset
 from pyai.converter import (convert_states_to_arrays, array_to_policy,
@@ -9,23 +10,28 @@ from pyapp.model import BOARD_SIZE
 from pyapp.game_util import load_units_csv, new_game_state
 
 
+TURN_LIMIT = 6
+
+
 unit_roster = load_units_csv("unit_stats.csv")
 placements = [
     (0, 0, 15, 5),
     (1, 0, 15, 10),
     (2, 0, 15, 15),
     (7, 1, 5, 5),
+    (7, 1, 5, 8),
     (8, 1, 5, 10),
     (9, 1, 5, 15),
 ]
-GAME_START_STATE = new_game_state(unit_roster, placements, BOARD_SIZE)
+GAME_START_STATE = new_game_state(unit_roster, placements,
+                                  BOARD_SIZE, turn_limit=TURN_LIMIT)
 
 
 NUM_SELF_PLAY_EPOCHS = 5
-NUM_TRAINING_EPOCHS = 5
-NUM_GAMES = 20
+NUM_TRAINING_EPOCHS = 10
+NUM_GAMES = 8
 EXPERIENCE_SAMPLE_EPOCH_SIZE = 1000
-NUM_MCTS_SIMULATIONS = 100
+NUM_MCTS_SIMULATIONS = 200
 UCB1_EXPLORATION = 2.0 * 2.0 ** 0.5
 FINAL_POLICY_TEMPERATURE = 0.4
 MODEL_FILENAME = 'Models/model1.h5'
@@ -119,7 +125,11 @@ if __name__ == "__main__":
             game_ids = mgr.get_running_game_ids()  # some might be finished
             teams = [state.get_acting_team() for state in game_states]
 
-            print("Number of unfinished games:", len(game_states))
+            print("Number of unfinished games:", len(game_states),
+                  "average turn number:", np.average([state.get_turn_number()
+                                                      for state in game_states
+                                                      if not state.is_finished(
+                                                      )]))
 
             # Compute phase vector for each game state:
             phases = [phase_to_vector(state.get_phase())
@@ -136,10 +146,11 @@ if __name__ == "__main__":
             # Now ready to make a decision in-game:
             mgr.commit()
 
-        print("*** Finished playing!")
-
         # Get the game values, with respect to team 0:
         game_values = mgr.get_game_values()
+
+        print("*** Finished playing! Average game score for team 0:",
+              np.average(list(game_values)))
 
         # Now we've built up a buffer of new experiences, commit them
         # to the database and train:

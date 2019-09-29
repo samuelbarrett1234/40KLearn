@@ -141,7 +141,8 @@ void UnitFightCommand::Apply(const GameState& state,
 		else
 			nextTeam = team; //Opponent has no fight moves left so we proceed by default		
 
-		outStates.emplace_back(state.GetInternalTeam(), nextTeam, Phase::FIGHT, newBoard);
+		outStates.emplace_back(state.GetInternalTeam(), nextTeam, Phase::FIGHT, newBoard,
+			state.HasTurnLimit() ? state.GetTurnLimit() : (-1), state.GetTurnNumber());
 		outDistribution.push_back(targetProbs[i]);
 	}
 

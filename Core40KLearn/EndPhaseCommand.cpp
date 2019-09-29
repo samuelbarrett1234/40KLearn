@@ -149,8 +149,14 @@ void EndPhaseCommand::Apply(const GameState& state,
 		}
 	}
 
+	//Compute turn limit and turn number info (don't forget to add 1 to turn
+	// number if we are team 1 ending their turn!)
+	const int turnLimit = state.HasTurnLimit() ? state.GetTurnLimit() : (-1);
+	const int turnNumber = (state.GetInternalTeam() == 1 && nextTeam == 0) ?
+		(state.GetTurnNumber() + 1) : state.GetTurnNumber();
+
 	//Create next game state
-	outStates.emplace_back(nextTeam, activeTeam, nextPhase, board);
+	outStates.emplace_back(nextTeam, activeTeam, nextPhase, board, turnLimit, turnNumber);
 	outDistribution.push_back(1.0f);
 }
 

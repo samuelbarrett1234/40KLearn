@@ -79,7 +79,8 @@ def select_randomly(results, probs):
     assert(False and "Should never reach here")
 
 
-def new_game_state(unit_roster, placements, board_size, board_scale=1.0):
+def new_game_state(unit_roster, placements, board_size,
+                   board_scale=1.0, turn_limit=-1):
     """
     Create a new game with the given unit roster (array of
     units) and placements (a list of tuples (unit_idx, team, x, y)).
@@ -115,4 +116,4 @@ def new_game_state(unit_roster, placements, board_size, board_scale=1.0):
 
         b.set_unit_on_square(pos, newunit, team)
 
-    return py40kl.GameState(0, 0, py40kl.Phase.MOVEMENT, b)
+    return py40kl.GameState(0, 0, py40kl.Phase.MOVEMENT, b, turn_limit)

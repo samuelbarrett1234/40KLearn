@@ -113,6 +113,17 @@ class ExperienceDataset:
             exp_policies += policies
             exp_phases += phases
 
+            # Reset lists to reduce memory usage:
+            self.buffer_gs[i] = []
+            self.buffer_pol[i] = []
+            self.buffer_ph[i] = []
+            self.buffer_gs_teams[i] = []
+
+        del self.buffer_gs
+        del self.buffer_pol
+        del self.buffer_ph
+        del self.buffer_gs_teams
+
         # Convert numpy to string, so we can serialise it:
         def to_serialisable_format(A):
             # Convert A to numpy array first, then

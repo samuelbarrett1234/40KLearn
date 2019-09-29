@@ -37,7 +37,10 @@ public:
 	/// the next decision. If not fight phase, should be the same as internalTeam!</param>
 	/// <param name="phase">The phase to begin in.</param>
 	/// <param name="board">The state of the board when the game begins.</param>
-	GameState(int internalTeam, int actingTeam, Phase phase, const BoardState& board);
+	/// <param name="turnLimit">The maximum number of turns for this game. If negative (default), counts as infinity. Must be nonzero.</param>
+	/// <param name="turnNumber">The number of (full) turns passed before the current state (must be nonnegative.)</param>
+	GameState(int internalTeam, int actingTeam, Phase phase, const BoardState& board,
+		int turnLimit = -1, int turnNumber = 0);
 
 	/// <summary>
 	/// Get the team which is currently making decisions.
@@ -78,7 +81,7 @@ public:
 	/// <summary>
 	/// Determine if this game state is finished (which
 	/// happens when at least one team has no units
-	/// remaining.)
+	/// remaining, or if the turn limit has been reached.)
 	/// </summary>
 	/// <returns>True if finished, false if not.</returns>
 	bool IsFinished() const;
@@ -104,9 +107,38 @@ public:
 	}
 
 
+	/// <summary>
+	/// Determine if the given game state object has a
+	/// turn limit.
+	/// </summary>
+	/// <returns>True if has turn limit, false if not.</returns>
+	inline bool HasTurnLimit() const
+	{
+		return (m_TurnLimit > 0);
+	}
+
+	
+	/// <summary>
+	/// Get the maximum number of full turns playable.
+	/// PRECONDITION: HasTurnLimit().
+	/// </summary>
+	/// <returns>The turn limit.</returns>
+	int GetTurnLimit() const;
+
+
+	/// <summary>
+	/// Get the current turn number. Note that the turn
+	/// number only increments when team 1 finishes their
+	/// turn and it transitions to team 0's turn.
+	/// </summary>
+	/// <returns>The turn number, >= 0.</returns>
+	inline int GetTurnNumber() const
+	{
+		return m_TurnNumber;
+	}
+
+
 	std::string ToString() const;
-
-
 	inline bool operator == (const GameState& other) const
 	{
 		return (m_InternalTeam == other.m_InternalTeam && m_Phase == other.m_Phase
@@ -118,6 +150,9 @@ private:
 	int m_InternalTeam, //The internal team is "whose turn it is"
 		m_ActingTeam; //The acting team is "who is about to perform the next move".
 	//The distinction is required because players take turns in fighting in the fight phase.
+
+	int m_TurnNumber, //The current turn number (of both players) starting at zero.
+		m_TurnLimit; //The turn limit (if negative, represents infinity.)
 
 	Phase m_Phase;
 	BoardState m_Board;

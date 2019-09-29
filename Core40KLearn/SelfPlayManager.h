@@ -45,7 +45,8 @@ public:
 	/// The number of simulations the AI will do in the search tree before making a decision.
 	/// </param>
 	/// <param name="numThreads">The number of threads to execute on. Must be >= 1.</param>
-	SelfPlayManager(float ucb1ExplorationParameter, float temperature, size_t numSimulations, size_t numThreads);
+	SelfPlayManager(float ucb1ExplorationParameter, float temperature,
+		size_t numSimulations, size_t numThreads);
 
 
 	~SelfPlayManager();
@@ -241,7 +242,8 @@ private:
 
 	std::mt19937 m_RandEng;
 
-	const size_t m_NumSimulations, m_NumThreads;
+	const size_t m_NumSimulations,
+		m_NumThreads;
 	const float m_Temperature;
 	UCB1PolicyStrategy m_TreePolicy;
 
@@ -275,7 +277,7 @@ private:
 	// games. Warning: it is possible, although unlikely, that this
 	// array is empty when m_pSelectedLeaves is nonempty (we may
 	// select a terminal node for every search tree, by chance.)
-	std::vector<size_t> m_SelectedIndices; 
+	std::vector<size_t> m_SelectedIndices;
 };
 
 

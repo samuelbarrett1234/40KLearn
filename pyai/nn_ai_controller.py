@@ -22,8 +22,16 @@ class NeuralNetworkAIController:
         self.on_turn_changed()  # Sets up the MCTS tree
 
     def on_update(self):
-        # Simulate:
-        self.tree.simulate(self.N - self.tree.get_num_samples())
+        if len(self.model.get_actions()) == 1:
+            # If there is only one action to perform,
+            # defer properly simulating until later.
+            # But we still need to make the root node
+            # a non-leaf, so simulate one step to set
+            # up the tree:
+            self.tree.simulate(1)
+        else:
+            # Simulate only enough to bring us up to the sample target:
+            self.tree.simulate(self.N - self.tree.get_num_samples())
 
         # Get results:
         actions, dist = self.tree.get_distribution()
@@ -66,9 +74,15 @@ class NeuralNetworkAIController:
 
             print("AI decided for", unit.name, "to", verb, subject)
 
+        old_state = self.model.get_state()
         # Actually apply the changes
         self.model.choose_action(action)
         self.tree.commit(self.model.get_state())
+        new_state = self.model.get_state()
+        old_val = self.tree.sim_strategy.compute_value_estimate(old_state)
+        new_val = self.tree.sim_strategy.compute_value_estimate(new_state)
+        print("AI estimates that, by doing that action, the value went from",
+              old_val, "to", new_val)
 
     def on_click_position(self, pos, bLeft):
         pass  # AI doesn't care about clicks

@@ -99,7 +99,8 @@ void OverwatchCommand::Apply(const GameState& state,
 			newBoard.ClearSquare(m_Target);
 		}
 
-		outStates.emplace_back(state.GetInternalTeam(), state.GetActingTeam(), Phase::CHARGE, newBoard);
+		outStates.emplace_back(state.GetInternalTeam(), state.GetActingTeam(), Phase::CHARGE, newBoard,
+			state.HasTurnLimit() ? state.GetTurnLimit() : (-1), state.GetTurnNumber());
 		outDistribution.push_back(targetProbs[i]);
 	}
 }

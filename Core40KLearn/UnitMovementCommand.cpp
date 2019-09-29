@@ -96,7 +96,8 @@ void UnitMovementCommand::Apply(const GameState& state,
 	board.SetUnitOnSquare(m_Target, unitStats, team);
 
 	//Deterministic action:
-	outStates.emplace_back(team, team, Phase::MOVEMENT, board);
+	outStates.emplace_back(team, team, Phase::MOVEMENT, board,
+		state.HasTurnLimit() ? state.GetTurnLimit() : (-1), state.GetTurnNumber());
 	outDistribution.push_back(1.0f);
 }
 

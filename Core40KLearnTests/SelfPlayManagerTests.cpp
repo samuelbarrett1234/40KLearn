@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(BasicUsageTest)
 	b.SetUnitOnSquare(Position(1, 0), unitWithGun, 1);
 	GameState gs(0, 0, Phase::FIGHT, b);
 	
-	SelfPlayManager mgr(1.4f, 1, 3);
+	SelfPlayManager mgr(1.4f, 0.4f, 1, 3);
 
 	//Test that we count as finished when there are no games running:
 	BOOST_TEST(mgr.AllFinished());
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(TestSelfPlayManagerThrowsWhenResetWithFinishedState)
 	b.SetUnitOnSquare(Position(0, 0), unitWithGun, 0);
 	GameState gs(0, 0, Phase::FIGHT, b);
 
-	SelfPlayManager mgr(1.4f, 1, 3);
+	SelfPlayManager mgr(1.4f, 0.4f, 1, 3);
 
 	C40KL_CHECK_PRE_POST_EXCEPTION(mgr.Reset(5, gs), std::runtime_error);
 }

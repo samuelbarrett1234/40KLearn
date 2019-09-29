@@ -782,6 +782,38 @@ BOOST_AUTO_TEST_CASE(FlagsFoughtTest)
 }
 
 
+BOOST_AUTO_TEST_CASE(TestFightCommandPreservesTurnNumber)
+{
+	//Test that the fight command preserves the turn
+	// limit and current turn number value.
+
+	BoardState b(25, 1.0f);
+	b.SetUnitOnSquare(Position(0, 0), unitSingleAttack, 0);
+	b.SetUnitOnSquare(Position(0, 1), unitSingleAttack, 1);
+
+	const int turnLimit = 4, turnNumber = 2;
+
+	GameState gs(0, 0, Phase::FIGHT, b, turnLimit, turnNumber);
+
+	auto cmds = gs.GetCommands();
+
+	for (auto pCmd : cmds)
+	{
+		//Apply command
+		std::vector<GameState> results;
+		std::vector<float> probs;
+		pCmd->Apply(gs, results, probs);
+
+		for (const auto& state : results)
+		{
+			BOOST_TEST(state.HasTurnLimit());
+			BOOST_TEST(state.GetTurnLimit() == turnLimit);
+			BOOST_TEST(state.GetTurnNumber() == turnNumber);
+		}
+	}
+}
+
+
 BOOST_AUTO_TEST_SUITE_END();
 
 
