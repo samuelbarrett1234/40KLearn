@@ -31,21 +31,20 @@ class NNModel:
         x = BatchNormalization()(x)
         x = Conv2D(256, (3, 3), activation='relu')(x)
         x = BatchNormalization()(x)
-        x = Conv2D(256, (3, 3), activation='relu')(x)
+        x = Conv2D(128, (3, 3), activation='relu')(x)
         x = BatchNormalization()(x)
-        x = Conv2D(256, (3, 3), activation='relu')(x)
+        x = Conv2D(128, (3, 3), activation='relu')(x)
         x = BatchNormalization()(x)
-        x = Conv2D(256, (3, 3), activation='relu')(x)
+        x = Conv2D(128, (3, 3), activation='relu')(x)
         x = BatchNormalization()(x)
         x = Flatten()(x)  # flatten CNN output
         x = concatenate([x, self.phase_input])  # add phase input
-        x = Dense(2048, activation='relu')(x)
+        x = Dense(1024, activation='relu')(x)
         x = BatchNormalization()(x)
-        x = Dense(2048, activation='relu')(x)
+        x = Dense(1024, activation='relu')(x)
 
         # construct value head of network
-        self.value_head = Dense(1024, activation='relu')(x)
-        self.value_head = Dense(256, activation='relu')(self.value_head)
+        self.value_head = Dense(512, activation='relu')(x)
         self.value_head = Dense(128, activation='relu')(self.value_head)
         self.value_head = Dense(1, activation='tanh',
                                 name='value_head')(self.value_head)
@@ -53,7 +52,7 @@ class NNModel:
         # loss, and all values inbetween
 
         # construct policy head of network
-        self.policy_head = Dense(2048,
+        self.policy_head = Dense(1024,
                                  activation='relu')(x)
         self.policy_head = Dense(2 * self.board_size * self.board_size + 1,
                                  activation='softmax',
@@ -89,6 +88,8 @@ class NNModel:
         # values: should be a list of scalars
         # policies: should be a list of 2D arrays of the same
         # size as 2 * self.board_size * self.board_size + 1
+
+        assert(self.num_epochs > 0)  # negative if not configured for training
 
         assert(len(input_game_states) == len(input_phases))
         assert(len(input_game_states) == len(values))

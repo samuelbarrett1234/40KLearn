@@ -12,15 +12,17 @@ The Warhammer 40K rules are available freely online, however the
 game has been simplified for the purposes of this project in the
 following way:
 - Units are fixed to moving on a coarse grid,
-- All units in a squad must have exactly the same unit stats,
+- All units in a squad must have exactly the same unit stats (i.e. no squad leaders),
 - No Psykers,
+- No Advancing,
 - No stratagems or other global abilities,
 - No aura special rules,
 - No randomness in determining statistics (e.g. a weapon with a random number of shots),
 - No line of sight or cover
 
 It should be easy to incorporate global abilities (e.g. an orbital bombardment)
-and psykers with exactly one psychic power, but this is currently not the case.
+and psykers with exactly one psychic power, or advancing, but this is currently
+not implemented.
 
 ## Project Structure
 
@@ -31,15 +33,35 @@ builds into a DLL. This project has tests in the Core40KLearnTests project.
 The core project is also wrapped, to expose it to Python, in the py40kl project.
 The game's (very basic) GUI uses model/view/controller, where the View uses
 Pygame to render, and the model is just a wrapper around a core GameState object,
-and the controller is either a human player or an AI controller.
+and the controller is either a human player or an AI controller. The Python code
+is contained in the folders: pyapp, pyai and Scripts. The first of these contains
+the UI code, and some utility code. The second of these folders contains all AI
+implementations in Python (including neural networks). The last of these folders,
+the Scripts folder, contains the runnable Python scripts, designed to be used
+from command line.
+
+The key scripts are play.py, train.py and game.py:
+- play.py : perform self-play with a given neural network setup to generate an
+            experience dataset. It does this using Monte Carlo tree search, guided
+            by the neural network weights provided (or from scratch), and can
+            simulate many games at once. This is by far the most performance
+            heavy part of the project: this is because the search algorithm can
+            take quite some time and uses a lot of memory.
+- train.py : this trains a given neural network on an experience dataset. It does
+             so by randomly subsampling from all experiences (uniformly) and then
+             training the neural network to predict the outputs of the tree search
+             and the winner of the game from the game state.
+- game.py : this runs the GUI to allow a human/AI to play a game against another
+            human/AI. The default is set to having team 0 be a human and team 1
+            being the AI.
 
 In the core project, the main classes are:
 - GameState: this is an immutable object encapsulating all info about a particular
   moment in a game. In order to "modify" it, you would need to create a copy of its
   board state, modify that board state, and then create a new game state object with
   that board.
-- BoardState: this represents the state of the board, but does not know which player's
-  turn it is, etc.
+- BoardState: this represents the layout of the board, but does not know which player's
+  turn it is, etc - basically just tracks board size and unit statistics and positions.
 - Unit: this represents all of the game statistics of a single unit (which may consist
   of many models). Units also store flags representing 'what they have done this turn',
   for example, a unit cannot move twice per turn, so it contains a flag which is true
@@ -51,15 +73,13 @@ In the core project, the main classes are:
   doing the action", and the target position is "what is the action being done to." Their
   use is dependent on the type of action.
 
-The Python code is split into three directories: pyapp, pyai, and Scripts. pyapp contains
-application code, pyai contains AI-related code, and Scripts contains any runnable files.
-
 ## Installation Instructions
 
 This project relies on the Boost C++ libraries. Ensure they are installed and built.
 The root of the Boost library directory is stored in the environment variable
 BOOST_DIR. Ensure that the include files are in BOOST_DIR/boost, and that the
-built Boost binaries are in BOOST_DIR/stage/lib.
+built Boost binaries are in BOOST_DIR/stage/lib. It was built with Microsoft Visual
+Studio (2017) but will probably work on any visual studio version.
 
 Python dependencies:
 - NumPy,
@@ -83,8 +103,15 @@ where they are intended to be ran from.
 Finally, put the Boost Python and Python DLLs in the root directory of the project,
 once built. This allows them to be found when the game is ran.
 
-Run "Scripts/game.py" to play the game against an AI player, and run "Scripts/train.py"
-to train the neural network for a period of time.
+Now it is time to run the scripts! For example, one could type:
+- python Scripts/play.py --model_filename="Models/model1.h5" --data="TrainingData/data*" --initial_states="UnitData/map_*.csv" --unit_data="UnitData/unit_stats.csv" --search_size=200 --num_games=5 --iterations=1
+- python Scripts/train.py --data="TrainingData/*" --model="Models/model1.h5"
+- python Scripts/game.py --model_filename="Models/model1.h5" --unit_data="UnitData/unit_stats.csv" --initial_state="UnitData/map_1.csv"
+
+Note on GUI controls: left click a blue square (one of your units) to select it. If
+that unit has any available actions, the square upon which they can act will be displayed
+in yellow. Enemies are in red. Right click on a yellow square to move there/shoot
+that enemy/charge that location/fight that enemy. Press enter to end phase.
 
 ## TODO
 
