@@ -92,9 +92,10 @@ to train the neural network for a period of time.
   as rotation, reflection (there are 8 symmetries.) This is useful because it doesn't
   change the board's value, and shouldn't change the policy (after applying the
   transformation to the policy, also.)
+- Create a script for evaluating different sets of model weights, do determine which
+  is better.
 - Maybe: refactor the MCTS tree to enforce an order on which units to order. This
   should reduce branching factor. Then, update neural network policy output.
-- Randomly generate initial game state for each self-play epoch.
 - Stretch goal: supporting many concurrent games, each with their own large search
   trees. This would require two steps: (i) allow search trees to be stored in a database
   or file, so their sizes aren't bound by the limits of the system's RAM, and (ii) allow

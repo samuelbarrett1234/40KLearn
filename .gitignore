@@ -3,7 +3,7 @@ Core40KLearn/Temp/
 Core40KLearn/Output/
 Core40KLearn/.vs/
 Models/
-Data/
+TrainingData/
 *.dll
 *.pyd
 .vscode/

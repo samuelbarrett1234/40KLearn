@@ -64,6 +64,38 @@ def load_units_csv(filename):
     return units
 
 
+def load_unit_placements_csv(filename):
+    """
+    A helper function for loading a unit placement table from
+    a CSV file, returning a list of tuples (unit_idx, team, x, y).
+    """
+    units = []
+    with open(filename) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        isHeader = True
+        colHeaders = []
+        for row in csv_reader:
+            if isHeader:
+                colHeaders = row
+                isHeader = False
+            else:
+                # Read the row in as a dict:
+                u = {}
+                for i, entry in enumerate(row):
+                    col = colHeaders[i]
+                    if col != "name":
+                        entry = int(entry)  # Convert datatype if not unit name
+                    u[col] = entry
+                # Save row to list as a tuple:
+                units.append((
+                    u["name"],
+                    u["team"],
+                    u["x"],
+                    u["y"]
+                ))
+    return units
+
+
 def select_randomly(results, probs):
     """
     A helper function for selecting a result randomly

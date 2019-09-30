@@ -14,9 +14,9 @@ class NNModel:
     and for generating prior policies.
     """
 
-    def __init__(self, board_size, num_epochs, filename=None):
+    def __init__(self, board_size, num_epochs=-1, filename=None):
         self.board_size = board_size
-        self.num_epochs = num_epochs
+        self.num_epochs = num_epochs  # default is an invalid value.
 
         self.board_input = Input(shape=(self.board_size,
                                         self.board_size, 2 * NUM_FEATURES))
@@ -29,25 +29,13 @@ class NNModel:
                    input_shape=self.board_input.shape[1:]
                    )(self.board_input)
         x = BatchNormalization()(x)
-        x = Conv2D(128, (3, 3), activation='relu')(x)
+        x = Conv2D(256, (3, 3), activation='relu')(x)
         x = BatchNormalization()(x)
-        x = Conv2D(128, (3, 3), activation='relu')(x)
+        x = Conv2D(256, (3, 3), activation='relu')(x)
         x = BatchNormalization()(x)
-        x = Conv2D(128, (3, 3), activation='relu')(x)
+        x = Conv2D(256, (3, 3), activation='relu')(x)
         x = BatchNormalization()(x)
-        x = Conv2D(128, (3, 3), activation='relu')(x)
-        x = BatchNormalization()(x)
-        x = Conv2D(128, (3, 3), activation='relu')(x)
-        x = BatchNormalization()(x)
-        x = Conv2D(128, (3, 3), activation='relu')(x)
-        x = BatchNormalization()(x)
-        x = Conv2D(128, (3, 3), activation='relu')(x)
-        x = BatchNormalization()(x)
-        x = Conv2D(128, (3, 3), activation='relu')(x)
-        x = BatchNormalization()(x)
-        x = Conv2D(128, (3, 3), activation='relu')(x)
-        x = BatchNormalization()(x)
-        x = Conv2D(128, (3, 3), activation='relu')(x)
+        x = Conv2D(256, (3, 3), activation='relu')(x)
         x = BatchNormalization()(x)
         x = Flatten()(x)  # flatten CNN output
         x = concatenate([x, self.phase_input])  # add phase input
@@ -58,6 +46,7 @@ class NNModel:
         # construct value head of network
         self.value_head = Dense(1024, activation='relu')(x)
         self.value_head = Dense(256, activation='relu')(self.value_head)
+        self.value_head = Dense(128, activation='relu')(self.value_head)
         self.value_head = Dense(1, activation='tanh',
                                 name='value_head')(self.value_head)
         # value head returns +1 for estimated win and -1 for estimated
