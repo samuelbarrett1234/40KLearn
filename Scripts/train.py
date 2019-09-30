@@ -17,7 +17,7 @@ if __name__ == "__main__":
                     default=None)
     ap.add_argument("--data",
                     help="The wildcard pattern for all data folders.",
-                    type=str)
+                    type=str, required=True)
     ap.add_argument("--num_batches",
                     help=("The number of batches to run. Each batch "
                           "is formed of a new sample. The neural"

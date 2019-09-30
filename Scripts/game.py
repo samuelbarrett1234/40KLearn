@@ -36,10 +36,10 @@ if __name__ == "__main__":
                     help=("The wildcard pattern for all CSV files of"
                           " 'unit placement tables'; at each iteration"
                           " one of these will be selected at random."),
-                    type=str)
+                    type=str, required=True)
     ap.add_argument("--unit_data",
                     help="The table of unit statistics.",
-                    type=str)
+                    type=str, required=True)
     ap.add_argument("--team0",
                     help="Who is playing as team 0 (P or AI).",
                     type=str,

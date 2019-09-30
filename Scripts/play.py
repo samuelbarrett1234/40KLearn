@@ -24,7 +24,7 @@ if __name__ == "__main__":
                     default=None)
     ap.add_argument("--data",
                     help="The wildcard pattern for all data folders.",
-                    type=str)
+                    type=str, required=True)
     ap.add_argument("--search_size",
                     help="The number of MCTS searches to perform per game",
                     type=int,
@@ -54,10 +54,10 @@ if __name__ == "__main__":
                     help=("The wildcard pattern for all CSV files of"
                           " 'unit placement tables'; at each iteration"
                           " one of these will be selected at random."),
-                    type=str)
+                    type=str, required=True)
     ap.add_argument("--unit_data",
                     help="The table of unit statistics.",
-                    type=str)
+                    type=str, required=True)
     ap.add_argument("--ucb1_parameter",
                     help=("The exploration parameter (higher means the"
                           " search algorithm is more exploratory.) Must"
