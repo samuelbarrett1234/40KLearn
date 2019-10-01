@@ -2,10 +2,12 @@
 
 class TwoPlayerController:
     """
-    This class COMBINES TWO CONTROLLERS, one for each
-    team, sending each controller the commands only
-    for their own units. The teams 0 and 1 are controlled
-    by controllers: controller0 and controller 1, respectively.
+    This class combines two 'child' controllers, one for each
+    team, sending each controller the commands only for their
+    own units. The teams 0 and 1 are controlled by controllers
+    controller0 and controller 1, respectively. This class is
+    basically for automatically delegating to the correct child
+    controller, depending on which team is currently acting.
     """
 
     def __init__(self, model, controller0, controller1):

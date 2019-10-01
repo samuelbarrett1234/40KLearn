@@ -74,15 +74,9 @@ class NeuralNetworkAIController:
 
             print("AI decided for", unit.name, "to", verb, subject)
 
-        old_state = self.model.get_state()
         # Actually apply the changes
         self.model.choose_action(action)
         self.tree.commit(self.model.get_state())
-        new_state = self.model.get_state()
-        old_val = self.tree.sim_strategy.compute_value_estimate(old_state)
-        new_val = self.tree.sim_strategy.compute_value_estimate(new_state)
-        print("AI estimates that, by doing that action, the value went from",
-              old_val, "to", new_val)
 
     def on_click_position(self, pos, bLeft):
         pass  # AI doesn't care about clicks

@@ -3,42 +3,6 @@ import csv
 import py40kl
 
 
-# The names and order of the unit stats
-columns = [
-    # NOTE: no randomness in the unit stats allowed!
-    "name",
-    # The number of models left in the squad
-    # (all members of squad must be identical)
-    "count",
-    # The unit's statistics
-    "movement",
-    "ws",
-    "bs",
-    # NOTE: we do not have strength here because it is stored in ml_s
-    "t",
-    "w",  # This is wounds per model, however THIS IS NEVER UPDATED.
-    "total_w",  # Note that this is total squad wounds, not per model
-    "a",
-    "ld",
-    "sv",
-    "inv",
-    # Ranged weapon stats
-    "rg_range",
-    "rg_s",
-    "rg_ap",
-    "rg_dmg",
-    "rg_shots",
-    "rg_is_rapid",
-    "rg_is_heavy",  # Make true if you want an accuracy penalty for moving
-    # Melee weapon stats
-    "ml_s",
-    "ml_ap",
-    "ml_dmg",
-    # Special rules (1 represents having the rule, 0 means not)
-    # (none as of yet)
-]
-
-
 def load_units_csv(filename):
     """
     A helper function for loading a unit database CSV file in

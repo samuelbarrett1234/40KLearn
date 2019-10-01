@@ -2,7 +2,9 @@ import py40kl
 import numpy as np
 
 
-NUM_FEATURES = 19  # 19 features, see below
+# Size of a feature vector representing a single unit
+# See below for why this is 19.
+NUM_FEATURES = 19
 
 
 def unit_to_vector(unit):
@@ -150,10 +152,19 @@ def array_to_policy(policy_array, game_state):
             policy[i] = p_source * p_target
         else:
             # End phase is at the end of policy_array
-            # NOTE: slight hack: we square the probability here
-            # because otherwise it will tend to be slightly higher
-            # and yet we don't want it to happen more often.
+
+            # We need to square this probability to keep
+            # it on the same order as the other probabilities
+            # in the policy - because they will be the product
+            # of a source and target. I.e. we just want to make
+            # a uniform output from the neural network transfer
+            # to a uniform output over final policies.
+
             policy[i] = policy_array[-1] ** 2.0
+
+    # NOTE: slight hack, we want to discourage passing, so
+    # multiply pass probability by a small value:
+    policy[-1] *= 1.0e-3
 
     # Normalise:
     policy = np.array(policy)

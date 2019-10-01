@@ -7,8 +7,7 @@ from random import choice
 from pyai.nn_model import NNModel
 from pyai.experience_dataset import ExperienceDataset
 from pyai.converter import (convert_states_to_arrays, array_to_policy,
-                            phase_to_vector, policy_to_array,
-                            NUM_FEATURES)
+                            policy_to_array, NUM_FEATURES)
 from pyapp.model import BOARD_SIZE, BOARD_SCALE
 from pyapp.game_util import (load_units_csv, new_game_state,
                              load_unit_placements_csv)
@@ -69,7 +68,7 @@ if __name__ == "__main__":
                           " a uniform distribution over actions, lower"
                           " means closer to an argmax. Must be >= 0."),
                     type=float,
-                    default=0.4)
+                    default=0.5)
 
     args = ap.parse_args()
 
@@ -156,37 +155,20 @@ if __name__ == "__main__":
                                 for pol_arr, state
                                 in zip(policies_as_numeric, states)]
 
-                    # If there are options other than passing, and the current
-                    # phase is the shooting phase or fight phase, then do not
-                    # allow a pass (set its probability to zero and normalise).
-                    # In other cases, at least discourage a pass.
-                    for state, policy in zip(states, policies):
-                        if len(policy) > 1:
-                            if state.get_phase() == py40kl.Phase.SHOOTING\
-                               or state.get_phase() == py40kl.Phase.FIGHT:
-                                policy[-1] = 0.0
-                            else:
-                                policy[-1] *= 1.0e-3
-                            s = sum(policy)
-                            if s == 0.0:
-                                policy[-1] = 1.0  # restore to where we were
-                            else:
-                                policy = [p / s for p in policy]
-
-                    # convert to a CPP-usable form
-                    val_array = py40kl.FloatArray()
-                    for x in values:
-                        val_array.append(float(x))
+                    # Convert the values into a CPP usable form (namely
+                    # by reshaping it to a 1D array and converting from
+                    # numpy.float32 to native float):
+                    values = list(map(float, values.reshape((-1,))))
 
                     # Update games with this info:
-                    mgr.update(val_array, policies)
+                    mgr.update(values, policies)
                 else:
                     # Empty update:
                     mgr.update([], [])
 
             # Get current game info:
             game_states = mgr.get_current_game_states()
-            game_states_numeric, _ = convert_states_to_arrays(game_states)
+            game_states_numeric, phases = convert_states_to_arrays(game_states)
             policies = mgr.get_current_action_distributions()
             game_ids = mgr.get_running_game_ids()  # some might be finished
             teams = [state.get_acting_team() for state in game_states]
@@ -197,10 +179,6 @@ if __name__ == "__main__":
                                                       for state in game_states
                                                       if not state.is_finished(
                                                       )]))
-
-            # Compute phase vector for each game state:
-            phases = [phase_to_vector(state.get_phase())
-                      for state in game_states]
 
             # Convert policies into the trainable format:
             policies = [policy_to_array(pol, gs)
@@ -217,7 +195,7 @@ if __name__ == "__main__":
         game_values = mgr.get_game_values()
 
         print("*** Finished playing! Average game score for team 0:",
-              np.average(list(game_values)))
+              np.average(game_values))
 
         print("*** Saving game results...")
 

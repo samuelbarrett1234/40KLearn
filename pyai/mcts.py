@@ -5,18 +5,20 @@ import py40kl
 class MCTS:
     """
     root_state : the state for MCTS to begin in.
-    tree_policy : the policy which decides the distribution of actions
-                  from a leaf node
+    tree_policy : the policy to use during the selection stage, where
+                  we use value statistics and priors from that node to
+                  select the next node to inspect.
     final_policy : the policy which decides which action to take from
-                   the root node, after many simulations
-    sim_strategy : the strategy which decides the value of a state by
-                   simulation or otherwise.
+                   the root node, after all of the simulations.
+    est_strategy : the strategy which (i) computes a value estimate of
+                   a particular state and (ii) computes a prior dist.
+                   over actions available in a given state.
     """
-    def __init__(self, root_state, tree_policy, final_policy, sim_strategy):
+    def __init__(self, root_state, tree_policy, final_policy, est_strategy):
         self.root = py40kl.MCTSNode.create_root_node(root_state)
         self.tree_policy = tree_policy
         self.final_policy = final_policy
-        self.sim_strategy = sim_strategy
+        self.est_strategy = est_strategy
         self.team = root_state.get_acting_team()
         self.maxDepth = 0
 
@@ -105,10 +107,10 @@ class MCTS:
                 # This means we need to get actions and prior probabilities
                 actions = cur_node.get_actions()
 
-                priors = self.sim_strategy.compute_prior_distribution(
+                priors = self.est_strategy.compute_prior_distribution(
                     cur_node.get_state(), actions)
 
-                value_estimate = self.sim_strategy.compute_value_estimate(
+                value_estimate = self.est_strategy.compute_value_estimate(
                     cur_node.get_state())
 
                 # Add new statistic:

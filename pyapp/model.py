@@ -10,9 +10,8 @@ BOARD_SCALE = 1.0
 class Model:
     """
     Represents the interface by which the views/controllers
-    play the game. Note that this is an extra layer over the
-    game wrapper object, which provides handy summary information
-    and handles everything in terms of board-cell-coordinates.
+    play the game. Note that this is an extra layer over the CPP
+    game state object and manages the application of commands.
     """
     def __init__(self, unit_roster, placements):
         self.game = new_game_state(unit_roster, placements, BOARD_SIZE,
