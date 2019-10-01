@@ -123,10 +123,14 @@ void UnitChargeCommand::GetPossibleCommands(const GameState& state, GameCommandA
 						if (std::abs(enemyPos.first - targetPos.first) <= 1
 							&& std::abs(enemyPos.second - targetPos.second) <= 1)
 						{
-							//If satisifes shooting preconditions...
-							if (HasStandardRangedWeapon(enemyStats) //If has ranged weapon...
-								&& enemyStats.rg_range >= board.GetDistance(unitPos, enemyPos) //... which is in range
-								&& !board.HasAdjacentEnemy(enemyPos, 1 - ourTeam)) //And if not already tied up in combat...
+							//Check shooting preconditions:
+
+							//If has ranged weapon...
+							if (HasStandardRangedWeapon(enemyStats)
+								//... which is in range
+								&& enemyStats.rg_range >= board.GetDistance(unitPos, enemyPos)
+								//And if not already tied up in combat...
+								&& !board.HasAdjacentEnemy(enemyPos, 1 - ourTeam))
 							{
 								//Add overwatch command:
 								arr.push_back(std::make_shared<OverwatchCommand>(enemyPos, unitPos));

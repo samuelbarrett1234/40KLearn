@@ -151,6 +151,7 @@ size_t MCTSNode::GetNumValueSamples() const
 void MCTSNode::Detach()
 {
 	C40KL_ASSERT_PRECONDITION(!IsRoot(), "Cannot detach root.");
+
 	m_pParent = nullptr;
 }
 
@@ -195,7 +196,8 @@ std::vector<float> MCTSNode::GetActionValueEstimates() const
 {
 	C40KL_ASSERT_PRECONDITION(!IsLeaf(), "Cannot get action visit counts of leaf node.");
 
-	std::vector<float> values(GetMyActions().size(), 0.0f), weights(GetMyActions().size(), 0.0f);
+	std::vector<float> values(GetMyActions().size(), 0.0f),
+		weights(GetMyActions().size(), 0.0f);
 
 	//Aggregate values and weights over all samples
 	// from resulting states *only including states
@@ -209,8 +211,12 @@ std::vector<float> MCTSNode::GetActionValueEstimates() const
 		{
 			if (childrenFromAction[j]->GetNumValueSamples() > 0)
 			{
-				values[i] += m_pChildren[i][j]->GetValueEstimate() * weightsFromAction[j] * (float)childrenFromAction[j]->GetNumValueSamples();
-				weights[i] += weightsFromAction[j] * (float)childrenFromAction[j]->GetNumValueSamples();
+				values[i] += m_pChildren[i][j]->GetValueEstimate()
+					* weightsFromAction[j]
+					* (float)childrenFromAction[j]->GetNumValueSamples();
+
+				weights[i] += weightsFromAction[j]
+					* (float)childrenFromAction[j]->GetNumValueSamples();
 			}
 		}
 	}

@@ -7,6 +7,22 @@ namespace c40kl
 {
 
 
+/// <summary>
+/// Helper function for inserting states and corresponding
+/// probabilities into an output distribution. This is
+/// equivalent to adding results and probs to their respective
+/// output vectors and then removing duplicates appropriately.
+/// PRECONDITIONS: outStates.size() == outProbabilities.size()
+/// && results.size() == probs.size() && sum(outProbabilities
+/// ++ probs) less than or equal to 1.0f && results are unique
+/// && outStates are unique.
+/// </summary>
+void InsertResultsToDistribution(std::vector<GameState>& outStates,
+	std::vector<float>& outProbabilities,
+	std::vector<GameState> results,
+	std::vector<float> probs);
+
+
 float BinomialProbability(int n, int r, float p)
 {
 	const auto dist = boost::math::binomial_distribution<float>((float)n, p);
@@ -25,6 +41,9 @@ void ApplyCommand(GameCommandPtr pCmd,
 		"Need same number of states as probabilities");
 	
 	C40KL_ASSERT_PRECONDITION(pCmd != nullptr, "Need a valid command.");
+
+	C40KL_ASSERT_PRECONDITION(outStates.empty() && outProbabilities.empty(),
+		"Output parameters must start empty.");
 
 	const size_t n = inStates.size();
 
@@ -51,92 +70,17 @@ void ApplyCommand(GameCommandPtr pCmd,
 
 			//Now, output all results, ensuring uniqueness!
 
-			//Note that we can assume that the states in 'results' are unique,
-			// so there is no point checking for duplicates against them (so
-			// basically we only need to check duplicates for the states already
-			// in the outStates array before we start).
-			const size_t startOutStatesSize = outStates.size();
-
-			outStates.insert(outStates.end(), results.begin(), results.end());
-			outProbabilities.insert(outProbabilities.end(), probs.begin(), probs.end());
-
-			C40KL_ASSERT_INVARIANT(outStates.size() == outProbabilities.size(),
-				"Output distribution sizes need to tie up.");
-			
-			//Now erase any element whose index is greater than or equal to
-			// startOutStatesSize if it is equal to a state with index less
-			// than startOutStatesSize
-
-			size_t numDuplicates = 0;
-			for (size_t j = 0; j < startOutStatesSize; j++)
-			{
-				for (size_t k = startOutStatesSize; k < outStates.size() - numDuplicates; k++)
-				{
-					if (outStates[j] == outStates[k])
-					{
-						// 'Transer' the probability of the duplicate state
-						// to the first copy. This is an important step which
-						// ensures that the probabilities add up to one after
-						// the duplicates are erased.
-						outProbabilities[j] += outProbabilities[k];
-
-						//Swap the duplicates with the end
-						// element so we can erase them all
-						// in one go (swap and pop):
-						numDuplicates++;
-
-						//Move the state at index k to the back (at swapIndex)
-						// so we can remove all duplicates in one go
-						const size_t swapIndex = outStates.size() - numDuplicates;
-
-						C40KL_ASSERT_INVARIANT(k <= swapIndex
-							&& k < outStates.size()
-							&& swapIndex < outStates.size()
-							&& k >= startOutStatesSize
-							&& numDuplicates <= outStates.size() - startOutStatesSize,
-							"Duplicate removing swap-and-pop invariant was false.");
-
-						if (swapIndex != k)
-						{
-							std::swap(outStates[k], outStates[swapIndex]);
-							std::swap(outProbabilities[k],
-								outProbabilities[swapIndex]);
-						}
-					}
-				}
-			}
-
-			C40KL_ASSERT_INVARIANT(outStates.size() == outProbabilities.size(),
-				"States and probabilities must tie up.");
-
-			const size_t duplicateOffset = outStates.size() - numDuplicates;
-			outStates.erase(outStates.begin() + duplicateOffset, outStates.end());
-			outProbabilities.erase(outProbabilities.begin() + duplicateOffset, outProbabilities.end());
+			InsertResultsToDistribution(outStates, outProbabilities,
+				results, probs);
 		}
 		else
 		{
 			//If state is finished then don't apply the command
+			// and just directly add the input state, ensuring
+			// uniqueness:
 
-			bool bAddedYet = false;
-
-			//Ensure that we never add duplicate states:
-			for (size_t j = 0; j < outStates.size(); j++)
-			{
-				//Don't add duplicate states!
-				if (outStates[j] == inStates[i])
-				{
-					outProbabilities[j] += inProbabilities[i];
-					bAddedYet = true;
-					break;
-				}
-			}
-
-			//Else we have a new state!
-			if (!bAddedYet)
-			{
-				outStates.emplace_back(inStates[i]);
-				outProbabilities.push_back(inProbabilities[i]);
-			}
+			InsertResultsToDistribution(outStates, outProbabilities,
+				{ inStates[i] }, { inProbabilities[i] });
 		}
 	}
 
@@ -374,6 +318,81 @@ void GetFightableUnits(const BoardState& board, int team, PositionArray& outPosi
 			}
 		}
 	}
+}
+
+
+void InsertResultsToDistribution(std::vector<GameState>& outStates,
+	std::vector<float>& outProbabilities,
+	std::vector<GameState> results,
+	std::vector<float> probs)
+{
+	//Check these preconditions:
+	C40KL_ASSERT_PRECONDITION(outStates.size() == outProbabilities.size()
+		&& results.size() == probs.size(),
+		"Probabilities need to match states.");
+
+	//Note that we can assume that the states in 'results' are unique,
+	// so there is no point checking for duplicates against them (so
+	// basically we only need to check duplicates for the states already
+	// in the outStates array before we start).
+	const size_t startOutStatesSize = outStates.size();
+
+	//Insert everything - we will remove duplicates next.
+	outStates.insert(outStates.end(), results.begin(), results.end());
+	outProbabilities.insert(outProbabilities.end(), probs.begin(), probs.end());
+
+	C40KL_ASSERT_INVARIANT(outStates.size() == outProbabilities.size(),
+		"Output distribution sizes need to tie up.");
+
+	//Now erase any element whose index is greater than or equal to
+	// startOutStatesSize if it is equal to a state with index less
+	// than startOutStatesSize
+
+	size_t numDuplicates = 0;
+	for (size_t j = 0; j < startOutStatesSize; j++)
+	{
+		for (size_t k = startOutStatesSize; k < outStates.size() - numDuplicates; k++)
+		{
+			if (outStates[j] == outStates[k])
+			{
+				// 'Transer' the probability of the duplicate state
+				// to the first copy. This is an important step which
+				// ensures that the probabilities add up to one after
+				// the duplicates are erased.
+				outProbabilities[j] += outProbabilities[k];
+
+				//Swap the duplicates with the end
+				// element so we can erase them all
+				// in one go (swap and pop):
+				numDuplicates++;
+
+				//Move the state at index k to the back (at swapIndex)
+				// so we can remove all duplicates in one go
+				const size_t swapIndex = outStates.size() - numDuplicates;
+
+				C40KL_ASSERT_INVARIANT(k <= swapIndex
+					&& k < outStates.size()
+					&& swapIndex < outStates.size()
+					&& k >= startOutStatesSize
+					&& numDuplicates <= outStates.size() - startOutStatesSize,
+					"Duplicate removing swap-and-pop invariant was false.");
+
+				if (swapIndex != k)
+				{
+					std::swap(outStates[k], outStates[swapIndex]);
+					std::swap(outProbabilities[k],
+						outProbabilities[swapIndex]);
+				}
+			}
+		}
+	}
+
+	C40KL_ASSERT_INVARIANT(outStates.size() == outProbabilities.size(),
+		"States and probabilities must tie up.");
+
+	const size_t duplicateOffset = outStates.size() - numDuplicates;
+	outStates.erase(outStates.begin() + duplicateOffset, outStates.end());
+	outProbabilities.erase(outProbabilities.begin() + duplicateOffset, outProbabilities.end());
 }
 
 

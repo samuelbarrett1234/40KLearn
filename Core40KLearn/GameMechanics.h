@@ -17,6 +17,10 @@ namespace c40kl
 /// commands to FINISHED states in the input
 /// distribution and will instead copy over
 /// the finished states to the output distribution.
+/// 
+/// PRECONDITIONS: inStates.size() == inProbabilities.size()
+/// && outStates.empty() && outProbabilities.empty()
+/// && pCmd != nullptr.
 /// </summary>
 /// <param name="pCmd">The command to apply (must be non-null).</param>
 /// <param name="inStates">The array of states; the action will be applied to each.</param>
