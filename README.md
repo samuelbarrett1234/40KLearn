@@ -8,22 +8,6 @@ The RL agent will use Monte Carlo Tree Search (MCTS), and a
 convolutional neural network with a value head and a policy
 head, which guides the tree search algorithm.
 
-The Warhammer 40K rules are available freely online, however the
-game has been simplified for the purposes of this project in the
-following way:
-- Units are fixed to moving on a coarse grid,
-- All units in a squad must have exactly the same unit stats (i.e. no squad leaders),
-- No Psykers,
-- No Advancing,
-- No stratagems or other global abilities,
-- No aura special rules,
-- No randomness in determining statistics (e.g. a weapon with a random number of shots),
-- No line of sight or cover
-
-It should be easy to incorporate global abilities (e.g. an orbital bombardment)
-and psykers with exactly one psychic power, or advancing, but this is currently
-not implemented.
-
 ## Project Structure
 
 The performance-intensive parts of the project are written in C++ and
@@ -112,6 +96,24 @@ Note on GUI controls: left click a blue square (one of your units) to select it.
 that unit has any available actions, the square upon which they can act will be displayed
 in yellow. Enemies are in red. Right click on a yellow square to move there/shoot
 that enemy/charge that location/fight that enemy. Press enter to end phase.
+
+## Game rules and simplifications
+
+The Warhammer 40K rules are available freely online, however the
+game has been simplified for the purposes of this project in the
+following way:
+- Units are fixed to moving on a coarse grid,
+- All units in a squad must have exactly the same unit stats (i.e. no squad leaders),
+- No Psykers,
+- No Advancing,
+- No stratagems or other global abilities,
+- No aura special rules,
+- No randomness in determining statistics (e.g. a weapon with a random number of shots),
+- No line of sight or cover
+
+It should be easy to incorporate global abilities (e.g. an orbital bombardment)
+and psykers with exactly one psychic power, or advancing, but this is currently
+not implemented.
 
 ## TODO
 
